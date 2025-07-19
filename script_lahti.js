@@ -2,10 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    // === Aseta oma Project-GC nimesi tähän ===
-    const PGC_PROFILENAME = 'lahjemies';
-
-    // === Kunta-maakunta-data ===
     const kuntaMaakuntaData = {
         "Akaa": "Pirkanmaa", "Alajärvi": "Etelä-Pohjanmaa", "Alavieska": "Pohjois-Pohjanmaa", "Alavus": "Etelä-Pohjanmaa", "Asikkala": "Päijät-Häme",
         "Askola": "Uusimaa", "Aura": "Varsinais-Suomi", "Brändö": "Ahvenanmaa", "Eckerö": "Ahvenanmaa", "Enonkoski": "Etelä-Savo", "Enontekiö": "Lappi",
@@ -85,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const database = getDatabase(app);
 
     const startLocationInput = document.getElementById('startLocation');
+    const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
     const bulkAddBtn = document.getElementById('bulkAddBtn');
     const municipalityList = document.getElementById('municipalityList');
@@ -95,14 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkAddContainer = document.getElementById('bulkAddContainer');
 
     let municipalities = [];
-    let startLocation = '';
-
-    const saveData = () => {
-        set(ref(database, 'lahti_lista'), {
-            municipalities: municipalities,
-            startLocation: startLocationInput.value
-        });
-    };
 
     const render = () => {
         municipalityList.innerHTML = '';
@@ -143,10 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
 
             const kunnanNimi = municipality.name;
-            const maakunta = kuntaMaakuntaData[kunnanNimi];
+            const pgcProfileName = pgcProfileNameInput.value.trim();
+            const oikeaAvain = Object.keys(kuntaMaakuntaData).find(key => key.toLowerCase() === kunnanNimi.toLowerCase());
+            const maakunta = oikeaAvain ? kuntaMaakuntaData[oikeaAvain] : undefined;
             let pgcLinkHtml = '';
-            if (maakunta) {
-                const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${PGC_PROFILENAME}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(kunnanNimi)}&nonefound=on&submit=Filter`;
+            if (maakunta && pgcProfileName) {
+                const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(kunnanNimi)}&nonefound=on&submit=Filter`;
                 pgcLinkHtml = `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${kunnanNimi} Project-GC:ssä" class="pgc-link">🗺️</a>`;
             }
 
@@ -176,15 +167,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = snapshot.val();
         if (data) {
             municipalities = data.municipalities || [];
-            startLocation = data.startLocation || '';
-            startLocationInput.value = startLocation;
-            render();
-        } else {
-            municipalities = [];
-            startLocation = '';
-            render();
+            startLocationInput.value = data.startLocation || '';
+            pgcProfileNameInput.value = data.pgcProfileName || '';
         }
+        render();
     });
+
+    const saveMunicipalities = () => set(ref(database, 'lahti_lista/municipalities'), municipalities);
+    const saveStartLocation = () => set(ref(database, 'lahti_lista/startLocation'), startLocationInput.value);
+    const savePgcProfileName = () => {
+        set(ref(database, 'lahti_lista/pgcProfileName'), pgcProfileNameInput.value);
+        render();
+    };
 
     const handleBulkAdd = () => {
         if (!municipalities) municipalities = [];
@@ -197,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         bulkAddInput.value = '';
-        saveData();
+        saveMunicipalities();
     };
 
     toggleBulkAddBtn.addEventListener('click', () => {
@@ -218,11 +212,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const munIndex = button.dataset.munIndex;
         const cacheIndex = button.dataset.cacheIndex;
         e.stopPropagation();
+        
+        let needsSave = false;
         if (button.classList.contains('edit-municipality-btn')) {
             const newName = prompt("Muokkaa kunnan nimeä:", municipalities[munIndex].name);
-            if (newName && newName.trim()) municipalities[munIndex].name = newName.trim();
+            if (newName && newName.trim()) {
+                municipalities[munIndex].name = newName.trim();
+                needsSave = true;
+            }
         } else if (button.classList.contains('delete-municipality-btn')) {
-            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) municipalities.splice(munIndex, 1);
+            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
+                municipalities.splice(munIndex, 1);
+                needsSave = true;
+            }
         } else if (button.classList.contains('add-cache-btn')) {
             const container = button.closest('.add-cache');
             const nameInput = container.querySelector('.new-cache-name');
@@ -231,23 +233,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
                 municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: typeSelector.value, done: false });
                 nameInput.value = '';
+                needsSave = true;
             }
         } else if (button.classList.contains('delete-cache-btn')) {
             const cacheName = municipalities[munIndex].caches[cacheIndex].name;
-            if (confirm(`Poistetaanko kätkö "${cacheName}"?`)) municipalities[munIndex].caches.splice(cacheIndex, 1);
+            if (confirm(`Poistetaanko kätkö "${cacheName}"?`)) {
+                municipalities[munIndex].caches.splice(cacheIndex, 1);
+                needsSave = true;
+            }
         } else if (button.classList.contains('edit-cache-btn')) {
             const oldCache = municipalities[munIndex].caches[cacheIndex];
             const newName = prompt("Muokkaa kätkön nimeä:", oldCache.name);
-            if (newName && newName.trim()) oldCache.name = newName.trim();
+            if (newName && newName.trim()) {
+                oldCache.name = newName.trim();
+                needsSave = true;
+            }
         } else if (button.type === 'checkbox') {
             municipalities[munIndex].caches[cacheIndex].done = button.checked;
+            needsSave = true;
         }
-        saveData();
+
+        if (needsSave) {
+            saveMunicipalities();
+        }
     });
 
-    startLocationInput.addEventListener('change', () => {
-        set(ref(database, 'lahti_lista/startLocation'), startLocationInput.value);
-    });
+    startLocationInput.addEventListener('change', saveStartLocation);
+    pgcProfileNameInput.addEventListener('change', savePgcProfileName);
 
     let draggedIndex = null;
     municipalityList.addEventListener('dragstart', (e) => {
@@ -283,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newIndex > -1) {
                 const [removed] = municipalities.splice(draggedIndex, 1);
                 municipalities.splice(newIndex, 0, removed);
-                saveData();
+                saveMunicipalities();
             }
         }
     });
@@ -335,6 +347,6 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalities.sort((a, b) => optimizedOrder.indexOf(a.name) - optimizedOrder.indexOf(b.name));
         const mapsUrl = `https://www.google.com/maps/dir/${route.map(r => encodeURIComponent(r)).join('/')}`;
         routeResultDiv.innerHTML = `✅ Reitti optimoitu! <a href="${mapsUrl}" target="_blank">Avaa reitti Google Mapsissa</a>`;
-        saveData();
+        saveMunicipalities();
     });
 });
