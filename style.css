@@ -21,9 +21,9 @@ body {
 
 .teksti-alue {
     color: #F8F8F8;
-    line-height: 1.7; /* TIIVISTETTY */
-    padding: 5px; /* TIIVISTETTY */
-    font-size: 1.0em; /* TIIVISTETTY */
+    line-height: 1.7;
+    padding: 5px;
+    font-size: 1.0em;
     transition: font-size 0.3s ease;
 }
 
@@ -36,8 +36,8 @@ body {
 }
 
 .logo {
-    width: 50px; /* TIIVISTETTY */
-    height: 50px; /* TIIVISTETTY */
+    width: 50px;
+    height: 50px;
     border: 2px solid #90EE90;
     border-radius: 50%;
     box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
@@ -51,7 +51,7 @@ body {
     text-align: left;
     margin: 0;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    font-size: 1.2em; /* TIIVISTETTY */
+    font-size: 1.2em;
     letter-spacing: 0.5px;
 }
 
@@ -59,8 +59,8 @@ body {
     color: #90EE90;
     text-align: center;
     margin-top: 20px;
-    margin-bottom: 15px; /* TIIVISTETTY */
-    font-size: 1.2em; /* TIIVISTETTY */
+    margin-bottom: 15px;
+    font-size: 1.2em;
     text-shadow: 1px 1px 1px rgba(0,0,0,0.6);
 }
 
@@ -74,16 +74,16 @@ body {
 /* === SOVELLUKSEN ELEMENTTIEN TYYLIT === */
 
 .container {
-    padding: 0 5px; /* TIIVISTETTY */
+    padding: 0 5px;
 }
 
 /* Syöttökentät ja valikot */
 input[type="text"], textarea, select {
     flex-grow: 1;
-    padding: 10px; /* TIIVISTETTY */
+    padding: 10px;
     border: 1px solid #2A381C;
     border-radius: 4px;
-    font-size: 15px; /* TIIVISTETTY */
+    font-size: 15px;
     width: 100%;
     box-sizing: border-box;
     background-color: #2A381C;
@@ -98,13 +98,13 @@ input[type="text"]::placeholder, textarea::placeholder {
 
 /* Napit */
 button {
-    padding: 10px 15px; /* TIIVISTETTY */
+    padding: 10px 15px;
     border: 1px solid #90EE90;
     background-color: transparent;
     color: #90EE90;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 15px; /* TIIVISTETTY */
+    font-size: 15px;
     font-family: 'Georgia', serif;
     transition: background-color 0.2s, color 0.2s;
     flex-shrink: 0;
@@ -143,7 +143,7 @@ button:hover {
 .controls {
     display: flex;
     gap: 10px;
-    margin-bottom: 15px; /* TIIVISTETTY */
+    margin-bottom: 15px;
     align-items: center;
     flex-wrap: wrap;
 }
@@ -180,7 +180,7 @@ ul {
 .municipality-item {
     background: #4a5c3a;
     border: 1px solid #2A381C;
-    padding: 10px; /* TIIVISTETTY */
+    padding: 10px;
     margin-bottom: 10px;
     border-radius: 5px;
     cursor: grab;
@@ -195,21 +195,21 @@ ul {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1.1em; /* TIIVISTETTY */
+    font-size: 1.1em;
     font-weight: bold;
     color: #FFFFFF;
-    margin-bottom: 5px; /* TIIVISTETTY */
+    margin-bottom: 5px;
 }
 
 .cache-list {
     padding-left: 0;
-    margin-top: 10px; /* TIIVISTETTY */
+    margin-top: 10px;
 }
 
 .cache-item {
     display: flex;
     align-items: center;
-    padding: 5px; /* TIIVISTETTY */
+    padding: 5px;
     border-top: 1px solid #556B2F;
 }
 
@@ -221,6 +221,24 @@ ul {
     text-decoration: line-through;
     color: #bbbbbb;
 }
+
+/* UUSI TYYLI: GC-koodien linkkien ulkoasu */
+.cache-info a {
+    color: inherit; /* Perii tekstin värin */
+    text-decoration: underline;
+    text-decoration-color: #cccccc;
+    transition: color 0.2s;
+}
+
+.cache-info a:hover {
+    color: #FFD700; /* Korostusväri hiiren ollessa päällä */
+}
+
+.cache-info span.done a {
+    color: #bbbbbb; /* Väri löydetyille linkeille */
+    text-decoration-color: #bbbbbb;
+}
+
 
 .cache-type {
     font-size: 0.8em;
@@ -246,33 +264,32 @@ ul {
     color: #FFD700;
 }
 
-/* TÄRKEÄ MUUTOS: Kätkön lisäysrivin asettelu */
+/* Kätkön lisäysrivin asettelu */
 .add-cache {
     display: flex;
-    flex-direction: row; /* Asetetaan elementit aina vierekkäin */
+    flex-direction: row;
     gap: 8px;
-    margin-top: 10px; /* TIIVISTETTY */
+    margin-top: 10px;
     align-items: center;
 }
 
 .add-cache .new-cache-name {
-    flex-grow: 1; /* Tekstikenttä vie suurimman osan tilasta */
-    min-width: 50px; /* Varmistaa että kenttä ei katoa liian pienenä */
+    flex-grow: 1;
+    min-width: 50px;
 }
 
 .add-cache .cache-type-selector {
     flex-grow: 0;
     flex-shrink: 1;
-    min-width: 80px; /* Varmistetaan, että valikko on luettavissa */
+    min-width: 80px;
 }
 
 .add-cache button {
     flex-grow: 0;
     flex-shrink: 0;
-    width: auto; /* Estää plus-nappia venymästä */
-    padding: 10px 12px; /* TIIVISTETTY */
+    width: auto;
+    padding: 10px 12px;
 }
-
 
 .route-result {
     margin: 15px 0;
