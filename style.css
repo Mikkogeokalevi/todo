@@ -3,14 +3,14 @@ body {
     background-color: #1a2015;
     font-family: 'Georgia', serif;
     margin: 0;
-    padding: 20px;
+    padding: 10px; /* TIIVISTETTY */
     transition: padding 0.3s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .sisalto-laatikko {
     max-width: 800px;
-    margin: 30px auto;
+    margin: 15px auto; /* TIIVISTETTY */
     padding: 10px;
     background-color: #3D4F2B;
     border: 3px solid #11150C;
@@ -21,21 +21,19 @@ body {
 
 .teksti-alue {
     color: #F8F8F8;
-    line-height: 1.8;
-    padding: 10px;
-    font-size: 1.1em;
-    transition: font-size 0.3s ease;
+    line-height: 1.7; /* TIIVISTETTY */
+    padding: 5px 10px; /* TIIVISTETTY */
+    font-size: 1.05em; /* TIIVISTETTY */
 }
 
 /* --- Logo ja otsikot --- */
 .logo-container {
-    text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 10px; /* TIIVISTETTY */
 }
 
 .logo {
-    width: 100px;
-    height: 100px;
+    width: 80px; /* PIENENNETTY */
+    height: 80px; /* PIENENNETTY */
     border: 2px solid #90EE90;
     border-radius: 50%;
     box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
@@ -47,9 +45,9 @@ body {
     color: #90EE90;
     text-align: center;
     margin-top: 0;
-    margin-bottom: 25px;
+    margin-bottom: 20px; /* TIIVISTETTY */
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    font-size: 1.6em;
+    font-size: 1.5em; /* PIENENNETTY */
     letter-spacing: 0.5px;
 }
 
@@ -57,7 +55,7 @@ body {
     color: #90EE90;
     text-align: center;
     margin-top: 20px;
-    font-size: 1.4em;
+    font-size: 1.3em; /* PIENENNETTY */
     text-shadow: 1px 1px 1px rgba(0,0,0,0.6);
 }
 
@@ -65,23 +63,18 @@ body {
     border: none;
     height: 1px;
     background-color: #2A381C;
-    margin: 30px 0;
+    margin: 20px 0; /* TIIVISTETTY */
 }
 
 
 /* === SOVELLUKSEN ELEMENTTIEN TYYLIT (UUDET) === */
 
-.container {
-    padding: 0 10px; /* Pieni sisennys laatikon reunoista */
-}
-
 /* Syöttökentät ja valikot */
 input[type="text"], textarea, select {
-    flex-grow: 1;
-    padding: 12px;
+    padding: 10px; /* TIIVISTETTY */
     border: 1px solid #2A381C;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 15px; /* TIIVISTETTY */
     width: 100%;
     box-sizing: border-box;
     background-color: #2A381C;
@@ -89,46 +82,29 @@ input[type="text"], textarea, select {
     font-family: 'Georgia', serif;
 }
 
-input[type="text"]::placeholder, textarea::placeholder {
-    color: #cccccc;
-    opacity: 0.7;
-}
-
 /* Napit */
 button {
-    padding: 12px 15px;
+    padding: 10px 15px; /* TIIVISTETTY */
     border: 1px solid #90EE90;
     background-color: transparent;
     color: #90EE90;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px; /* TIIVISTETTY */
     font-family: 'Georgia', serif;
     transition: background-color 0.2s, color 0.2s;
     flex-shrink: 0;
 }
 
-button:hover {
-    background-color: #90EE90;
-    color: #1a2015;
-}
-
-#optimizeRouteBtn {
-    background-color: #FFD700;
-    color: #1a2015;
-    border-color: #FFD700;
-    font-weight: bold;
-}
-
-#optimizeRouteBtn:hover {
-    background-color: #e6c200;
-}
+button:hover { background-color: #90EE90; color: #1a2015; }
+#optimizeRouteBtn { background-color: #FFD700; color: #1a2015; border-color: #FFD700; font-weight: bold; }
+#optimizeRouteBtn:hover { background-color: #e6c200; }
 
 /* Asettelut ja ryhmittelyt */
-.controls, .add-municipality, .add-cache {
+.controls, .add-cache {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 15px; /* TIIVISTETTY */
     align-items: center;
 }
 
@@ -137,111 +113,62 @@ button:hover {
     border: 1px solid #556B2F;
     padding: 15px;
     border-radius: 8px;
-    margin-bottom: 20px;
+    margin-bottom: 15px; /* TIIVISTETTY */
 }
 
-.bulk-add h3 {
-    margin: 0 0 10px 0;
-    text-align: center;
-    color: #E6E6E6;
-    font-size: 1.1em;
+/* UUDET TYYLIT NUMEROKENTÄLLE */
+.order-and-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1;
 }
+
+.order-number {
+    width: 50px;
+    padding: 6px;
+    font-size: 1em;
+    text-align: center;
+    background-color: #2A381C;
+    color: #FFFFFF;
+    border: 1px solid #556B2F;
+    border-radius: 4px;
+    -moz-appearance: textfield; /* Poistaa nuolinapit Firefoxissa */
+}
+.order-number::-webkit-outer-spin-button,
+.order-number::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Poistaa nuolinapit Chromessa */
+    margin: 0;
+}
+
 
 /* Kuntien ja kätköjen listat */
-ul {
-    list-style: none;
-    padding: 0;
-}
-
 .municipality-item {
     background: #4a5c3a;
     border: 1px solid #2A381C;
-    padding: 15px;
-    margin-bottom: 10px;
+    padding: 10px 15px; /* TIIVISTETTY */
+    margin-bottom: 8px; /* TIIVISTETTY */
     border-radius: 5px;
     cursor: grab;
 }
+.municipality-header { font-size: 1.1em; /* TIIVISTETTY */ }
+.cache-list { margin-top: 10px; /* TIIVISTETTY */ }
+.cache-item { padding: 6px 5px; /* TIIVISTETTY */ }
 
-.municipality-item.dragging {
-    opacity: 0.8;
-    border: 1px dashed #FFD700;
-}
-
-.municipality-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #FFFFFF;
-}
-
-.cache-list {
-    padding-left: 0;
-    margin-top: 15px;
-}
-
-.cache-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 5px;
-    border-top: 1px solid #556B2F;
-}
-
-.cache-info span.done {
-    text-decoration: line-through;
-    color: #bbbbbb;
-}
-
-.cache-type {
-    font-size: 0.8em;
-    background-color: #2A381C;
-    color: #dddddd;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-right: 8px;
-    white-space: nowrap;
-}
-
-/* Pienet toiminnot (edit/delete) */
-.cache-actions button, .municipality-header .actions button {
-    background: none;
-    border: none;
-    font-size: 1.2em;
-    padding: 0 4px;
-    color: #cccccc;
-}
-
-.cache-actions button:hover, .municipality-header .actions button:hover {
-    color: #FFD700;
-}
-
-.route-result {
-    margin: 15px 0;
-    padding: 12px;
-    background-color: #2A381C;
-    border-left: 4px solid #90EE90;
-    word-wrap: break-word;
-    color: #FFFFFF;
-}
-
-.route-result a {
-    color: #FFD700;
-    font-weight: bold;
-}
+/* Muut vanhat tyylit säilyvät ennallaan */
+.municipality-item.dragging { opacity: 0.8; border: 1px dashed #FFD700; }
+.municipality-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #FFFFFF; }
+.cache-list { padding-left: 0; }
+.cache-item { display: flex; align-items: center; border-top: 1px solid #556B2F; }
+.cache-info span.done { text-decoration: line-through; color: #bbbbbb; }
+.cache-type { font-size: 0.8em; background-color: #2A381C; color: #dddddd; padding: 2px 8px; border-radius: 10px; margin-right: 8px; white-space: nowrap; }
+.cache-actions button, .municipality-header .actions button { background: none; border: none; font-size: 1.2em; padding: 0 4px; color: #cccccc; }
+.cache-actions button:hover, .municipality-header .actions button:hover { color: #FFD700; }
+.route-result { margin: 15px 0; padding: 12px; background-color: #2A381C; border-left: 4px solid #90EE90; word-wrap: break-word; color: #FFFFFF; }
+.route-result a { color: #FFD700; font-weight: bold; }
 
 /* Responsiivisuus */
 @media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-    .sisalto-laatikko {
-        margin: 15px auto;
-    }
-    .controls, .add-cache {
-        flex-direction: column;
-    }
-    button {
-        width: 100%;
-    }
+    .controls, .add-cache { flex-direction: column; }
+    button { width: 100%; }
 }
