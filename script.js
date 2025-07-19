@@ -4,6 +4,7 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 
 document.addEventListener('DOMContentLoaded', () => {
     // === FIREBASE-ASETUKSET ===
+    // TÄRKEÄÄ: LIITÄ UUSI, RAJOITETTU API-AVAIMESI TÄHÄN!
     const firebaseConfig = {
         apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
         authDomain: "geokatkosuunnittelija.firebaseapp.com",
@@ -14,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         appId: "1:745498680990:web:869074eb0f0b72565ca58f"
     };
 
+    // Alustetaan Firebase modernilla syntaksilla
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
@@ -32,24 +34,16 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === FUNKTIOT ===
     const saveData = () => {
+        // Käyttää modernia set-funktiota
         set(ref(database), {
             municipalities: municipalities,
             startLocation: startLocationInput.value
-        });
-    };
-    
-    const normalizeOrderNumbers = () => {
-        municipalities.forEach((mun, index) => {
-            mun.order = index + 1;
         });
     };
 
     const render = () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
-        
-        municipalities.sort((a,b) => (a.order || 0) - (b.order || 0));
-
         municipalities.forEach((municipality, munIndex) => {
             const munItem = document.createElement('li');
             munItem.className = 'municipality-item';
@@ -69,11 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </li>
             `).join('');
 
-            // KORJATTU OSA ALKAA: Palautettu yksinkertaisempi rakenne ilman turhaa "wrapper" diviä
             munItem.innerHTML = `
                 <div class="municipality-header">
-                    <input type="number" class="municipality-order" value="${municipality.order}" data-mun-index="${munIndex}" min="1">
-                    <span class="municipality-name">${municipality.name}</span>
+                    <span>${municipality.name}</span>
                     <div class="actions">
                         <button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button>
                         <button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button>
@@ -86,10 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="add-cache-btn" data-mun-index="${munIndex}">+</button>
                 </div>
             `;
-            // KORJATTU OSA LOPPUU
             municipalityList.appendChild(munItem);
         });
     };
+
 
     // === DATAN KUUNTELIJA FIREBASESTA ===
     onValue(ref(database), (snapshot) => {
@@ -100,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             startLocationInput.value = startLocation;
             render();
         } else {
+            // Jos tietokanta on täysin tyhjä, alustetaan tyhjillä arvoilla
             municipalities = [];
             startLocation = 'Lahti';
             render();
@@ -110,12 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!municipalities) municipalities = [];
         const text = bulkAddInput.value.trim();
         if (!text) return;
-        const lastOrder = municipalities.length > 0 ? Math.max(...municipalities.map(m => m.order || 0)) : 0;
 
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
-        newNames.forEach((name, index) => {
+        newNames.forEach(name => {
             if (!municipalities.some(m => m.name.toLowerCase() === name.toLowerCase())) {
-                municipalities.push({ name: name, caches: [], order: lastOrder + index + 1 });
+                municipalities.push({ name: name, caches: [] });
             }
         });
 
@@ -125,19 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === TAPAHTUMANKÄSITTELIJÄT ===
     bulkAddBtn.addEventListener('click', handleBulkAdd);
-
-    municipalityList.addEventListener('change', (e) => {
-        if (e.target.classList.contains('municipality-order')) {
-            const munIndex = parseInt(e.target.dataset.munIndex, 10);
-            const newOrder = parseInt(e.target.value, 10);
-            
-            municipalities[munIndex].order = newOrder;
-            municipalities.sort((a,b) => (a.order || 0) - (b.order || 0));
-            
-            normalizeOrderNumbers();
-            saveData();
-        }
-    });
 
     municipalityList.addEventListener('click', (e) => {
         const targetButton = e.target.closest('button');
@@ -150,13 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
 
         if (button.classList.contains('edit-municipality-btn')) {
-             const newName = prompt("Muokkaa kunnan nimeä:", municipalities[munIndex].name);
+            const newName = prompt("Muokkaa kunnan nimeä:", municipalities[munIndex].name);
             if (newName && newName.trim()) municipalities[munIndex].name = newName.trim();
         } else if (button.classList.contains('delete-municipality-btn')) {
-            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
-                municipalities.splice(munIndex, 1);
-                normalizeOrderNumbers(); 
-            }
+            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) municipalities.splice(munIndex, 1);
         } else if (button.classList.contains('add-cache-btn')) {
             const container = button.closest('.add-cache');
             const nameInput = container.querySelector('.new-cache-name');
@@ -178,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     startLocationInput.addEventListener('change', () => {
+        // Tallennetaan vain lähtöpaikka, ei koko dataa turhaan
         set(ref(database, 'startLocation'), startLocationInput.value);
     });
 
@@ -185,6 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedIndex = null;
 
     municipalityList.addEventListener('dragstart', (e) => {
+        // Varmistetaan, että raahaus alkaa vain listan itemistä, ei napeista
         if(e.target.classList.contains('municipality-item')) {
             draggedIndex = parseInt(e.target.dataset.munIndex, 10);
             setTimeout(() => e.target.classList.add('dragging'), 0);
@@ -193,10 +171,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    municipalityList.addEventListener('dragover', (e) => e.preventDefault());
+    municipalityList.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(municipalityList, e.clientY);
+        const draggingElement = document.querySelector('.dragging');
+        if (draggingElement) {
+            if (afterElement == null) {
+                municipalityList.appendChild(draggingElement);
+            } else {
+                municipalityList.insertBefore(draggingElement, afterElement);
+            }
+        }
+    });
     
     municipalityList.addEventListener('dragend', (e) => {
-        if(e.target.classList.contains('municipality-item')) e.target.classList.remove('dragging');
+        if(e.target.classList.contains('municipality-item')) {
+            e.target.classList.remove('dragging');
+        }
     });
 
     municipalityList.addEventListener('drop', (e) => {
@@ -207,12 +198,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newIndex > -1) {
                 const [removed] = municipalities.splice(draggedIndex, 1);
                 municipalities.splice(newIndex, 0, removed);
-                normalizeOrderNumbers(); 
                 saveData();
             }
         }
     });
-    
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.municipality-item:not(.dragging)')];
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
     // === REITIN OPTIMOINTI ===
     optimizeRouteBtn.addEventListener('click', async () => {
         const startLoc = startLocationInput.value.trim();
@@ -253,8 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const optimizedOrder = route.slice(1);
         municipalities.sort((a, b) => optimizedOrder.indexOf(a.name) - optimizedOrder.indexOf(b.name));
-        
-        normalizeOrderNumbers(); 
         
         const mapsUrl = `https://www.google.com/maps/dir/${route.map(r => encodeURIComponent(r)).join('/')}`;
         routeResultDiv.innerHTML = `✅ Reitti optimoitu! <a href="${mapsUrl}" target="_blank">Avaa reitti Google Mapsissa</a>`;
