@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === SOVELLUKSEN TILA ===
     let municipalities = [];
     let startLocation = 'Lahti';
-    
+
     // === FUNKTIOT ===
     const saveData = () => {
         set(ref(database), {
@@ -51,16 +51,27 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.dataset.munIndex = munIndex;
 
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
-                // === UUSI LISÄYS: Tunnista GC-koodit ja tee niistä linkkejä ===
+                // === MUUTETTU LOGIIKKA: Tunnista GC-koodi ja linkitä vain se ===
                 const cacheName = cache.name.trim();
                 let cacheNameDisplay;
 
                 // Tarkistetaan, alkaako nimi "GC" (kirjainkoosta riippumatta)
                 if (cacheName.toUpperCase().startsWith('GC')) {
-                    // Jos alkaa, luodaan linkki. target="_blank" avaa linkin uuteen välilehteen.
-                    cacheNameDisplay = `<a href="https://coord.info/${cacheName}" target="_blank" rel="noopener noreferrer">${cacheName}</a>`;
+                    const spaceIndex = cacheName.indexOf(' ');
+
+                    if (spaceIndex === -1) {
+                        // Välilyöntiä ei löytynyt, koko nimi on linkki (esim. "GC12345")
+                        cacheNameDisplay = `<a href="https://coord.info/${cacheName}" target="_blank" rel="noopener noreferrer">${cacheName}</a>`;
+                    } else {
+                        // Välilyönti löytyi, jaetaan nimi koodiin ja kuvaukseen
+                        const gcCode = cacheName.substring(0, spaceIndex);
+                        const description = cacheName.substring(spaceIndex); // Sisältää välilyönnin
+
+                        // Luodaan linkki vain koodiosasta ja lisätään kuvaus perään
+                        cacheNameDisplay = `<a href="https://coord.info/${gcCode}" target="_blank" rel="noopener noreferrer">${gcCode}</a>${description}`;
+                    }
                 } else {
-                    // Muuten näytetään nimi normaalina tekstinä.
+                    // Ei ole GC-koodi, näytetään normaalina tekstinä.
                     cacheNameDisplay = cacheName;
                 }
                 // =============================================================
@@ -137,9 +148,11 @@ document.addEventListener('DOMContentLoaded', () => {
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
     municipalityList.addEventListener('click', (e) => {
-        // Estetään linkin toiminta, jos klikataan jotain muuta kuin linkkiä itsessään
-        if (!e.target.matches('a')) {
-           e.preventDefault();
+        // Estetään tapahtumien "kupliminen" ylös, jos klikataan linkkiä,
+        // jotta koko rivin muut tapahtumat eivät laukea turhaan.
+        if (e.target.matches('a')) {
+           e.stopPropagation();
+           return;
         }
 
         const targetButton = e.target.closest('button');
@@ -168,8 +181,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (button.classList.contains('delete-cache-btn')) {
             if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) municipalities[munIndex].caches.splice(cacheIndex, 1);
         } else if (button.classList.contains('edit-cache-btn')) {
-            const newName = prompt("Muokkaa kätkön nimeä:", municipalities[munIndex].caches[cacheIndex].name);
-            if (newName && newName.trim()) municipalities[munIndex].caches[cacheIndex].name = newName.trim();
+            const oldCache = municipalities[munIndex].caches[cacheIndex];
+            const newName = prompt("Muokkaa kätkön nimeä:", oldCache.name);
+            if (newName && newName.trim()) oldCache.name = newName.trim();
         } else if (button.type === 'checkbox') {
             municipalities[munIndex].caches[cacheIndex].done = button.checked;
         }
