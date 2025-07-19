@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // UUTTA: Funktio, joka varmistaa, että järjestysnumerot ovat kunnossa (1, 2, 3...)
     const normalizeOrderNumbers = () => {
         municipalities.forEach((mun, index) => {
             mun.order = index + 1;
@@ -49,7 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
         
-        // Järjestetään aina ennen renderöintiä varmuuden vuoksi
         municipalities.sort((a,b) => (a.order || 0) - (b.order || 0));
 
         municipalities.forEach((municipality, munIndex) => {
@@ -71,10 +69,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </li>
             `).join('');
 
+            // KORJATTU OSA ALKAA: Numerokenttä ja nimi on nyt kääritty omaan div-elementtiin
             munItem.innerHTML = `
                 <div class="municipality-header">
-                    <input type="number" class="municipality-order" value="${municipality.order}" data-mun-index="${munIndex}" min="1">
-                    <span class="municipality-name">${municipality.name}</span>
+                    <div class="municipality-info">
+                        <input type="number" class="municipality-order" value="${municipality.order}" data-mun-index="${munIndex}" min="1">
+                        <span class="municipality-name">${municipality.name}</span>
+                    </div>
                     <div class="actions">
                         <button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button>
                         <button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button>
@@ -87,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="add-cache-btn" data-mun-index="${munIndex}">+</button>
                 </div>
             `;
+            // KORJATTU OSA LOPPUU
             municipalityList.appendChild(munItem);
         });
     };
@@ -115,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
         newNames.forEach((name, index) => {
             if (!municipalities.some(m => m.name.toLowerCase() === name.toLowerCase())) {
-                // UUTTA: Lisätään järjestysnumero
                 municipalities.push({ name: name, caches: [], order: lastOrder + index + 1 });
             }
         });
@@ -127,17 +128,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // === TAPAHTUMANKÄSITTELIJÄT ===
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
-    // UUTTA: Kuunnellaan 'change' eventtiä numerokentissä, 'click' ei toimi niissä
     municipalityList.addEventListener('change', (e) => {
         if (e.target.classList.contains('municipality-order')) {
             const munIndex = parseInt(e.target.dataset.munIndex, 10);
             const newOrder = parseInt(e.target.value, 10);
             
-            // Annetaan väliaikainen järjestysnumero ja järjestetään sen mukaan
             municipalities[munIndex].order = newOrder;
             municipalities.sort((a,b) => (a.order || 0) - (b.order || 0));
             
-            // Normaalistetaan numerot (1, 2, 3...) ja tallennetaan
             normalizeOrderNumbers();
             saveData();
         }
@@ -159,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (button.classList.contains('delete-municipality-btn')) {
             if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
                 municipalities.splice(munIndex, 1);
-                normalizeOrderNumbers(); // UUTTA: Päivitetään numerot poiston jälkeen
+                normalizeOrderNumbers(); 
             }
         } else if (button.classList.contains('add-cache-btn')) {
             const container = button.closest('.add-cache');
@@ -211,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newIndex > -1) {
                 const [removed] = municipalities.splice(draggedIndex, 1);
                 municipalities.splice(newIndex, 0, removed);
-                normalizeOrderNumbers(); // UUTTA: Päivitetään numerot raahauksen jälkeen
+                normalizeOrderNumbers(); 
                 saveData();
             }
         }
@@ -219,7 +217,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === REITIN OPTIMOINTI ===
     optimizeRouteBtn.addEventListener('click', async () => {
-        // ... (Tämä funktio pysyy samana, mutta lopussa päivitetään numerot) ...
         const startLoc = startLocationInput.value.trim();
         if (!startLoc) return alert('Syötä lähtöpaikka!');
         if (!municipalities || municipalities.length === 0) return alert('Lisää vähintään yksi kunta.');
@@ -259,7 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const optimizedOrder = route.slice(1);
         municipalities.sort((a, b) => optimizedOrder.indexOf(a.name) - optimizedOrder.indexOf(b.name));
         
-        normalizeOrderNumbers(); // UUTTA: Päivitetään numerot optimoinnin jälkeen
+        normalizeOrderNumbers(); 
         
         const mapsUrl = `https://www.google.com/maps/dir/${route.map(r => encodeURIComponent(r)).join('/')}`;
         routeResultDiv.innerHTML = `✅ Reitti optimoitu! <a href="${mapsUrl}" target="_blank">Avaa reitti Google Mapsissa</a>`;
