@@ -36,7 +36,7 @@ h3 {
     align-items: center;
 }
 
-input[type="text"], textarea, select {
+input[type="text"], input[type="number"], textarea, select {
     flex-grow: 1;
     padding: 12px;
     border: 1px solid #ddd;
@@ -109,6 +109,21 @@ ul {
     font-weight: bold;
 }
 
+/* Uusi tyyli numerokentälle */
+.municipality-order {
+    width: 60px;
+    flex-grow: 0;
+    flex-shrink: 0;
+    margin-right: 15px;
+    text-align: center;
+    font-weight: bold;
+    border: 1px solid #ccc;
+}
+
+.municipality-name {
+    flex-grow: 1; /* Varmistaa, että nimi vie lopun tilan */
+}
+
 .cache-list {
     list-style: none;
     padding-left: 0;
@@ -156,6 +171,7 @@ ul {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
+    margin-left: 10px; /* Tilaa nimelle */
 }
 
 .cache-actions button, .municipality-header .actions button {
@@ -217,5 +233,9 @@ ul {
         flex-basis: 100%;
         margin-left: 28px; /* Tilaa checkboxille */
         margin-bottom: 8px;
+    }
+    .municipality-order {
+        width: 45px;
+        margin-right: 10px;
     }
 }
