@@ -3,14 +3,15 @@ body {
     background-color: #f4f7f6;
     color: #333;
     margin: 0;
-    padding: 20px;
+    padding: 10px;
+    -webkit-tap-highlight-color: transparent; /* Estää napautuskorostuksen mobiilissa */
 }
 
 .container {
     max-width: 800px;
     margin: auto;
     background: white;
-    padding: 25px;
+    padding: 20px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
@@ -20,19 +21,24 @@ h1, h2, h3 {
     color: #00796b;
 }
 
+h1 {
+    font-size: 1.8em;
+}
+
 h3 {
     margin-top: 0;
 }
 
-.controls, .add-municipality {
+.controls, .add-municipality, .add-cache {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
+    align-items: center;
 }
 
-input[type="text"], textarea {
+input[type="text"], textarea, select {
     flex-grow: 1;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
@@ -45,7 +51,7 @@ textarea {
 }
 
 button {
-    padding: 10px 15px;
+    padding: 12px 15px;
     border: none;
     background-color: #00796b;
     color: white;
@@ -70,7 +76,7 @@ button:hover {
 
 .route-result {
     margin: 15px 0;
-    padding: 10px;
+    padding: 12px;
     background-color: #e0f2f1;
     border-left: 4px solid #00796b;
     word-wrap: break-word;
@@ -87,7 +93,13 @@ ul {
     padding: 15px;
     margin-bottom: 10px;
     border-radius: 5px;
+    cursor: grab; /* Osoitin kertoo raahattavuudesta */
 }
+.municipality-item.dragging {
+    opacity: 0.5;
+    background: #c8e6c9;
+}
+
 
 .municipality-header {
     display: flex;
@@ -115,11 +127,14 @@ ul {
 }
 
 .cache-item input[type="checkbox"] {
+    flex-shrink: 0;
     margin-right: 10px;
 }
 
 .cache-info {
     flex-grow: 1;
+    min-width: 0; /* Estää ylivuodon flexboxissa */
+    word-break: break-all;
 }
 
 .cache-info span.done {
@@ -134,27 +149,32 @@ ul {
     padding: 2px 6px;
     border-radius: 10px;
     margin-right: 8px;
+    white-space: nowrap;
 }
 
-.cache-actions button {
+.cache-actions, .municipality-header .actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.cache-actions button, .municipality-header .actions button {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 1em;
-    padding: 2px 5px;
-    color: #555;
+    font-size: 1.1em;
+    padding: 0 4px;
+    color: #888;
+    transition: color 0.2s;
 }
 
-.cache-actions button:hover {
-    color: #000;
+.cache-actions button:hover, .municipality-header .actions button:hover {
+    color: #e53935;
+}
+.municipality-header .actions .edit-municipality-btn:hover {
+    color: #00796b;
 }
 
-.add-cache {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-    align-items: center;
-}
 
 .bulk-add {
     background-color: #fafafa;
@@ -170,25 +190,32 @@ ul {
     margin-top: 10px;
 }
 
-.municipality-header .actions {
-    display: flex;
-    gap: 8px;
-}
-
-.municipality-header .actions button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1em;
-    padding: 0;
-    color: #888;
-    transition: color 0.2s;
-}
-
-.municipality-header .actions button:hover {
-    color: #e53935;
-}
-
-.municipality-header .actions .edit-municipality-btn:hover {
-    color: #00796b;
+/* Mobiiliresponsiivisuus */
+@media (max-width: 600px) {
+    body {
+        padding: 5px;
+    }
+    .container {
+        padding: 15px;
+    }
+    h1 {
+        font-size: 1.5em;
+    }
+    .controls, .add-cache {
+        flex-direction: column;
+    }
+    button {
+        width: 100%;
+    }
+    .add-cache select {
+        width: 100%;
+    }
+    .cache-item {
+        flex-wrap: wrap;
+    }
+    .cache-info {
+        flex-basis: 100%;
+        margin-left: 28px; /* Tilaa checkboxille */
+        margin-bottom: 8px;
+    }
 }
