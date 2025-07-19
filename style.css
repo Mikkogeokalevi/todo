@@ -3,14 +3,14 @@ body {
     background-color: #1a2015;
     font-family: 'Georgia', serif;
     margin: 0;
-    padding: 20px;
+    padding: 10px; /* Tiivistetty ylä- ja alareunaa */
     transition: padding 0.3s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .sisalto-laatikko {
     max-width: 800px;
-    margin: 30px auto;
+    margin: 15px auto; /* Tiivistetty ylä- ja alareunaa */
     padding: 10px;
     background-color: #3D4F2B;
     border: 3px solid #11150C;
@@ -27,29 +27,31 @@ body {
     transition: font-size 0.3s ease;
 }
 
-/* --- Logo ja otsikot --- */
+/* --- Logo ja otsikot (MUOKATTU) --- */
 .logo-container {
-    text-align: center;
-    margin-bottom: 15px;
+    display: flex; /* Asettaa elementit vierekkäin */
+    align-items: center; /* Tasaa pystysuunnassa keskelle */
+    margin-bottom: 20px;
+    gap: 15px; /* Lisää tilaa logon ja otsikon väliin */
 }
 
 .logo {
-    width: 100px;
-    height: 100px;
+    width: 60px; /* Pienennetty logoa */
+    height: 60px; /* Pienennetty logoa */
     border: 2px solid #90EE90;
     border-radius: 50%;
     box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
     background-color: #3D4F2B;
     padding: 3px;
+    flex-shrink: 0; /* Estää logoa kutistumasta */
 }
 
 .paaotsikko {
     color: #90EE90;
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 25px;
+    text-align: left; /* Tasaus vasemmalle, jotta asettuu nätisti logon viereen */
+    margin: 0; /* Poistettu marginaalit */
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    font-size: 1.6em;
+    font-size: 1.3em; /* Pienennetty fonttikokoa */
     letter-spacing: 0.5px;
 }
 
@@ -65,14 +67,14 @@ body {
     border: none;
     height: 1px;
     background-color: #2A381C;
-    margin: 30px 0;
+    margin: 20px 0; /* Tiivistetty marginaaleja */
 }
 
 
-/* === SOVELLUKSEN ELEMENTTIEN TYYLIT (UUDET) === */
+/* === SOVELLUKSEN ELEMENTTIEN TYYLIT === */
 
 .container {
-    padding: 0 10px; /* Pieni sisennys laatikon reunoista */
+    padding: 0 10px;
 }
 
 /* Syöttökentät ja valikot */
@@ -106,11 +108,25 @@ button {
     font-family: 'Georgia', serif;
     transition: background-color 0.2s, color 0.2s;
     flex-shrink: 0;
+    width: 100%; /* Tehdään napeista oletuksena täysleveitä mobiilissa */
+    box-sizing: border-box;
 }
 
 button:hover {
     background-color: #90EE90;
     color: #1a2015;
+}
+
+/* UUSI TYYLI: Nappi, joka näyttää/piilottaa elementtejä */
+.toggle-button {
+    background-color: #4a5c3a;
+    border-color: #556B2F;
+    margin-bottom: 15px;
+}
+
+.toggle-button:hover {
+    background-color: #556B2F;
+    color: #FFFFFF;
 }
 
 #optimizeRouteBtn {
@@ -130,6 +146,7 @@ button:hover {
     gap: 10px;
     margin-bottom: 20px;
     align-items: center;
+    flex-wrap: wrap; /* Sallii elementtien rivittyä, jos ei mahdu */
 }
 
 .bulk-add {
@@ -140,12 +157,22 @@ button:hover {
     margin-bottom: 20px;
 }
 
+/* UUSI TYYLI: Oletuksena piilotettu elementti */
+.bulk-add.hidden {
+    display: none;
+}
+
 .bulk-add h3 {
     margin: 0 0 10px 0;
     text-align: center;
     color: #E6E6E6;
     font-size: 1.1em;
 }
+
+.bulk-add button {
+    margin-top: 10px;
+}
+
 
 /* Kuntien ja kätköjen listat */
 ul {
@@ -188,6 +215,10 @@ ul {
     border-top: 1px solid #556B2F;
 }
 
+.cache-info {
+    flex-grow: 1; /* Antaa tämän elementin viedä saatavilla olevan tilan */
+}
+
 .cache-info span.done {
     text-decoration: line-through;
     color: #bbbbbb;
@@ -210,10 +241,17 @@ ul {
     font-size: 1.2em;
     padding: 0 4px;
     color: #cccccc;
+    width: auto; /* Ylikirjoitetaan yleinen napin leveys */
 }
 
 .cache-actions button:hover, .municipality-header .actions button:hover {
     color: #FFD700;
+}
+
+.add-cache button {
+    width: auto; /* Estää plus-nappia venymästä */
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 .route-result {
@@ -231,17 +269,12 @@ ul {
 }
 
 /* Responsiivisuus */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
-    .sisalto-laatikko {
-        margin: 15px auto;
-    }
-    .controls, .add-cache {
-        flex-direction: column;
-    }
+@media (min-width: 600px) {
+    /* Palautetaan nappien leveys isommilla näytöillä */
     button {
-        width: 100%;
+        width: auto;
+    }
+    .toggle-button {
+      width: 100%; /* Pidetään tämä täysleveänä */
     }
 }
