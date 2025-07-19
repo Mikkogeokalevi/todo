@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geokätköreissun Suunnittelija</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Geokätköreissun Suunnittelija</h1>
+
+        <div class="controls">
+            <input type="text" id="startLocation" placeholder="Syötä lähtöpaikka (esim. Lahti)">
+            <button id="optimizeRouteBtn">🚀 Optimoi ja järjestä reitti</button>
+        </div>
+        
+        <div id="routeResult" class="route-result"></div>
+
+        <hr>
+
+        <h2>Löydettävät kunnat ja kätköt</h2>
+        <div class="bulk-add">
+            <h3>Lisää kunnat listana</h3>
+            <textarea id="bulkAddMunicipalities" rows="5" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
+            <button id="bulkAddBtn">Lisää listasta</button>
+        </div>
+
+        <ul id="municipalityList">
+            </ul>
+
+    </div>
+    
+    <template id="cacheTypeSelector">
+        <select class="cache-type-selector">
+            <option value="Tradi">Tradi</option>
+            <option value="Multi">Multi</option>
+            <option value="Mysti">Mysti</option>
+            <option value="Letter">Letter</option>
+            <option value="Wherigo">Wherigo</option>
+            <option value="Event">Event</option>
+            <option value="Muu">Muu</option>
+        </select>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>
