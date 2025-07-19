@@ -1,4 +1,3 @@
-// Importoi tarvittavat funktiot Firebase SDK:sta
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
@@ -25,10 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const optimizeRouteBtn = document.getElementById('optimizeRouteBtn');
     const routeResultDiv = document.getElementById('routeResult');
     const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
+    // UUDET ELEMENTIT
+    const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
+    const bulkAddSection = document.getElementById('bulkAddSection');
+
 
     // === SOVELLUKSEN TILA ===
     let municipalities = [];
-    let startLocation = 'Lahti';
     
     // === FUNKTIOT ===
     const saveData = () => {
@@ -38,29 +40,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // UUSI: Funktio kuntien järjestämiseen numeron mukaan
     const sortMunicipalities = () => {
         if (!municipalities) return;
-        municipalities.sort((a, b) => {
-            const orderA = a.order !== undefined ? a.order : Infinity;
-            const orderB = b.order !== undefined ? b.order : Infinity;
-            return orderA - orderB;
-        });
+        municipalities.sort((a, b) => (a.order || 0) - (b.order || 0));
     };
 
     const render = () => {
-        // Järjestetään kunnat aina ennen renderöintiä
         sortMunicipalities();
-
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
         
-        municipalities.forEach((municipality, munIndex) => {
+        municipalities.forEach((municipality) => {
             const munItem = document.createElement('li');
             munItem.className = 'municipality-item';
-            munItem.draggable = true;
-            // Käytetään nyt kunnan uniikkia ID:tä indeksin sijaan
-            munItem.dataset.id = municipality.id; 
+            // POISTETTU: draggable = true
 
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => `
                 <li class="cache-item">
@@ -75,7 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </li>
             `).join('');
 
-            // MUOKATTU: Lisätty numerokenttä ja data-id-attribuutit
             munItem.innerHTML = `
                 <div class="municipality-header">
                     <div class="order-and-name">
@@ -103,17 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = snapshot.val();
         if (data) {
             municipalities = data.municipalities || [];
-            startLocation = data.startLocation || 'Lahti';
-            startLocationInput.value = startLocation;
-            render();
-        } else {
-            municipalities = [];
-            startLocation = 'Lahti';
+            startLocationInput.value = data.startLocation || 'Lahti';
             render();
         }
     });
     
-    // MUOKATTU: Lisätään kunnalle uniikki ID ja järjestysnumero
     const handleBulkAdd = () => {
         if (!municipalities) municipalities = [];
         const text = bulkAddInput.value.trim();
@@ -122,43 +108,70 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingNames = new Set(municipalities.map(m => m.name.toLowerCase()));
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
         
+        const maxOrder = municipalities.length > 0 ? Math.max(...municipalities.map(m => m.order || 0)) : 0;
+        let currentOrder = maxOrder;
+
         newNames.forEach(name => {
             if (!existingNames.has(name.toLowerCase())) {
-                const maxOrder = municipalities.length > 0 ? Math.max(...municipalities.map(m => m.order || 0)) : 0;
+                currentOrder++;
                 municipalities.push({ 
-                    id: Date.now() + Math.random(), // Uniikki ID
+                    id: Date.now() + Math.random(),
                     name: name, 
                     caches: [],
-                    order: maxOrder + 1 // Uusi järjestysnumero
+                    order: currentOrder
                 });
             }
         });
 
         bulkAddInput.value = '';
+        bulkAddSection.classList.add('hidden'); // Piilota lisäyksen jälkeen
         saveData();
     };
 
     // === TAPAHTUMANKÄSITTELIJÄT ===
+
+    // Nappi kuntien lisäysosion näyttämiselle/piilottamiselle
+    toggleBulkAddBtn.addEventListener('click', () => {
+        bulkAddSection.classList.toggle('hidden');
+    });
+
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
-    // Yhdistetään 'click' ja 'change' kuuntelijat
-    municipalityList.addEventListener('input', (e) => {
-        // Kuunnellaan vain 'change' tai 'blur' numerokentälle, mutta 'input' on ok nopeaan testaukseen
+    // UUSI, LUOTETTAVA LOGIIKKA NUMEROJÄRJESTYSTÄ VARTEN
+    municipalityList.addEventListener('change', (e) => {
         if (e.target.classList.contains('order-number')) {
             const munId = e.target.dataset.id;
             const newOrder = parseInt(e.target.value, 10);
-            const munIndex = municipalities.findIndex(m => m.id == munId);
-            if (munIndex !== -1) {
-                municipalities[munIndex].order = isNaN(newOrder) ? municipalities[munIndex].order : newOrder;
-                sortMunicipalities(); // Järjestetään heti
-                saveData(); // Tallentaa ja triggeröi renderöinnin
+
+            if (isNaN(newOrder) || newOrder < 1) {
+                // Palauta vanha arvo, jos syöte on virheellinen
+                render(); 
+                return;
             }
+
+            const itemToMoveIndex = municipalities.findIndex(m => m.id == munId);
+            if (itemToMoveIndex === -1) return;
+
+            // 1. Ota siirrettävä kunta talteen ja poista se listalta
+            const [itemToMove] = municipalities.splice(itemToMoveIndex, 1);
+            
+            // 2. Lisää kunta uuteen paikkaan (varmista, ettei mennä yli rajojen)
+            const newIndex = Math.max(0, Math.min(newOrder - 1, municipalities.length));
+            municipalities.splice(newIndex, 0, itemToMove);
+            
+            // 3. Päivitä KAIKKIEN kuntien järjestysnumerot vastaamaan uutta järjestystä
+            municipalities.forEach((mun, index) => {
+                mun.order = index + 1;
+            });
+            
+            // 4. Tallenna ja renderöi
+            saveData();
         }
     });
 
+
     municipalityList.addEventListener('click', (e) => {
-        const target = e.target;
-        const button = target.closest('button, input[type="checkbox"]');
+        const button = e.target.closest('button, input[type="checkbox"]');
         if (!button) return;
 
         const munId = button.dataset.id || button.dataset.munId;
@@ -171,10 +184,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (button.classList.contains('edit-municipality-btn')) {
             const newName = prompt("Muokkaa kunnan nimeä:", municipalities[munIndex].name);
-            if (newName && newName.trim()) municipalities[munIndex].name = newName.trim();
+            if (newName && newName.trim()) {
+                municipalities[munIndex].name = newName.trim();
+                saveData();
+            }
         } else if (button.classList.contains('delete-municipality-btn')) {
             if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
                 municipalities.splice(munIndex, 1);
+                // Päivitä järjestysnumerot poiston jälkeen
+                municipalities.forEach((mun, index) => mun.order = index + 1);
+                saveData();
             }
         } else if (button.classList.contains('add-cache-btn')) {
             const container = button.closest('.add-cache');
@@ -184,102 +203,44 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
                 municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: typeSelector.value, done: false });
                 nameInput.value = '';
+                saveData();
             }
         } else if (button.classList.contains('delete-cache-btn')) {
             if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
                 municipalities[munIndex].caches.splice(cacheIndex, 1);
+                saveData();
             }
         } else if (button.classList.contains('edit-cache-btn')) {
             const newName = prompt("Muokkaa kätkön nimeä:", municipalities[munIndex].caches[cacheIndex].name);
-            if (newName && newName.trim()) municipalities[munIndex].caches[cacheIndex].name = newName.trim();
+            if (newName && newName.trim()) {
+                municipalities[munIndex].caches[cacheIndex].name = newName.trim();
+                saveData();
+            }
         } else if (button.type === 'checkbox') {
             const cacheMunIndex = municipalities.findIndex(m => m.id == button.dataset.munId);
             if (cacheMunIndex !== -1) {
                  municipalities[cacheMunIndex].caches[cacheIndex].done = button.checked;
+                 saveData();
             }
         }
-        saveData();
     });
 
     startLocationInput.addEventListener('change', () => {
         set(ref(database, 'startLocation'), startLocationInput.value);
     });
 
-    // === RAAHAA & PUDOTA -TOIMINNALLISUUS ===
-    let draggedId = null;
-
-    municipalityList.addEventListener('dragstart', (e) => {
-        if(e.target.classList.contains('municipality-item')) {
-            draggedId = e.target.dataset.id;
-            setTimeout(() => e.target.classList.add('dragging'), 0);
-        } else {
-            e.preventDefault();
-        }
-    });
-
-    municipalityList.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterElement = getDragAfterElement(municipalityList, e.clientY);
-        const draggingElement = document.querySelector('.dragging');
-        if (draggingElement) {
-            if (afterElement == null) {
-                municipalityList.appendChild(draggingElement);
-            } else {
-                municipalityList.insertBefore(draggingElement, afterElement);
-            }
-        }
-    });
-    
-    // MUOKATTU: Päivitetään järjestysnumerot pudotuksen jälkeen
-    municipalityList.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const draggingElement = document.querySelector('.dragging');
-        if (!draggingElement) return;
-        draggingElement.classList.remove('dragging');
-
-        const draggedItemIndex = municipalities.findIndex(m => m.id == draggedId);
-        const [removed] = municipalities.splice(draggedItemIndex, 1);
-        
-        const newIndex = Array.from(municipalityList.children).indexOf(draggingElement);
-        municipalities.splice(newIndex, 0, removed);
-
-        // Päivitä kaikkien kuntien järjestysnumerot
-        municipalities.forEach((mun, index) => {
-            mun.order = index + 1;
-        });
-
-        saveData(); // Tallentaa uudet järjestysnumerot ja päivittää näkymän
-    });
-
-    function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.municipality-item:not(.dragging)')];
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
+    // POISTETTU: Koko RAAHAA & PUDOTA -toiminnallisuus poistettu tarpeettomana
 
     // === REITIN OPTIMOINTI ===
     optimizeRouteBtn.addEventListener('click', async () => {
+        // ... (Tämä funktio pysyy ennallaan)
         const startLoc = startLocationInput.value.trim();
         if (!startLoc) return alert('Syötä lähtöpaikka!');
         if (!municipalities || municipalities.length === 0) return alert('Lisää vähintään yksi kunta.');
-        
-        // Varmistetaan että reitti optimoidaan nykyisessä järjestyksessä
         sortMunicipalities();
-
         routeResultDiv.textContent = 'Haetaan koordinaatteja... ⏳';
-        
         const locations = [startLoc, ...municipalities.map(m => m.name)];
         const coords = {};
-        
-        //... (Loppuosa funktiosta pysyy ennallaan, mutta pieni korjaus Google Maps -linkkiin)
-        
         for (const loc of locations) {
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(loc + ', Finland')}&format=json&limit=1`);
@@ -292,30 +253,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         }
-        
         routeResultDiv.textContent = 'Optimoidaan reittiä...';
-        
         let unvisited = [...municipalities.map(m => m.name)];
         let currentLoc = startLoc;
         const route = [startLoc];
         const distance = (p1, p2) => Math.sqrt(Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lon - p2.lon, 2));
-
         while (unvisited.length > 0) {
             let nearest = unvisited.reduce((a, b) => distance(coords[currentLoc], coords[a]) < distance(coords[currentLoc], coords[b]) ? a : b);
             route.push(nearest);
             unvisited = unvisited.filter(l => l !== nearest);
             currentLoc = nearest;
         }
-        
-        // Päivitetään kuntien järjestys optimoinnin perusteella
         const optimizedOrder = route.slice(1);
         municipalities.forEach(mun => {
             mun.order = optimizedOrder.indexOf(mun.name) + 1;
         });
-        
         const mapsUrl = `https://www.google.com/maps/dir/${route.map(r => encodeURIComponent(r)).join('/')}`;
         routeResultDiv.innerHTML = `✅ Reitti optimoitu! Järjestys päivitetty. <a href="${mapsUrl}" target="_blank">Avaa reitti Google Mapsissa</a>`;
-        
         saveData();
     });
 });
