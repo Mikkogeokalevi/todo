@@ -141,6 +141,27 @@ button:hover {
     flex-wrap: wrap;
 }
 
+.profile-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #2A381C;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.profile-controls label {
+    font-weight: bold;
+    color: #E6E6E6;
+    flex-shrink: 0;
+}
+
+.profile-controls input {
+    background-color: #3D4F2B;
+    border-color: #556B2F;
+}
+
 .bulk-add {
     background-color: #2A381C;
     border: 1px solid #556B2F;
@@ -321,7 +342,6 @@ ul {
 .actions .pgc-link:hover {
     transform: scale(1.2);
 }
-
 
 @media (min-width: 600px) {
     button {
