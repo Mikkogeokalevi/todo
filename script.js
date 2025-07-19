@@ -25,8 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const optimizeRouteBtn = document.getElementById('optimizeRouteBtn');
     const routeResultDiv = document.getElementById('routeResult');
     const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
-    
-    // UUDET ELEMENTIT PIILOTUSTOIMINNOLLE
     const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
     const bulkAddContainer = document.getElementById('bulkAddContainer');
 
@@ -52,18 +50,34 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.draggable = true;
             munItem.dataset.munIndex = munIndex;
 
-            let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => `
+            let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
+                // === UUSI LISÄYS: Tunnista GC-koodit ja tee niistä linkkejä ===
+                const cacheName = cache.name.trim();
+                let cacheNameDisplay;
+
+                // Tarkistetaan, alkaako nimi "GC" (kirjainkoosta riippumatta)
+                if (cacheName.toUpperCase().startsWith('GC')) {
+                    // Jos alkaa, luodaan linkki. target="_blank" avaa linkin uuteen välilehteen.
+                    cacheNameDisplay = `<a href="https://coord.info/${cacheName}" target="_blank" rel="noopener noreferrer">${cacheName}</a>`;
+                } else {
+                    // Muuten näytetään nimi normaalina tekstinä.
+                    cacheNameDisplay = cacheName;
+                }
+                // =============================================================
+
+                return `
                 <li class="cache-item">
                     <input type="checkbox" ${cache.done ? 'checked' : ''} data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">
                     <div class="cache-info">
-                        <div><span class="cache-type">${cache.type}</span><span class="${cache.done ? 'done' : ''}">${cache.name}</span></div>
+                        <div><span class="cache-type">${cache.type}</span><span class="${cache.done ? 'done' : ''}">${cacheNameDisplay}</span></div>
                     </div>
                     <div class="cache-actions">
                         <button class="edit-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">✏️</button>
                         <button class="delete-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">🗑️</button>
                     </div>
                 </li>
-            `).join('');
+                `;
+            }).join('');
 
             munItem.innerHTML = `
                 <div class="municipality-header">
@@ -115,20 +129,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // === TAPAHTUMANKÄSITTELIJÄT ===
-
-    // UUSI TAPAHTUMANKÄSITTELIJÄ
     toggleBulkAddBtn.addEventListener('click', () => {
         const isHidden = bulkAddContainer.classList.toggle('hidden');
-        if (isHidden) {
-            toggleBulkAddBtn.textContent = 'Lisää kunnat listana';
-        } else {
-            toggleBulkAddBtn.textContent = 'Piilota lisäysalue';
-        }
+        toggleBulkAddBtn.textContent = isHidden ? 'Lisää kunnat listana' : 'Piilota lisäysalue';
     });
 
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
     municipalityList.addEventListener('click', (e) => {
+        // Estetään linkin toiminta, jos klikataan jotain muuta kuin linkkiä itsessään
+        if (!e.target.matches('a')) {
+           e.preventDefault();
+        }
+
         const targetButton = e.target.closest('button');
         if (!targetButton && e.target.type !== 'checkbox') return;
 
@@ -230,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!startLoc) return alert('Syötä lähtöpaikka!');
         if (!municipalities || municipalities.length === 0) return alert('Lisää vähintään yksi kunta.');
         
-        routeResultDiv.style.display = 'block'; // Tehdään laatikko näkyväksi
+        routeResultDiv.style.display = 'block';
         routeResultDiv.textContent = 'Haetaan koordinaatteja... ⏳';
         
         const locations = [startLoc, ...municipalities.map(m => m.name)];
