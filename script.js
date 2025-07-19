@@ -4,9 +4,8 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 
 document.addEventListener('DOMContentLoaded', () => {
     // === FIREBASE-ASETUKSET ===
-    // TÄRKEÄÄ: LIITÄ UUSI, RAJOITETTU API-AVAIMESI TÄHÄN!
     const firebaseConfig = {
-        apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
+        apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M", // VAIHDA TÄHÄN OMA API-AVAIMESI
         authDomain: "geokatkosuunnittelija.firebaseapp.com",
         databaseURL: "https://geokatkosuunnittelija-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "geokatkosuunnittelija",
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         appId: "1:745498680990:web:869074eb0f0b72565ca58f"
     };
 
-    // Alustetaan Firebase modernilla syntaksilla
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
@@ -34,54 +32,71 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === FUNKTIOT ===
     const saveData = () => {
-        // Käyttää modernia set-funktiota
         set(ref(database), {
             municipalities: municipalities,
             startLocation: startLocationInput.value
         });
     };
+    
+    // UUSI: Funktio kuntien järjestämiseen numeron mukaan
+    const sortMunicipalities = () => {
+        if (!municipalities) return;
+        municipalities.sort((a, b) => {
+            const orderA = a.order !== undefined ? a.order : Infinity;
+            const orderB = b.order !== undefined ? b.order : Infinity;
+            return orderA - orderB;
+        });
+    };
 
     const render = () => {
+        // Järjestetään kunnat aina ennen renderöintiä
+        sortMunicipalities();
+
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
+        
         municipalities.forEach((municipality, munIndex) => {
             const munItem = document.createElement('li');
             munItem.className = 'municipality-item';
             munItem.draggable = true;
-            munItem.dataset.munIndex = munIndex;
+            // Käytetään nyt kunnan uniikkia ID:tä indeksin sijaan
+            munItem.dataset.id = municipality.id; 
 
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => `
                 <li class="cache-item">
-                    <input type="checkbox" ${cache.done ? 'checked' : ''} data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">
+                    <input type="checkbox" ${cache.done ? 'checked' : ''} data-mun-id="${municipality.id}" data-cache-index="${cacheIndex}">
                     <div class="cache-info">
                         <div><span class="cache-type">${cache.type}</span><span class="${cache.done ? 'done' : ''}">${cache.name}</span></div>
                     </div>
                     <div class="cache-actions">
-                        <button class="edit-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">✏️</button>
-                        <button class="delete-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">🗑️</button>
+                        <button class="edit-cache-btn" data-mun-id="${municipality.id}" data-cache-index="${cacheIndex}">✏️</button>
+                        <button class="delete-cache-btn" data-mun-id="${municipality.id}" data-cache-index="${cacheIndex}">🗑️</button>
                     </div>
                 </li>
             `).join('');
 
+            // MUOKATTU: Lisätty numerokenttä ja data-id-attribuutit
             munItem.innerHTML = `
                 <div class="municipality-header">
-                    <span>${municipality.name}</span>
+                    <div class="order-and-name">
+                        <input type="number" class="order-number" value="${municipality.order}" data-id="${municipality.id}">
+                        <span>${municipality.name}</span>
+                    </div>
                     <div class="actions">
-                        <button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button>
-                        <button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button>
+                        <button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-id="${municipality.id}">✏️</button>
+                        <button class="delete-municipality-btn" title="Poista kunta" data-id="${municipality.id}">🗑️</button>
                     </div>
                 </div>
                 <ul class="cache-list">${cacheHtml}</ul>
                 <div class="add-cache">
                     <input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi">
                     ${cacheTypeSelectorTemplate.innerHTML}
-                    <button class="add-cache-btn" data-mun-index="${munIndex}">+</button>
+                    <button class="add-cache-btn" data-id="${municipality.id}">+</button>
                 </div>
             `;
             municipalityList.appendChild(munItem);
         });
     };
-
 
     // === DATAN KUUNTELIJA FIREBASESTA ===
     onValue(ref(database), (snapshot) => {
@@ -92,22 +107,30 @@ document.addEventListener('DOMContentLoaded', () => {
             startLocationInput.value = startLocation;
             render();
         } else {
-            // Jos tietokanta on täysin tyhjä, alustetaan tyhjillä arvoilla
             municipalities = [];
             startLocation = 'Lahti';
             render();
         }
     });
     
+    // MUOKATTU: Lisätään kunnalle uniikki ID ja järjestysnumero
     const handleBulkAdd = () => {
         if (!municipalities) municipalities = [];
         const text = bulkAddInput.value.trim();
         if (!text) return;
 
+        const existingNames = new Set(municipalities.map(m => m.name.toLowerCase()));
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
+        
         newNames.forEach(name => {
-            if (!municipalities.some(m => m.name.toLowerCase() === name.toLowerCase())) {
-                municipalities.push({ name: name, caches: [] });
+            if (!existingNames.has(name.toLowerCase())) {
+                const maxOrder = municipalities.length > 0 ? Math.max(...municipalities.map(m => m.order || 0)) : 0;
+                municipalities.push({ 
+                    id: Date.now() + Math.random(), // Uniikki ID
+                    name: name, 
+                    caches: [],
+                    order: maxOrder + 1 // Uusi järjestysnumero
+                });
             }
         });
 
@@ -118,21 +141,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // === TAPAHTUMANKÄSITTELIJÄT ===
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
-    municipalityList.addEventListener('click', (e) => {
-        const targetButton = e.target.closest('button');
-        if (!targetButton && e.target.type !== 'checkbox') return;
+    // Yhdistetään 'click' ja 'change' kuuntelijat
+    municipalityList.addEventListener('input', (e) => {
+        // Kuunnellaan vain 'change' tai 'blur' numerokentälle, mutta 'input' on ok nopeaan testaukseen
+        if (e.target.classList.contains('order-number')) {
+            const munId = e.target.dataset.id;
+            const newOrder = parseInt(e.target.value, 10);
+            const munIndex = municipalities.findIndex(m => m.id == munId);
+            if (munIndex !== -1) {
+                municipalities[munIndex].order = isNaN(newOrder) ? municipalities[munIndex].order : newOrder;
+                sortMunicipalities(); // Järjestetään heti
+                saveData(); // Tallentaa ja triggeröi renderöinnin
+            }
+        }
+    });
 
-        const button = targetButton || e.target;
-        const munIndex = button.dataset.munIndex;
+    municipalityList.addEventListener('click', (e) => {
+        const target = e.target;
+        const button = target.closest('button, input[type="checkbox"]');
+        if (!button) return;
+
+        const munId = button.dataset.id || button.dataset.munId;
+        if (!munId) return;
+
+        const munIndex = municipalities.findIndex(m => m.id == munId);
+        if (munIndex === -1) return;
+        
         const cacheIndex = button.dataset.cacheIndex;
         
-        e.stopPropagation();
-
         if (button.classList.contains('edit-municipality-btn')) {
             const newName = prompt("Muokkaa kunnan nimeä:", municipalities[munIndex].name);
             if (newName && newName.trim()) municipalities[munIndex].name = newName.trim();
         } else if (button.classList.contains('delete-municipality-btn')) {
-            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) municipalities.splice(munIndex, 1);
+            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
+                municipalities.splice(munIndex, 1);
+            }
         } else if (button.classList.contains('add-cache-btn')) {
             const container = button.closest('.add-cache');
             const nameInput = container.querySelector('.new-cache-name');
@@ -143,28 +186,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 nameInput.value = '';
             }
         } else if (button.classList.contains('delete-cache-btn')) {
-            if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) municipalities[munIndex].caches.splice(cacheIndex, 1);
+            if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
+                municipalities[munIndex].caches.splice(cacheIndex, 1);
+            }
         } else if (button.classList.contains('edit-cache-btn')) {
             const newName = prompt("Muokkaa kätkön nimeä:", municipalities[munIndex].caches[cacheIndex].name);
             if (newName && newName.trim()) municipalities[munIndex].caches[cacheIndex].name = newName.trim();
         } else if (button.type === 'checkbox') {
-            municipalities[munIndex].caches[cacheIndex].done = button.checked;
+            const cacheMunIndex = municipalities.findIndex(m => m.id == button.dataset.munId);
+            if (cacheMunIndex !== -1) {
+                 municipalities[cacheMunIndex].caches[cacheIndex].done = button.checked;
+            }
         }
         saveData();
     });
 
     startLocationInput.addEventListener('change', () => {
-        // Tallennetaan vain lähtöpaikka, ei koko dataa turhaan
         set(ref(database, 'startLocation'), startLocationInput.value);
     });
 
     // === RAAHAA & PUDOTA -TOIMINNALLISUUS ===
-    let draggedIndex = null;
+    let draggedId = null;
 
     municipalityList.addEventListener('dragstart', (e) => {
-        // Varmistetaan, että raahaus alkaa vain listan itemistä, ei napeista
         if(e.target.classList.contains('municipality-item')) {
-            draggedIndex = parseInt(e.target.dataset.munIndex, 10);
+            draggedId = e.target.dataset.id;
             setTimeout(() => e.target.classList.add('dragging'), 0);
         } else {
             e.preventDefault();
@@ -184,23 +230,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    municipalityList.addEventListener('dragend', (e) => {
-        if(e.target.classList.contains('municipality-item')) {
-            e.target.classList.remove('dragging');
-        }
-    });
-
+    // MUOKATTU: Päivitetään järjestysnumerot pudotuksen jälkeen
     municipalityList.addEventListener('drop', (e) => {
         e.preventDefault();
         const draggingElement = document.querySelector('.dragging');
-        if (draggingElement) {
-            const newIndex = Array.from(municipalityList.children).indexOf(draggingElement);
-            if (newIndex > -1) {
-                const [removed] = municipalities.splice(draggedIndex, 1);
-                municipalities.splice(newIndex, 0, removed);
-                saveData();
-            }
-        }
+        if (!draggingElement) return;
+        draggingElement.classList.remove('dragging');
+
+        const draggedItemIndex = municipalities.findIndex(m => m.id == draggedId);
+        const [removed] = municipalities.splice(draggedItemIndex, 1);
+        
+        const newIndex = Array.from(municipalityList.children).indexOf(draggingElement);
+        municipalities.splice(newIndex, 0, removed);
+
+        // Päivitä kaikkien kuntien järjestysnumerot
+        municipalities.forEach((mun, index) => {
+            mun.order = index + 1;
+        });
+
+        saveData(); // Tallentaa uudet järjestysnumerot ja päivittää näkymän
     });
 
     function getDragAfterElement(container, y) {
@@ -221,12 +269,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const startLoc = startLocationInput.value.trim();
         if (!startLoc) return alert('Syötä lähtöpaikka!');
         if (!municipalities || municipalities.length === 0) return alert('Lisää vähintään yksi kunta.');
+        
+        // Varmistetaan että reitti optimoidaan nykyisessä järjestyksessä
+        sortMunicipalities();
 
         routeResultDiv.textContent = 'Haetaan koordinaatteja... ⏳';
         
         const locations = [startLoc, ...municipalities.map(m => m.name)];
         const coords = {};
-
+        
+        //... (Loppuosa funktiosta pysyy ennallaan, mutta pieni korjaus Google Maps -linkkiin)
+        
         for (const loc of locations) {
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(loc + ', Finland')}&format=json&limit=1`);
@@ -254,11 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
             currentLoc = nearest;
         }
         
+        // Päivitetään kuntien järjestys optimoinnin perusteella
         const optimizedOrder = route.slice(1);
-        municipalities.sort((a, b) => optimizedOrder.indexOf(a.name) - optimizedOrder.indexOf(b.name));
+        municipalities.forEach(mun => {
+            mun.order = optimizedOrder.indexOf(mun.name) + 1;
+        });
         
         const mapsUrl = `https://www.google.com/maps/dir/${route.map(r => encodeURIComponent(r)).join('/')}`;
-        routeResultDiv.innerHTML = `✅ Reitti optimoitu! <a href="${mapsUrl}" target="_blank">Avaa reitti Google Mapsissa</a>`;
+        routeResultDiv.innerHTML = `✅ Reitti optimoitu! Järjestys päivitetty. <a href="${mapsUrl}" target="_blank">Avaa reitti Google Mapsissa</a>`;
         
         saveData();
     });
