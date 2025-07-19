@@ -241,6 +241,11 @@ ul {
     white-space: nowrap;
 }
 
+.actions {
+    display: flex;
+    align-items: center;
+}
+
 .cache-actions button, .municipality-header .actions button {
     background: none;
     border: none;
@@ -293,6 +298,30 @@ ul {
     color: #FFD700;
     font-weight: bold;
 }
+
+.municipality-name-link {
+    color: #FFFFFF;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.municipality-name-link:hover {
+    color: #FFD700;
+    text-decoration: underline;
+}
+
+.actions .pgc-link {
+    font-size: 1.2em;
+    text-decoration: none;
+    margin-right: 8px;
+    transition: transform 0.2s;
+    display: inline-block;
+}
+
+.actions .pgc-link:hover {
+    transform: scale(1.2);
+}
+
 
 @media (min-width: 600px) {
     button {
