@@ -10,10 +10,12 @@
 
     <div class="sisalto-laatikko">
         <div class="teksti-alue">
-            <div class="logo-container">
-                <img src="https://img.geocaching.com:443/84454fa6-e23a-4aad-a8a4-612b77f23abe.png" alt="Oma logo" class="logo" />
+            <div class="header-container">
+                <div class="logo-container">
+                    <img src="https://img.geocaching.com:443/84454fa6-e23a-4aad-a8a4-612b77f23abe.png" alt="Oma logo" class="logo" />
+                </div>
+                <h1 class="paaotsikko">— Geokätköreissun Suunnittelija —</h1>
             </div>
-            <h1 class="paaotsikko">— Geokätköreissun Suunnittelija —</h1>
 
             <div class="container">
                 <div class="controls">
@@ -26,8 +28,11 @@
                 <hr class="custom-hr">
 
                 <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
-                <div class="bulk-add">
-                    <h3>Lisää kunnat listana</h3>
+                
+                <button id="toggleBulkAddBtn">Lisää kuntia listana...</button>
+
+                <div id="bulkAddSection" class="bulk-add hidden">
+                    <h3>Lisää kunnat</h3>
                     <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
                     <button id="bulkAddBtn">Lisää listasta</button>
                 </div>
