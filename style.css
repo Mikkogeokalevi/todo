@@ -109,7 +109,14 @@ ul {
     font-weight: bold;
 }
 
-/* Uusi tyyli numerokentälle */
+/* KORJATTU OSA ALKAA */
+.municipality-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Varmistaa, että tämä osa vie suurimman osan tilasta */
+    min-width: 0; /* Estää ylivuodon kapeilla näytöillä */
+}
+
 .municipality-order {
     width: 60px;
     flex-grow: 0;
@@ -121,8 +128,13 @@ ul {
 }
 
 .municipality-name {
-    flex-grow: 1; /* Varmistaa, että nimi vie lopun tilan */
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Lisää ... jos nimi on liian pitkä */
 }
+/* KORJATTU OSA LOPPUU */
+
 
 .cache-list {
     list-style: none;
@@ -148,7 +160,7 @@ ul {
 
 .cache-info {
     flex-grow: 1;
-    min-width: 0; /* Estää ylivuodon flexboxissa */
+    min-width: 0; 
     word-break: break-all;
 }
 
@@ -171,7 +183,7 @@ ul {
     display: flex;
     gap: 8px;
     flex-shrink: 0;
-    margin-left: 10px; /* Tilaa nimelle */
+    margin-left: 10px; 
 }
 
 .cache-actions button, .municipality-header .actions button {
@@ -231,7 +243,7 @@ ul {
     }
     .cache-info {
         flex-basis: 100%;
-        margin-left: 28px; /* Tilaa checkboxille */
+        margin-left: 28px; 
         margin-bottom: 8px;
     }
     .municipality-order {
