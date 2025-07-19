@@ -24,10 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const optimizeRouteBtn = document.getElementById('optimizeRouteBtn');
     const routeResultDiv = document.getElementById('routeResult');
     const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
-    // UUDET ELEMENTIT
     const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
     const bulkAddSection = document.getElementById('bulkAddSection');
-
 
     // === SOVELLUKSEN TILA ===
     let municipalities = [];
@@ -40,9 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
+    // KORJATTU: Lajittelufunktio, joka ottaa huomioon sekä numeron että aakkosjärjestyksen
     const sortMunicipalities = () => {
         if (!municipalities) return;
-        municipalities.sort((a, b) => (a.order || 0) - (b.order || 0));
+        municipalities.sort((a, b) => {
+            const orderA = a.order || 0;
+            const orderB = b.order || 0;
+            
+            // Jos numerot ovat eri, lajitellaan niiden mukaan
+            if (orderA !== orderB) {
+                return orderA - orderB;
+            }
+            
+            // Jos numerot ovat samat, lajitellaan aakkosjärjestyksessä
+            return a.name.localeCompare(b.name, 'fi'); // 'fi' parantaa suomalaisten aakkosten käsittelyä
+        });
     };
 
     const render = () => {
@@ -53,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalities.forEach((municipality) => {
             const munItem = document.createElement('li');
             munItem.className = 'municipality-item';
-            // POISTETTU: draggable = true
 
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => `
                 <li class="cache-item">
@@ -71,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.innerHTML = `
                 <div class="municipality-header">
                     <div class="order-and-name">
-                        <input type="number" class="order-number" value="${municipality.order}" data-id="${municipality.id}">
+                        <input type="number" class="order-number" value="${municipality.order}" min="1" data-id="${municipality.id}">
                         <span>${municipality.name}</span>
                     </div>
                     <div class="actions">
@@ -124,47 +133,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         bulkAddInput.value = '';
-        bulkAddSection.classList.add('hidden'); // Piilota lisäyksen jälkeen
+        bulkAddSection.classList.add('hidden');
         saveData();
     };
 
     // === TAPAHTUMANKÄSITTELIJÄT ===
-
-    // Nappi kuntien lisäysosion näyttämiselle/piilottamiselle
     toggleBulkAddBtn.addEventListener('click', () => {
         bulkAddSection.classList.toggle('hidden');
     });
 
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
-    // UUSI, LUOTETTAVA LOGIIKKA NUMEROJÄRJESTYSTÄ VARTEN
+    // KORJATTU: Numerokentän käsittelijä on nyt paljon yksinkertaisempi.
+    // Se vain päivittää kyseisen kunnan numeron ja tallentaa.
+    // Lajittelulogiikka hoitaa loput.
     municipalityList.addEventListener('change', (e) => {
         if (e.target.classList.contains('order-number')) {
             const munId = e.target.dataset.id;
             const newOrder = parseInt(e.target.value, 10);
 
-            if (isNaN(newOrder) || newOrder < 1) {
-                // Palauta vanha arvo, jos syöte on virheellinen
-                render(); 
-                return;
+            const munIndex = municipalities.findIndex(m => m.id == munId);
+            if (munIndex === -1) return;
+
+            // Päivitä numero, jos se on kelvollinen
+            if (!isNaN(newOrder) && newOrder > 0) {
+                municipalities[munIndex].order = newOrder;
+            } else {
+                // Jos syöte on tyhjä tai virheellinen, annetaan numeroksi 1 oletuksena
+                municipalities[munIndex].order = 1;
             }
-
-            const itemToMoveIndex = municipalities.findIndex(m => m.id == munId);
-            if (itemToMoveIndex === -1) return;
-
-            // 1. Ota siirrettävä kunta talteen ja poista se listalta
-            const [itemToMove] = municipalities.splice(itemToMoveIndex, 1);
-            
-            // 2. Lisää kunta uuteen paikkaan (varmista, ettei mennä yli rajojen)
-            const newIndex = Math.max(0, Math.min(newOrder - 1, municipalities.length));
-            municipalities.splice(newIndex, 0, itemToMove);
-            
-            // 3. Päivitä KAIKKIEN kuntien järjestysnumerot vastaamaan uutta järjestystä
-            municipalities.forEach((mun, index) => {
-                mun.order = index + 1;
-            });
-            
-            // 4. Tallenna ja renderöi
             saveData();
         }
     });
@@ -191,8 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (button.classList.contains('delete-municipality-btn')) {
             if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
                 municipalities.splice(munIndex, 1);
-                // Päivitä järjestysnumerot poiston jälkeen
-                municipalities.forEach((mun, index) => mun.order = index + 1);
+                // MUUTETTU: Muiden kuntien numeroita EI enää päivitetä poiston yhteydessä.
                 saveData();
             }
         } else if (button.classList.contains('add-cache-btn')) {
@@ -229,11 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
         set(ref(database, 'startLocation'), startLocationInput.value);
     });
 
-    // POISTETTU: Koko RAAHAA & PUDOTA -toiminnallisuus poistettu tarpeettomana
-
     // === REITIN OPTIMOINTI ===
     optimizeRouteBtn.addEventListener('click', async () => {
-        // ... (Tämä funktio pysyy ennallaan)
         const startLoc = startLocationInput.value.trim();
         if (!startLoc) return alert('Syötä lähtöpaikka!');
         if (!municipalities || municipalities.length === 0) return alert('Lisää vähintään yksi kunta.');
@@ -265,6 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentLoc = nearest;
         }
         const optimizedOrder = route.slice(1);
+        // Optimointi asettaa uudet, yksilölliset numerot
         municipalities.forEach(mun => {
             mun.order = optimizedOrder.indexOf(mun.name) + 1;
         });
