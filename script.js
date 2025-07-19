@@ -38,20 +38,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // KORJATTU: Lajittelufunktio, joka ottaa huomioon sekä numeron että aakkosjärjestyksen
+    // KORJATTU LAJITTELUFUNKTIO
     const sortMunicipalities = () => {
         if (!municipalities) return;
         municipalities.sort((a, b) => {
             const orderA = a.order || 0;
             const orderB = b.order || 0;
-            
-            // Jos numerot ovat eri, lajitellaan niiden mukaan
             if (orderA !== orderB) {
                 return orderA - orderB;
             }
-            
-            // Jos numerot ovat samat, lajitellaan aakkosjärjestyksessä
-            return a.name.localeCompare(b.name, 'fi'); // 'fi' parantaa suomalaisten aakkosten käsittelyä
+            return a.name.localeCompare(b.name, 'fi');
         });
     };
 
@@ -71,8 +67,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div><span class="cache-type">${cache.type}</span><span class="${cache.done ? 'done' : ''}">${cache.name}</span></div>
                     </div>
                     <div class="cache-actions">
-                        <button class="edit-cache-btn" data-mun-id="${municipality.id}" data-cache-index="${cacheIndex}">✏️</button>
-                        <button class="delete-cache-btn" data-mun-id="${municipality.id}" data-cache-index="${cacheIndex}">🗑️</button>
+                        <button class="edit-cache-btn" title="Muokkaa kätköä" data-mun-id="${municipality.id}" data-cache-index="${cacheIndex}">✏️</button>
+                        <button class="delete-cache-btn" title="Poista kätkö" data-mun-id="${municipality.id}" data-cache-index="${cacheIndex}">🗑️</button>
                     </div>
                 </li>
             `).join('');
@@ -92,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="add-cache">
                     <input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi">
                     ${cacheTypeSelectorTemplate.innerHTML}
-                    <button class="add-cache-btn" data-id="${municipality.id}">+</button>
+                    <button class="add-cache-btn" title="Lisää kätkö" data-id="${municipality.id}">+</button>
                 </div>
             `;
             municipalityList.appendChild(munItem);
@@ -144,80 +140,82 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
-    // KORJATTU: Numerokentän käsittelijä on nyt paljon yksinkertaisempi.
-    // Se vain päivittää kyseisen kunnan numeron ja tallentaa.
-    // Lajittelulogiikka hoitaa loput.
+    // KORJATTU: Kaksi erillistä, toimivaa käsittelijää klikkauksille ja numeron muutoksille
+    
+    // 1. Käsittelijä numerokentän muutoksille
     municipalityList.addEventListener('change', (e) => {
         if (e.target.classList.contains('order-number')) {
             const munId = e.target.dataset.id;
             const newOrder = parseInt(e.target.value, 10);
+            const mun = municipalities.find(m => m.id == munId);
 
-            const munIndex = municipalities.findIndex(m => m.id == munId);
-            if (munIndex === -1) return;
-
-            // Päivitä numero, jos se on kelvollinen
-            if (!isNaN(newOrder) && newOrder > 0) {
-                municipalities[munIndex].order = newOrder;
-            } else {
-                // Jos syöte on tyhjä tai virheellinen, annetaan numeroksi 1 oletuksena
-                municipalities[munIndex].order = 1;
+            if (mun) {
+                mun.order = (!isNaN(newOrder) && newOrder > 0) ? newOrder : 1;
+                saveData();
             }
-            saveData();
         }
     });
 
-
+    // 2. Käsittelijä kaikille nappien ja checkboxien klikkauksille
     municipalityList.addEventListener('click', (e) => {
-        const button = e.target.closest('button, input[type="checkbox"]');
-        if (!button) return;
+        const target = e.target.closest('button, input[type="checkbox"]');
+        if (!target) return;
 
-        const munId = button.dataset.id || button.dataset.munId;
+        const munId = target.dataset.id || target.dataset.munId;
         if (!munId) return;
 
         const munIndex = municipalities.findIndex(m => m.id == munId);
         if (munIndex === -1) return;
-        
-        const cacheIndex = button.dataset.cacheIndex;
-        
-        if (button.classList.contains('edit-municipality-btn')) {
-            const newName = prompt("Muokkaa kunnan nimeä:", municipalities[munIndex].name);
+
+        const municipality = municipalities[munIndex];
+        const cacheIndex = target.dataset.cacheIndex;
+
+        // Kunnan muokkaus
+        if (target.classList.contains('edit-municipality-btn')) {
+            const newName = prompt("Muokkaa kunnan nimeä:", municipality.name);
             if (newName && newName.trim()) {
-                municipalities[munIndex].name = newName.trim();
+                municipality.name = newName.trim();
                 saveData();
             }
-        } else if (button.classList.contains('delete-municipality-btn')) {
-            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
+        }
+        // Kunnan poisto
+        else if (target.classList.contains('delete-municipality-btn')) {
+            if (confirm(`Haluatko poistaa kunnan "${municipality.name}"?`)) {
                 municipalities.splice(munIndex, 1);
-                // MUUTETTU: Muiden kuntien numeroita EI enää päivitetä poiston yhteydessä.
                 saveData();
             }
-        } else if (button.classList.contains('add-cache-btn')) {
-            const container = button.closest('.add-cache');
+        }
+        // Kätkön lisäys
+        else if (target.classList.contains('add-cache-btn')) {
+            const container = target.closest('.add-cache');
             const nameInput = container.querySelector('.new-cache-name');
             const typeSelector = container.querySelector('.cache-type-selector');
             if (nameInput.value.trim()) {
-                if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
-                municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: typeSelector.value, done: false });
+                if (!municipality.caches) municipality.caches = [];
+                municipality.caches.push({ id: Date.now(), name: nameInput.value.trim(), type: typeSelector.value, done: false });
                 nameInput.value = '';
                 saveData();
             }
-        } else if (button.classList.contains('delete-cache-btn')) {
-            if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
-                municipalities[munIndex].caches.splice(cacheIndex, 1);
+        }
+        // Kätkön poisto
+        else if (target.classList.contains('delete-cache-btn')) {
+            if (confirm(`Poistetaanko kätkö "${municipality.caches[cacheIndex].name}"?`)) {
+                municipality.caches.splice(cacheIndex, 1);
                 saveData();
             }
-        } else if (button.classList.contains('edit-cache-btn')) {
-            const newName = prompt("Muokkaa kätkön nimeä:", municipalities[munIndex].caches[cacheIndex].name);
+        }
+        // Kätkön muokkaus
+        else if (target.classList.contains('edit-cache-btn')) {
+            const newName = prompt("Muokkaa kätkön nimeä:", municipality.caches[cacheIndex].name);
             if (newName && newName.trim()) {
-                municipalities[munIndex].caches[cacheIndex].name = newName.trim();
+                municipality.caches[cacheIndex].name = newName.trim();
                 saveData();
             }
-        } else if (button.type === 'checkbox') {
-            const cacheMunIndex = municipalities.findIndex(m => m.id == button.dataset.munId);
-            if (cacheMunIndex !== -1) {
-                 municipalities[cacheMunIndex].caches[cacheIndex].done = button.checked;
-                 saveData();
-            }
+        }
+        // Checkboxin tila
+        else if (target.type === 'checkbox') {
+            municipality.caches[cacheIndex].done = target.checked;
+            saveData();
         }
     });
 
@@ -258,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentLoc = nearest;
         }
         const optimizedOrder = route.slice(1);
-        // Optimointi asettaa uudet, yksilölliset numerot
         municipalities.forEach(mun => {
             mun.order = optimizedOrder.indexOf(mun.name) + 1;
         });
