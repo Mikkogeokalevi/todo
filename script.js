@@ -69,13 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </li>
             `).join('');
 
-            // KORJATTU OSA ALKAA: Numerokenttä ja nimi on nyt kääritty omaan div-elementtiin
+            // KORJATTU OSA ALKAA: Palautettu yksinkertaisempi rakenne ilman turhaa "wrapper" diviä
             munItem.innerHTML = `
                 <div class="municipality-header">
-                    <div class="municipality-info">
-                        <input type="number" class="municipality-order" value="${municipality.order}" data-mun-index="${munIndex}" min="1">
-                        <span class="municipality-name">${municipality.name}</span>
-                    </div>
+                    <input type="number" class="municipality-order" value="${municipality.order}" data-mun-index="${munIndex}" min="1">
+                    <span class="municipality-name">${municipality.name}</span>
                     <div class="actions">
                         <button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button>
                         <button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button>
