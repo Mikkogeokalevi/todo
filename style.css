@@ -101,39 +101,39 @@ ul {
 }
 
 
+/* ----- KORJATTU OSA ALKAA ----- */
+
 .municipality-header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    align-items: center; /* Asettaa kaiken samalle korkeudelle */
+    gap: 15px; /* Lisää ilmaa elementtien väliin */
     font-size: 1.2em;
     font-weight: bold;
 }
 
-/* KORJATTU OSA ALKAA */
-.municipality-info {
-    display: flex;
-    align-items: center;
-    flex-grow: 1; /* Varmistaa, että tämä osa vie suurimman osan tilasta */
-    min-width: 0; /* Estää ylivuodon kapeilla näytöillä */
-}
-
 .municipality-order {
-    width: 60px;
-    flex-grow: 0;
-    flex-shrink: 0;
-    margin-right: 15px;
+    flex-shrink: 0; /* Estää kenttää kutistumasta */
+    width: 55px;
     text-align: center;
     font-weight: bold;
     border: 1px solid #ccc;
 }
 
 .municipality-name {
-    flex-grow: 1;
+    flex-grow: 1; /* Antaa nimen viedä kaiken jäljelle jäävän tilan */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis; /* Lisää ... jos nimi on liian pitkä */
 }
-/* KORJATTU OSA LOPPUU */
+
+.municipality-header .actions {
+    flex-shrink: 0; /* Estää nappien kutistumisen */
+}
+
+/* Poistetaan vanha, turha sääntö */
+.municipality-info { }
+
+/* ----- KORJATTU OSA LOPPUU ----- */
 
 
 .cache-list {
@@ -182,8 +182,6 @@ ul {
 .cache-actions, .municipality-header .actions {
     display: flex;
     gap: 8px;
-    flex-shrink: 0;
-    margin-left: 10px; 
 }
 
 .cache-actions button, .municipality-header .actions button {
@@ -246,8 +244,10 @@ ul {
         margin-left: 28px; 
         margin-bottom: 8px;
     }
+    .municipality-header {
+        gap: 10px;
+    }
     .municipality-order {
         width: 45px;
-        margin-right: 10px;
     }
 }
