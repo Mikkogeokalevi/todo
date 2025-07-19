@@ -1,16 +1,16 @@
-/* --- Perustyylit sivupohja.html:stä --- */
+/* --- Perustyylit --- */
 body {
     background-color: #1a2015;
     font-family: 'Georgia', serif;
     margin: 0;
-    padding: 10px; /* Tiivistetty ylä- ja alareunaa */
+    padding: 10px;
     transition: padding 0.3s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
 .sisalto-laatikko {
     max-width: 800px;
-    margin: 15px auto; /* Tiivistetty ylä- ja alareunaa */
+    margin: 15px auto;
     padding: 10px;
     background-color: #3D4F2B;
     border: 3px solid #11150C;
@@ -21,37 +21,37 @@ body {
 
 .teksti-alue {
     color: #F8F8F8;
-    line-height: 1.8;
-    padding: 10px;
-    font-size: 1.1em;
+    line-height: 1.7; /* TIIVISTETTY */
+    padding: 5px; /* TIIVISTETTY */
+    font-size: 1.0em; /* TIIVISTETTY */
     transition: font-size 0.3s ease;
 }
 
-/* --- Logo ja otsikot (MUOKATTU) --- */
+/* --- Logo ja otsikot --- */
 .logo-container {
-    display: flex; /* Asettaa elementit vierekkäin */
-    align-items: center; /* Tasaa pystysuunnassa keskelle */
+    display: flex;
+    align-items: center;
     margin-bottom: 20px;
-    gap: 15px; /* Lisää tilaa logon ja otsikon väliin */
+    gap: 15px;
 }
 
 .logo {
-    width: 60px; /* Pienennetty logoa */
-    height: 60px; /* Pienennetty logoa */
+    width: 50px; /* TIIVISTETTY */
+    height: 50px; /* TIIVISTETTY */
     border: 2px solid #90EE90;
     border-radius: 50%;
     box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
     background-color: #3D4F2B;
     padding: 3px;
-    flex-shrink: 0; /* Estää logoa kutistumasta */
+    flex-shrink: 0;
 }
 
 .paaotsikko {
     color: #90EE90;
-    text-align: left; /* Tasaus vasemmalle, jotta asettuu nätisti logon viereen */
-    margin: 0; /* Poistettu marginaalit */
+    text-align: left;
+    margin: 0;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    font-size: 1.3em; /* Pienennetty fonttikokoa */
+    font-size: 1.2em; /* TIIVISTETTY */
     letter-spacing: 0.5px;
 }
 
@@ -59,7 +59,8 @@ body {
     color: #90EE90;
     text-align: center;
     margin-top: 20px;
-    font-size: 1.4em;
+    margin-bottom: 15px; /* TIIVISTETTY */
+    font-size: 1.2em; /* TIIVISTETTY */
     text-shadow: 1px 1px 1px rgba(0,0,0,0.6);
 }
 
@@ -67,23 +68,22 @@ body {
     border: none;
     height: 1px;
     background-color: #2A381C;
-    margin: 20px 0; /* Tiivistetty marginaaleja */
+    margin: 20px 0;
 }
-
 
 /* === SOVELLUKSEN ELEMENTTIEN TYYLIT === */
 
 .container {
-    padding: 0 10px;
+    padding: 0 5px; /* TIIVISTETTY */
 }
 
 /* Syöttökentät ja valikot */
 input[type="text"], textarea, select {
     flex-grow: 1;
-    padding: 12px;
+    padding: 10px; /* TIIVISTETTY */
     border: 1px solid #2A381C;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 15px; /* TIIVISTETTY */
     width: 100%;
     box-sizing: border-box;
     background-color: #2A381C;
@@ -98,17 +98,17 @@ input[type="text"]::placeholder, textarea::placeholder {
 
 /* Napit */
 button {
-    padding: 12px 15px;
+    padding: 10px 15px; /* TIIVISTETTY */
     border: 1px solid #90EE90;
     background-color: transparent;
     color: #90EE90;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px; /* TIIVISTETTY */
     font-family: 'Georgia', serif;
     transition: background-color 0.2s, color 0.2s;
     flex-shrink: 0;
-    width: 100%; /* Tehdään napeista oletuksena täysleveitä mobiilissa */
+    width: 100%;
     box-sizing: border-box;
 }
 
@@ -117,7 +117,6 @@ button:hover {
     color: #1a2015;
 }
 
-/* UUSI TYYLI: Nappi, joka näyttää/piilottaa elementtejä */
 .toggle-button {
     background-color: #4a5c3a;
     border-color: #556B2F;
@@ -141,12 +140,12 @@ button:hover {
 }
 
 /* Asettelut ja ryhmittelyt */
-.controls, .add-municipality, .add-cache {
+.controls {
     display: flex;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 15px; /* TIIVISTETTY */
     align-items: center;
-    flex-wrap: wrap; /* Sallii elementtien rivittyä, jos ei mahdu */
+    flex-wrap: wrap;
 }
 
 .bulk-add {
@@ -157,7 +156,6 @@ button:hover {
     margin-bottom: 20px;
 }
 
-/* UUSI TYYLI: Oletuksena piilotettu elementti */
 .bulk-add.hidden {
     display: none;
 }
@@ -173,7 +171,6 @@ button:hover {
     margin-top: 10px;
 }
 
-
 /* Kuntien ja kätköjen listat */
 ul {
     list-style: none;
@@ -183,7 +180,7 @@ ul {
 .municipality-item {
     background: #4a5c3a;
     border: 1px solid #2A381C;
-    padding: 15px;
+    padding: 10px; /* TIIVISTETTY */
     margin-bottom: 10px;
     border-radius: 5px;
     cursor: grab;
@@ -198,25 +195,26 @@ ul {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 1.2em;
+    font-size: 1.1em; /* TIIVISTETTY */
     font-weight: bold;
     color: #FFFFFF;
+    margin-bottom: 5px; /* TIIVISTETTY */
 }
 
 .cache-list {
     padding-left: 0;
-    margin-top: 15px;
+    margin-top: 10px; /* TIIVISTETTY */
 }
 
 .cache-item {
     display: flex;
     align-items: center;
-    padding: 8px 5px;
+    padding: 5px; /* TIIVISTETTY */
     border-top: 1px solid #556B2F;
 }
 
 .cache-info {
-    flex-grow: 1; /* Antaa tämän elementin viedä saatavilla olevan tilan */
+    flex-grow: 1;
 }
 
 .cache-info span.done {
@@ -241,18 +239,40 @@ ul {
     font-size: 1.2em;
     padding: 0 4px;
     color: #cccccc;
-    width: auto; /* Ylikirjoitetaan yleinen napin leveys */
+    width: auto;
 }
 
 .cache-actions button:hover, .municipality-header .actions button:hover {
     color: #FFD700;
 }
 
-.add-cache button {
-    width: auto; /* Estää plus-nappia venymästä */
-    padding-left: 15px;
-    padding-right: 15px;
+/* TÄRKEÄ MUUTOS: Kätkön lisäysrivin asettelu */
+.add-cache {
+    display: flex;
+    flex-direction: row; /* Asetetaan elementit aina vierekkäin */
+    gap: 8px;
+    margin-top: 10px; /* TIIVISTETTY */
+    align-items: center;
 }
+
+.add-cache .new-cache-name {
+    flex-grow: 1; /* Tekstikenttä vie suurimman osan tilasta */
+    min-width: 50px; /* Varmistaa että kenttä ei katoa liian pienenä */
+}
+
+.add-cache .cache-type-selector {
+    flex-grow: 0;
+    flex-shrink: 1;
+    min-width: 80px; /* Varmistetaan, että valikko on luettavissa */
+}
+
+.add-cache button {
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: auto; /* Estää plus-nappia venymästä */
+    padding: 10px 12px; /* TIIVISTETTY */
+}
+
 
 .route-result {
     margin: 15px 0;
@@ -270,11 +290,10 @@ ul {
 
 /* Responsiivisuus */
 @media (min-width: 600px) {
-    /* Palautetaan nappien leveys isommilla näytöillä */
     button {
         width: auto;
     }
     .toggle-button {
-      width: 100%; /* Pidetään tämä täysleveänä */
+      width: 100%;
     }
 }
