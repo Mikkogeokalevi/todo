@@ -4,9 +4,8 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 
 document.addEventListener('DOMContentLoaded', () => {
     // === FIREBASE-ASETUKSET ===
-    // TÄRKEÄÄ: LIITÄ UUSI, RAJOITETTU API-AVAIMESI TÄHÄN!
     const firebaseConfig = {
-        apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
+        apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M", // HUOM: Tämä on esimerkkiavain, käytä omaasi.
         authDomain: "geokatkosuunnittelija.firebaseapp.com",
         databaseURL: "https://geokatkosuunnittelija-default-rtdb.europe-west1.firebasedatabase.app",
         projectId: "geokatkosuunnittelija",
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
         appId: "1:745498680990:web:869074eb0f0b72565ca58f"
     };
 
-    // Alustetaan Firebase modernilla syntaksilla
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
@@ -27,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const optimizeRouteBtn = document.getElementById('optimizeRouteBtn');
     const routeResultDiv = document.getElementById('routeResult');
     const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
+    
+    // UUDET ELEMENTIT PIILOTUSTOIMINNOLLE
+    const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
+    const bulkAddContainer = document.getElementById('bulkAddContainer');
+
 
     // === SOVELLUKSEN TILA ===
     let municipalities = [];
@@ -34,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // === FUNKTIOT ===
     const saveData = () => {
-        // Käyttää modernia set-funktiota
         set(ref(database), {
             municipalities: municipalities,
             startLocation: startLocationInput.value
@@ -82,8 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
-
-    // === DATAN KUUNTELIJA FIREBASESTA ===
     onValue(ref(database), (snapshot) => {
         const data = snapshot.val();
         if (data) {
@@ -92,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
             startLocationInput.value = startLocation;
             render();
         } else {
-            // Jos tietokanta on täysin tyhjä, alustetaan tyhjillä arvoilla
             municipalities = [];
             startLocation = 'Lahti';
             render();
@@ -116,6 +115,17 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // === TAPAHTUMANKÄSITTELIJÄT ===
+
+    // UUSI TAPAHTUMANKÄSITTELIJÄ
+    toggleBulkAddBtn.addEventListener('click', () => {
+        const isHidden = bulkAddContainer.classList.toggle('hidden');
+        if (isHidden) {
+            toggleBulkAddBtn.textContent = 'Lisää kunnat listana';
+        } else {
+            toggleBulkAddBtn.textContent = 'Piilota lisäysalue';
+        }
+    });
+
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
     municipalityList.addEventListener('click', (e) => {
@@ -154,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     startLocationInput.addEventListener('change', () => {
-        // Tallennetaan vain lähtöpaikka, ei koko dataa turhaan
         set(ref(database, 'startLocation'), startLocationInput.value);
     });
 
@@ -162,7 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedIndex = null;
 
     municipalityList.addEventListener('dragstart', (e) => {
-        // Varmistetaan, että raahaus alkaa vain listan itemistä, ei napeista
         if(e.target.classList.contains('municipality-item')) {
             draggedIndex = parseInt(e.target.dataset.munIndex, 10);
             setTimeout(() => e.target.classList.add('dragging'), 0);
@@ -221,7 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const startLoc = startLocationInput.value.trim();
         if (!startLoc) return alert('Syötä lähtöpaikka!');
         if (!municipalities || municipalities.length === 0) return alert('Lisää vähintään yksi kunta.');
-
+        
+        routeResultDiv.style.display = 'block'; // Tehdään laatikko näkyväksi
         routeResultDiv.textContent = 'Haetaan koordinaatteja... ⏳';
         
         const locations = [startLoc, ...municipalities.map(m => m.name)];
