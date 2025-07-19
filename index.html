@@ -8,28 +8,34 @@
 </head>
 <body>
 
-    <div class="container">
-        <h1>Geokätköreissun Suunnittelija</h1>
+    <div class="sisalto-laatikko">
+        <div class="teksti-alue">
+            <div class="logo-container">
+                <img src="https://img.geocaching.com:443/84454fa6-e23a-4aad-a8a4-612b77f23abe.png" alt="Oma logo" class="logo" />
+            </div>
+            <h1 class="paaotsikko">— Geokätköreissun Suunnittelija —</h1>
 
-        <div class="controls">
-            <input type="text" id="startLocation" placeholder="Syötä lähtöpaikka (esim. Lahti)">
-            <button id="optimizeRouteBtn">🚀 Optimoi ja järjestä reitti</button>
+            <div class="container">
+                <div class="controls">
+                    <input type="text" id="startLocation" placeholder="Syötä lähtöpaikka (esim. Lahti)">
+                    <button id="optimizeRouteBtn">🚀 Optimoi ja järjestä reitti</button>
+                </div>
+                
+                <div id="routeResult" class="route-result"></div>
+
+                <hr class="custom-hr">
+
+                <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
+                <div class="bulk-add">
+                    <h3>Lisää kunnat listana</h3>
+                    <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
+                    <button id="bulkAddBtn">Lisää listasta</button>
+                </div>
+
+                <ul id="municipalityList">
+                    </ul>
+            </div>
         </div>
-        
-        <div id="routeResult" class="route-result"></div>
-
-        <hr>
-
-        <h2>Löydettävät kunnat ja kätköt</h2>
-        <div class="bulk-add">
-            <h3>Lisää kunnat listana</h3>
-            <textarea id="bulkAddMunicipalities" rows="5" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
-            <button id="bulkAddBtn">Lisää listasta</button>
-        </div>
-
-        <ul id="municipalityList">
-            </ul>
-
     </div>
     
     <template id="cacheTypeSelector">
