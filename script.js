@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    // KORJATTU JA TÄYDENNETTY KUNTALISTA
+    // KORJATTU JA TÄYDENNETTY KUNTALISTA (säilytetään ennallaan)
     const kuntaMaakuntaData = {
         "Akaa": "Pirkanmaa", "Alajärvi": "Etelä-Pohjanmaa", "Alavieska": "Pohjois-Pohjanmaa", "Alavus": "Etelä-Pohjanmaa", "Asikkala": "Päijät-Häme",
         "Askola": "Uusimaa", "Aura": "Varsinais-Suomi", "Brändö": "Ahvenanmaa", "Eckerö": "Ahvenanmaa", "Enonkoski": "Etelä-Savo", "Enontekiö": "Lappi",
@@ -91,9 +91,106 @@ document.addEventListener('DOMContentLoaded', () => {
     const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
     const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
     const bulkAddContainer = document.getElementById('bulkAddContainer');
+    const toggleTrackingBtn = document.getElementById('toggleTrackingBtn'); // UUSI
 
     let municipalities = [];
 
+    // UUDET MUUTTUJAT KARTTAA JA SEURANTAA VARTEN
+    let map;
+    let userMarker;
+    let trackingWatcher = null;
+    let lastCheckedMunicipality = null;
+
+    // UUSI: Kartan alustusfunktio
+    const initMap = () => {
+        map = L.map('map').setView([61.9, 25.7], 6); // Asetetaan Suomen keskelle
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        const userIcon = L.divIcon({className: 'user-marker'});
+        userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
+    };
+
+    // UUSI: Funktio ilmoituksen näyttämiseen
+    const showNotification = (message) => {
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    };
+    
+    // UUSI: Funktio kuntatarkistukseen ja ilmoitukseen
+    const checkCurrentMunicipality = async (lat, lon) => {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
+            if (!response.ok) return;
+            const data = await response.json();
+            const currentMunicipality = data.address.municipality || data.address.town || data.address.village;
+
+            if (currentMunicipality && currentMunicipality !== lastCheckedMunicipality) {
+                lastCheckedMunicipality = currentMunicipality;
+                
+                const foundMunIndex = municipalities.findIndex(m => m.name.toLowerCase() === currentMunicipality.toLowerCase());
+                
+                // Poistetaan vanha korostus
+                document.querySelectorAll('.municipality-item.highlight').forEach(el => el.classList.remove('highlight'));
+
+                if (foundMunIndex !== -1) {
+                    showNotification(`Saavuit kuntaan: ${currentMunicipality}!`);
+                    const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
+                    if (munElement) {
+                        munElement.classList.add('highlight');
+                        munElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Kuntatarkistusvirhe:", error);
+        }
+    };
+
+    // UUSI: Funktio jatkuvan seurannan aloittamiseen ja lopettamiseen
+    const toggleTracking = () => {
+        if (trackingWatcher) { // Jos seuranta on päällä, lopetetaan se
+            navigator.geolocation.clearWatch(trackingWatcher);
+            trackingWatcher = null;
+            toggleTrackingBtn.textContent = '🛰️ Aloita seuranta';
+            toggleTrackingBtn.classList.remove('tracking-active');
+            lastCheckedMunicipality = null; // Nollataan, jotta ilmoitus tulee uudelleen
+        } else { // Jos seuranta ei ole päällä, aloitetaan se
+            if (!("geolocation" in navigator)) {
+                alert("Selaimesi ei tue paikannusta.");
+                return;
+            }
+            trackingWatcher = navigator.geolocation.watchPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    if (map && userMarker) {
+                        userMarker.setLatLng([latitude, longitude]);
+                        map.setView([latitude, longitude], 13); // Keskittää kartan käyttäjään
+                        checkCurrentMunicipality(latitude, longitude);
+                    }
+                },
+                (error) => {
+                    console.error("Paikannusvirhe:", error);
+                    alert("Paikannus epäonnistui. Tarkista selaimen luvat.");
+                },
+                { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+            );
+            toggleTrackingBtn.textContent = '🛑 Lopeta seuranta';
+            toggleTrackingBtn.classList.add('tracking-active');
+        }
+    };
+
+    // MUOKATTU: render-funktioon lisätään id ja data-attribuutti kuntalistalle
     const render = () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
@@ -102,6 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.className = 'municipality-item';
             munItem.draggable = true;
             munItem.dataset.munIndex = munIndex;
+            munItem.id = `mun-item-${munIndex}`; // UUSI ID korostusta varten
 
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
                 const cacheName = cache.name.trim();
@@ -164,14 +262,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
+    // Alkuperäinen koodi jatkuu...
+    
+    initMap(); // UUSI: Kutsutaan kartan alustusta
+
     onValue(ref(database, 'paalista'), (snapshot) => {
         const data = snapshot.val();
         if (data) {
+            const oldMunicipalities = JSON.stringify(municipalities);
+            const newMunicipalities = JSON.stringify(data.municipalities || []);
+            
             municipalities = data.municipalities || [];
             startLocationInput.value = data.startLocation || '';
             pgcProfileNameInput.value = data.pgcProfileName || '';
+
+            // Renderöidään vain jos data on muuttunut, vältetään turha uudelleenpiirto
+            if (oldMunicipalities !== newMunicipalities) {
+                render();
+            }
+        } else {
+             render();
         }
-        render();
     });
 
     const saveMunicipalities = () => set(ref(database, 'paalista/municipalities'), municipalities);
@@ -261,6 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     startLocationInput.addEventListener('change', saveStartLocation);
     pgcProfileNameInput.addEventListener('change', savePgcProfileName);
+    toggleTrackingBtn.addEventListener('click', toggleTracking); // UUSI
 
     let draggedIndex = null;
     municipalityList.addEventListener('dragstart', (e) => {
@@ -293,7 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const draggingElement = document.querySelector('.dragging');
         if (draggingElement) {
             const newIndex = Array.from(municipalityList.children).indexOf(draggingElement);
-            if (newIndex > -1) {
+            if (newIndex > -1 && draggedIndex !== null) { // Varmistetaan että draggedIndex ei ole null
                 const [removed] = municipalities.splice(draggedIndex, 1);
                 municipalities.splice(newIndex, 0, removed);
                 saveMunicipalities();
