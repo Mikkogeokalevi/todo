@@ -29,38 +29,58 @@ document.addEventListener('DOMContentLoaded', () => {
     let cacheMarkers = [];
     let clickMarker = null;
 
-    const parseDDM = (input) => {
-        try {
-            input = input.toUpperCase().replace(/,/g, '.').replace('°', ' ');
-            const parts = input.split(' ').filter(p => p.trim() !== '');
-            let lat, lon;
-            
-            if (parts.length === 4) {
-                const [p1, p2, p3, p4] = parts;
-                if (p1 === 'N' || p1 === 'S') {
-                     lat = parseFloat(p2) + parseFloat(p3) / 60;
-                     if (p1 === 'S') lat = -lat;
-                     const lonParts = input.split(p3)[1].trim().split(' ');
-                     lon = parseFloat(lonParts[1]) + parseFloat(lonParts[2]) / 60;
-                     if(lonParts[0] === 'W') lon = -lon;
-                } else {
-                     lat = parseFloat(p1) + parseFloat(p2) / 60;
-                     if(p3 === 'S') lat = -lat;
-                     lon = parseFloat(parts.slice(4)[0]) + parseFloat(parts.slice(4)[1]) / 60;
-                     if(parts.slice(4)[2] === 'W') lon = -lon;
-                }
-            } else {
-                 lat = parseFloat(parts[0]) + parseFloat(parts[1]) / 60;
-                 lon = parseFloat(parts[3]) + parseFloat(parts[4]) / 60;
-                 if(parts[2] === 'W') lon = -lon;
-            }
+    // KORJATTU: Uusi, luotettavampi funktio koordinaattien tunnistukseen
+    const parseDDMCoordinates = (str) => {
+        if (!str) return null;
 
-            return (isNaN(lat) || isNaN(lon)) ? null : { lat, lon };
+        // 1. Siisti syöte: isot kirjaimet, desimaalierotin pisteeksi, erikoismerkit välilyönneiksi
+        let cleaned = str.toUpperCase()
+          .replace(/,/g, '.')
+          .replace(/°|´|`|'/g, ' ') 
+          .replace(/([NSEW])/g, ' $1 ') // Varmista välilyönnit ilmansuuntien ympärillä
+          .replace(/\s+/g, ' ') // Poista ylimääräiset välilyönnit
+          .trim();
+
+        // 2. Etsi latitudi ja longitudi säännöllisillä lausekkeilla
+        const latRegex = /([NS])\s*(\d{1,2})\s+([\d\.]+)/;
+        const lonRegex = /([EW])\s*(\d{1,3})\s+([\d\.]+)/;
+
+        let latMatch = cleaned.match(latRegex);
+        const lonMatch = cleaned.match(lonRegex);
+
+        // 3. Käsittele tapaus, jossa N/S puuttuu (yleinen Suomessa, oletetaan N)
+        if (!latMatch && lonMatch) {
+            const potentialLatStr = cleaned.split(lonMatch[0])[0].trim();
+            const latParts = potentialLatStr.split(/\s+/);
+            if (latParts.length === 2) {
+                const latDeg = parseFloat(latParts[0]);
+                const latMin = parseFloat(latParts[1]);
+                if (!isNaN(latDeg) && !isNaN(latMin)) {
+                    latMatch = ["", 'N', latDeg.toString(), latMin.toString()];
+                }
+            }
+        }
+
+        // 4. Käsittele löydökset
+        if (!latMatch || !lonMatch) return null;
+
+        try {
+          let lat = parseFloat(latMatch[2]) + parseFloat(latMatch[3]) / 60.0;
+          if (latMatch[1] === 'S') lat = -lat;
+  
+          let lon = parseFloat(lonMatch[2]) + parseFloat(lonMatch[3]) / 60.0;
+          if (lonMatch[1] === 'W') lon = -lon;
+  
+          if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+            return null; // Varmistetaan, että arvot ovat järkeviä
+          }
+  
+          return { lat, lon };
         } catch (e) {
-            return null;
+          return null;
         }
     };
-
+    
     const getMunicipalityFromResponse = (data) => {
         const address = data.address;
         if (!address) return null;
@@ -250,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initMap();
 
-    // TÄRKEÄÄ: Tämä käyttää `paalista`-polkua
     onValue(ref(database, 'paalista'), (snapshot) => {
         const data = snapshot.val();
         municipalities = (data && data.pgcProfileName !== undefined) ? (data.municipalities || []) : [];
@@ -260,7 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAllMarkers();
     });
 
-    // TÄRKEÄÄ: Tämä käyttää `paalista`-polkua
     const saveMunicipalities = () => set(ref(database, 'paalista/municipalities'), municipalities);
     const savePgcProfileName = () => set(ref(database, 'paalista/pgcProfileName'), pgcProfileNameInput.value);
 
@@ -309,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentCoords = cache.lat ? `${cache.lat} ${cache.lon}` : '';
             const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
             if(input === null) return;
-            const coords = parseDDM(input);
+            const coords = parseDDMCoordinates(input); // KÄYTETÄÄN UUTTA FUNKTIOTA
             if(coords) {
                 cache.lat = coords.lat;
                 cache.lon = coords.lon;
@@ -321,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 needsSave = true;
                 needsRender = true;
             } else {
-                alert("Virheellinen koordinaattimuoto.\nEsimerkki: 62° 58.794 E 026° 11.341");
+                alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
             }
         }
         else if (button.classList.contains('edit-municipality-btn')) {
