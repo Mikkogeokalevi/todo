@@ -2,7 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 // --- ASETUKSET ---
-const FIREBASE_PATH = 'paalista';
+// Luetaan selaimen osoiteriviltä URL-parametrit
+const urlParams = new URLSearchParams(window.location.search);
+// Haetaan parametrin "lista" arvo (esim. "lahti_lista")
+const listNameFromUrl = urlParams.get('lista');
+// Asetetaan FIREBASE_PATH olemaan URL:sta saatu arvo.
+// Jos URL:ssa ei ole määritetty listaa, käytetään oletuksena 'paalista'.
+const FIREBASE_PATH = listNameFromUrl || 'paalista';
+
 const LOGGERS = ["Toni", "Jukka", "Riikka", "Vesa"];
 // --- ASETUKSET PÄÄTTYVÄT ---
 
@@ -48,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const ALERT_APPROACH_DISTANCE = 1500;
     const ALERT_TARGET_DISTANCE = 200;
 
-    // ... (Kaikki apufunktiot kuten getDistance, parseCoordinates, etc. pysyvät ennallaan) ...
     const getDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
         const Δφ = (lat2 - lat1) * Math.PI / 180; const Δλ = (lon2 - lon1) * Math.PI / 180;
@@ -262,18 +268,40 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.draggable = true;
             munItem.dataset.munIndex = munIndex;
             munItem.id = `mun-item-${munIndex}`;
+            
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
-                const cacheName = cache.name.trim();
-                let cacheNameDisplay;
-                if (cacheName.toUpperCase().startsWith('GC')) {
-                    const spaceIndex = cacheName.indexOf(' ');
-                    const gcCode = spaceIndex === -1 ? cacheName : cacheName.substring(0, spaceIndex);
-                    const description = spaceIndex === -1 ? '' : cacheName.substring(spaceIndex);
-                    cacheNameDisplay = `<a href="https://coord.info/${gcCode}" target="_blank" rel="noopener noreferrer">${gcCode}</a>${description}`;
-                } else { cacheNameDisplay = cacheName; }
+                // Luodaan linkki GC-koodista, jos se on olemassa
+                const gcCodeLink = cache.gcCode ? `<a href="https://coord.info/${cache.gcCode}" target="_blank" rel="noopener noreferrer">${cache.gcCode}</a>` : '';
+
+                // Muotoillaan lisätiedot näytettäväksi
+                const detailsHtml = `
+                    <span class="cache-detail-tag type">${cache.type || 'Muu'}</span>
+                    <span class="cache-detail-tag size">${cache.size || ''}</span>
+                    <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
+                    ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
+                `;
+
                 const coordsSetClass = (cache.lat && cache.lon) ? 'coords-set' : '';
-                return `<li class="cache-item"><input type="checkbox" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}"><div class="cache-info"><div><span class="cache-type">${cache.type}</span><span>${cacheNameDisplay}</span></div></div><div class="cache-actions"><button class="set-coords-btn ${coordsSetClass}" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">📍</button><button class="edit-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">✏️</button><button class="delete-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">🗑️</button></div></li>`;
+                
+                return `
+                    <li class="cache-item">
+                        <input type="checkbox" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">
+                        <div class="cache-info">
+                            <div class="cache-name">
+                                ${gcCodeLink} ${cache.name}
+                            </div>
+                            <div class="cache-details">
+                                ${detailsHtml}
+                            </div>
+                        </div>
+                        <div class="cache-actions">
+                            <button class="set-coords-btn ${coordsSetClass}" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">📍</button>
+                            <button class="edit-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">✏️</button>
+                            <button class="delete-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">🗑️</button>
+                        </div>
+                    </li>`;
             }).join('');
+
             const kunnanNimi = municipality.name;
             const pgcProfileName = pgcProfileNameInput.value.trim();
             const oikeaAvain = Object.keys(kuntaMaakuntaData).find(key => key.toLowerCase() === kunnanNimi.toLowerCase());
@@ -283,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(oikeaAvain)}&nonefound=on&submit=Filter`;
                 pgcLinkHtml = `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${kunnanNimi} Project-GC:ssä" class="pgc-link">🗺️</a>`;
             }
-            munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul><div class="add-cache"><input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi">${cacheTypeSelectorTemplate.innerHTML}<button class="add-cache-btn" data-mun-index="${munIndex}">+</button></div>`;
+            munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul><div class="pgc-add-container"><textarea class="pgc-paste-area" placeholder="Liitä PGC:n kätkötiedot tähän (yksi per rivi)..." rows="4"></textarea><button class="add-from-pgc-btn" data-mun-index="${munIndex}">Lisää tekstistä</button></div>`;
             municipalityList.appendChild(munItem);
         });
     };
@@ -429,14 +457,74 @@ document.addEventListener('DOMContentLoaded', () => {
                     municipalities.splice(munIndex, 1);
                     needsSave = true; needsRender = true;
                 }
-            } else if (button.classList.contains('add-cache-btn')) {
-                const container = button.closest('.add-cache');
-                const nameInput = container.querySelector('.new-cache-name');
-                if (nameInput.value.trim()) {
-                    if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
-                    municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: container.querySelector('.cache-type-selector').value });
-                    nameInput.value = '';
-                    needsSave = true; needsRender = true;
+            } else if (button.classList.contains('add-from-pgc-btn')) {
+                const container = button.closest('.pgc-add-container');
+                const textArea = container.querySelector('.pgc-paste-area');
+                const text = textArea.value.trim();
+                if (!text) return;
+
+                const lines = text.split('\n').filter(Boolean);
+                const newCaches = [];
+
+                lines.forEach(line => {
+                    try {
+                        const coordIndex = line.indexOf('N ');
+                        if (coordIndex === -1) return;
+
+                        const coordsString = line.substring(coordIndex);
+                        const coords = parseCoordinates(coordsString);
+
+                        const mainPart = line.substring(0, coordIndex).trim();
+
+                        const detailsRegex = /\s*([\w\s]+?)\s*\/\s*([\w\s]+?)\s*\/\s*([\d\.]+)\s*\/\s*([\d\.]+)$/;
+                        const detailsMatch = mainPart.match(detailsRegex);
+
+                        if (!detailsMatch) return;
+
+                        const cacheType = detailsMatch[1].trim();
+                        const cacheSize = detailsMatch[2].trim();
+                        const difficulty = detailsMatch[3];
+                        const terrain = detailsMatch[4];
+                        
+                        const frontPart = mainPart.substring(0, detailsMatch.index).trim();
+                        
+                        const frontParts = frontPart.split(/\s*-\s*/);
+                        
+                        const gcCode = frontParts[0];
+                        const cacheName = frontParts[1];
+                        const fpInfo = frontParts.length > 2 ? frontParts.slice(2).join(' - ') : '';
+
+                        const cacheData = {
+                            id: Date.now() + Math.random(),
+                            name: cacheName,
+                            gcCode: gcCode,
+                            fp: fpInfo,
+                            type: cacheType,
+                            size: cacheSize,
+                            difficulty: difficulty,
+                            terrain: terrain,
+                            lat: coords ? coords.lat : null,
+                            lon: coords ? coords.lon : null,
+                            alert_approach_given: false,
+                            alert_target_given: false
+                        };
+                        newCaches.push(cacheData);
+
+                    } catch (e) {
+                        console.error("Rivin jäsentäminen epäonnistui:", line, e);
+                    }
+                });
+
+                if (newCaches.length > 0) {
+                    if (!municipalities[munIndex].caches) {
+                        municipalities[munIndex].caches = [];
+                    }
+                    municipalities[munIndex].caches.push(...newCaches);
+                    textArea.value = '';
+                    needsSave = true;
+                    needsRender = true;
+                } else {
+                    alert("Ei voitu jäsentää kelvollisia kätkötietoja syötetystä tekstistä.");
                 }
             } else if (button.classList.contains('delete-cache-btn')) {
                 if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
