@@ -28,27 +28,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let municipalityMarkers = [];
     let cacheMarkers = [];
     let clickMarker = null;
+    let lastCheckedCoords = null; // UUSI: Viimeksi tarkistetut koordinaatit
 
-    // KORJATTU: Uusi, luotettavampi funktio koordinaattien tunnistukseen
+    // UUSI: Funktio etäisyyden laskemiseen kahden pisteen välillä (metreinä)
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 6371e3; // Maapallon säde metreinä
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    };
+
     const parseDDMCoordinates = (str) => {
         if (!str) return null;
-
-        // 1. Siisti syöte: isot kirjaimet, desimaalierotin pisteeksi, erikoismerkit välilyönneiksi
-        let cleaned = str.toUpperCase()
-          .replace(/,/g, '.')
-          .replace(/°|´|`|'/g, ' ') 
-          .replace(/([NSEW])/g, ' $1 ') // Varmista välilyönnit ilmansuuntien ympärillä
-          .replace(/\s+/g, ' ') // Poista ylimääräiset välilyönnit
-          .trim();
-
-        // 2. Etsi latitudi ja longitudi säännöllisillä lausekkeilla
+        let cleaned = str.toUpperCase().replace(/,/g, '.').replace(/°|´|`|'/g, ' ').replace(/([NSEW])/g, ' $1 ').replace(/\s+/g, ' ').trim();
         const latRegex = /([NS])\s*(\d{1,2})\s+([\d\.]+)/;
         const lonRegex = /([EW])\s*(\d{1,3})\s+([\d\.]+)/;
-
         let latMatch = cleaned.match(latRegex);
         const lonMatch = cleaned.match(lonRegex);
-
-        // 3. Käsittele tapaus, jossa N/S puuttuu (yleinen Suomessa, oletetaan N)
         if (!latMatch && lonMatch) {
             const potentialLatStr = cleaned.split(lonMatch[0])[0].trim();
             const latParts = potentialLatStr.split(/\s+/);
@@ -60,25 +60,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-
-        // 4. Käsittele löydökset
         if (!latMatch || !lonMatch) return null;
-
         try {
           let lat = parseFloat(latMatch[2]) + parseFloat(latMatch[3]) / 60.0;
           if (latMatch[1] === 'S') lat = -lat;
-  
           let lon = parseFloat(lonMatch[2]) + parseFloat(lonMatch[3]) / 60.0;
           if (lonMatch[1] === 'W') lon = -lon;
-  
-          if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-            return null; // Varmistetaan, että arvot ovat järkeviä
-          }
-  
+          if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
           return { lat, lon };
-        } catch (e) {
-          return null;
-        }
+        } catch (e) { return null; }
     };
     
     const getMunicipalityFromResponse = (data) => {
@@ -139,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalityMarkers = [];
         cacheMarkers.forEach(marker => marker.removeFrom(map));
         cacheMarkers = [];
-        
         const bounds = [];
         municipalities.forEach(mun => {
             if (mun.lat && mun.lon) {
@@ -157,14 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         if (bounds.length > 0 && !trackingWatcher) {
             map.fitBounds(bounds, { padding: [50, 50] });
         }
     };
 
     const checkCurrentMunicipality = async (lat, lon) => {
-        updateStatusDisplay({ municipality: null, lat, lon });
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
             if (!response.ok) return;
@@ -189,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (trackingWatcher) {
             navigator.geolocation.clearWatch(trackingWatcher);
             trackingWatcher = null;
+            lastCheckedCoords = null; // Nollataan optimointia varten
             toggleTrackingBtn.textContent = '🛰️ Aloita seuranta';
             toggleTrackingBtn.classList.remove('tracking-active');
             lastCheckedMunicipality = null;
@@ -196,13 +184,26 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAllMarkers();
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
+            
+            // Tässä on uusi, älykäs seurantalogikka
+            const CHECK_INTERVAL_METERS = 500; // Tarkistusväli metreinä (muuta tarvittaessa)
+            
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     if (map && userMarker) {
                         userMarker.setLatLng([latitude, longitude]);
                         if (!map.getBounds().contains(userMarker.getLatLng())) map.setView([latitude, longitude], 13);
-                        checkCurrentMunicipality(latitude, longitude);
+                        
+                        // SUORITA KUNTATARKISTUS VAIN JOS ON LIIKUTTU TARPEEKSI
+                        if (!lastCheckedCoords || getDistance(lastCheckedCoords.lat, lastCheckedCoords.lon, latitude, longitude) > CHECK_INTERVAL_METERS) {
+                            console.log(`Liikuttu yli ${CHECK_INTERVAL_METERS}m, tarkistetaan kunta...`);
+                            lastCheckedCoords = { lat: latitude, lon: longitude };
+                            checkCurrentMunicipality(latitude, longitude);
+                        } else {
+                            // Päivitä vain koordinaatit näytölle, mutta älä tee verkkokyselyä
+                             updateStatusDisplay({ municipality: lastCheckedMunicipality, lat: latitude, lon: longitude });
+                        }
                     }
                 },
                 (error) => { console.error("Paikannusvirhe:", error); alert("Paikannus epäonnistui."); updateStatusDisplay(null); },
@@ -327,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentCoords = cache.lat ? `${cache.lat} ${cache.lon}` : '';
             const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
             if(input === null) return;
-            const coords = parseDDMCoordinates(input); // KÄYTETÄÄN UUTTA FUNKTIOTA
+            const coords = parseDDMCoordinates(input);
             if(coords) {
                 cache.lat = coords.lat;
                 cache.lon = coords.lon;
