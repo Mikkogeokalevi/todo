@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
             await requestWakeLock();
-            const CHECK_MUNICIPALITY_INTERVAL_METERS = 500;
+            const CHECK_MUNICIPALIITY_INTERVAL_METERS = 500;
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude, speed } = position.coords;
@@ -466,33 +466,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lines = text.split('\n').filter(Boolean);
                 const newCaches = [];
 
-                lines.forEach(line => {
+                // Käydään rivit läpi kolmen ryhmissä
+                for (let i = 0; i < lines.length; i += 3) {
+                    const line1 = lines[i];
+                    const line2 = lines[i + 1];
+                    const line3 = lines[i + 2];
+
+                    // Varmistetaan, että meillä on kaikki kolme riviä käsiteltävänä
+                    if (!line1 || !line2 || !line3) continue;
+
                     try {
-                        const coordIndex = line.indexOf('N ');
-                        if (coordIndex === -1) return;
+                        // Jäsennys uusitulla, rivikohtaisella logiikalla
 
-                        const coordsString = line.substring(coordIndex);
-                        const coords = parseCoordinates(coordsString);
+                        // Rivi 1: GC-koodi, Nimi, FP
+                        const frontParts = line1.split(/\s*-\s*/);
+                        const gcCode = frontParts[0]?.trim();
+                        const cacheName = frontParts[1]?.trim();
+                        const fpInfo = frontParts.length > 2 ? frontParts.slice(2).join(' - ').trim() : '';
 
-                        const mainPart = line.substring(0, coordIndex).trim();
+                        // Rivi 2: Tyyppi, Koko, D/T
+                        const detailsParts = line2.split('/');
+                        const cacheType = detailsParts[0]?.trim();
+                        const cacheSize = detailsParts[1]?.trim();
+                        const difficulty = detailsParts[2]?.trim();
+                        const terrain = detailsParts[3]?.trim();
 
-                        const detailsRegex = /\s*([\w\s]+?)\s*\/\s*([\w\s]+?)\s*\/\s*([\d\.]+)\s*\/\s*([\d\.]+)$/;
-                        const detailsMatch = mainPart.match(detailsRegex);
+                        // Rivi 3: Koordinaatit
+                        const coords = parseCoordinates(line3);
 
-                        if (!detailsMatch) return;
-
-                        const cacheType = detailsMatch[1].trim();
-                        const cacheSize = detailsMatch[2].trim();
-                        const difficulty = detailsMatch[3];
-                        const terrain = detailsMatch[4];
-                        
-                        const frontPart = mainPart.substring(0, detailsMatch.index).trim();
-                        
-                        const frontParts = frontPart.split(/\s*-\s*/);
-                        
-                        const gcCode = frontParts[0];
-                        const cacheName = frontParts[1];
-                        const fpInfo = frontParts.length > 2 ? frontParts.slice(2).join(' - ') : '';
+                        // Varmistetaan, että saimme vähintään perustiedot
+                        if (!gcCode || !cacheName || !cacheType || !coords) {
+                            console.warn("Ohitetaan epäkelpo lohko:", line1, line2, line3);
+                            continue; // Siirry seuraavaan 3 rivin lohkoon
+                        }
 
                         const cacheData = {
                             id: Date.now() + Math.random(),
@@ -503,17 +509,17 @@ document.addEventListener('DOMContentLoaded', () => {
                             size: cacheSize,
                             difficulty: difficulty,
                             terrain: terrain,
-                            lat: coords ? coords.lat : null,
-                            lon: coords ? coords.lon : null,
+                            lat: coords.lat,
+                            lon: coords.lon,
                             alert_approach_given: false,
                             alert_target_given: false
                         };
                         newCaches.push(cacheData);
 
                     } catch (e) {
-                        console.error("Rivin jäsentäminen epäonnistui:", line, e);
+                        console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e);
                     }
-                });
+                }
 
                 if (newCaches.length > 0) {
                     if (!municipalities[munIndex].caches) {
