@@ -28,15 +28,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let municipalityMarkers = [];
     let cacheMarkers = [];
     let clickMarker = null;
-    let lastCheckedCoords = null; // UUSI: Viimeksi tarkistetut koordinaatit
+    let lastCheckedCoords = null;
 
-    // UUSI: Funktio etäisyyden laskemiseen kahden pisteen välillä (metreinä)
+    // UUSI: Määritellään ilmoitusten etäisyydet metreinä
+    const ALERT_APPROACH_DISTANCE = 1500; // 1.5 km
+    const ALERT_TARGET_DISTANCE = 200;   // 200 m
+
     const getDistance = (lat1, lon1, lat2, lon2) => {
-        const R = 6371e3; // Maapallon säde metreinä
-        const φ1 = lat1 * Math.PI / 180;
-        const φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180;
-        const Δλ = (lon2 - lon1) * Math.PI / 180;
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180; const Δλ = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
@@ -53,19 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const potentialLatStr = cleaned.split(lonMatch[0])[0].trim();
             const latParts = potentialLatStr.split(/\s+/);
             if (latParts.length === 2) {
-                const latDeg = parseFloat(latParts[0]);
-                const latMin = parseFloat(latParts[1]);
-                if (!isNaN(latDeg) && !isNaN(latMin)) {
-                    latMatch = ["", 'N', latDeg.toString(), latMin.toString()];
-                }
+                const latDeg = parseFloat(latParts[0]); const latMin = parseFloat(latParts[1]);
+                if (!isNaN(latDeg) && !isNaN(latMin)) latMatch = ["", 'N', latDeg.toString(), latMin.toString()];
             }
         }
         if (!latMatch || !lonMatch) return null;
         try {
-          let lat = parseFloat(latMatch[2]) + parseFloat(latMatch[3]) / 60.0;
-          if (latMatch[1] === 'S') lat = -lat;
-          let lon = parseFloat(lonMatch[2]) + parseFloat(lonMatch[3]) / 60.0;
-          if (lonMatch[1] === 'W') lon = -lon;
+          let lat = parseFloat(latMatch[2]) + parseFloat(latMatch[3]) / 60.0; if (latMatch[1] === 'S') lat = -lat;
+          let lon = parseFloat(lonMatch[2]) + parseFloat(lonMatch[3]) / 60.0; if (lonMatch[1] === 'W') lon = -lon;
           if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
           return { lat, lon };
         } catch (e) { return null; }
@@ -104,11 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
         map.on('click', handleMapClick);
     };
 
-    const showNotification = (message) => {
+    const showNotification = (message, type = 'info') => {
         const existing = document.querySelector('.notification');
         if (existing) existing.remove();
         const notification = document.createElement('div');
-        notification.className = 'notification';
+        notification.className = `notification ${type}`;
         notification.textContent = message;
         document.body.appendChild(notification);
         setTimeout(() => { notification.remove(); }, 5000);
@@ -125,10 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateAllMarkers = () => {
-        municipalityMarkers.forEach(marker => marker.removeFrom(map));
-        municipalityMarkers = [];
-        cacheMarkers.forEach(marker => marker.removeFrom(map));
-        cacheMarkers = [];
+        municipalityMarkers.forEach(marker => marker.removeFrom(map)); municipalityMarkers = [];
+        cacheMarkers.forEach(marker => marker.removeFrom(map)); cacheMarkers = [];
         const bounds = [];
         municipalities.forEach(mun => {
             if (mun.lat && mun.lon) {
@@ -146,9 +140,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        if (bounds.length > 0 && !trackingWatcher) {
-            map.fitBounds(bounds, { padding: [50, 50] });
-        }
+        if (bounds.length > 0 && !trackingWatcher) map.fitBounds(bounds, { padding: [50, 50] });
+    };
+
+    // UUSI: Funktio kätköjen läheisyyden tarkistamiseen
+    const checkCacheProximity = (userLat, userLon) => {
+        let needsSave = false;
+        municipalities.forEach(mun => {
+            (mun.caches || []).forEach(cache => {
+                if (cache.lat && cache.lon && !cache.done) {
+                    const distance = getDistance(userLat, userLon, cache.lat, cache.lon);
+
+                    // Lähestymisilmoitus
+                    if (distance <= ALERT_APPROACH_DISTANCE && !cache.alert_approach_given) {
+                        showNotification(`Lähestyt kätköä: ${cache.name} (${Math.round(distance)}m)`, 'approach');
+                        cache.alert_approach_given = true;
+                        needsSave = true;
+                    }
+                    // Kohdeilmoitus
+                    if (distance <= ALERT_TARGET_DISTANCE && !cache.alert_target_given) {
+                        showNotification(`Olet lähellä kätköä: ${cache.name} (${Math.round(distance)}m)`, 'target');
+                        cache.alert_target_given = true;
+                        needsSave = true;
+                    }
+                }
+            });
+        });
+        if (needsSave) saveMunicipalities();
     };
 
     const checkCurrentMunicipality = async (lat, lon) => {
@@ -163,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const foundMunIndex = municipalities.findIndex(m => m.name.toLowerCase() === currentMunicipality.toLowerCase());
                 document.querySelectorAll('.municipality-item.highlight').forEach(el => el.classList.remove('highlight'));
                 if (foundMunIndex !== -1) {
-                    showNotification(`Saavuit kuntaan: ${currentMunicipality}!`);
+                    showNotification(`Saavuit kuntaan: ${currentMunicipality}!`, 'info');
                     const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
                     if (munElement) munElement.classList.add('highlight');
                 }
@@ -175,8 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (clickMarker) { clickMarker.removeFrom(map); clickMarker = null; }
         if (trackingWatcher) {
             navigator.geolocation.clearWatch(trackingWatcher);
-            trackingWatcher = null;
-            lastCheckedCoords = null; // Nollataan optimointia varten
+            trackingWatcher = null; lastCheckedCoords = null;
             toggleTrackingBtn.textContent = '🛰️ Aloita seuranta';
             toggleTrackingBtn.classList.remove('tracking-active');
             lastCheckedMunicipality = null;
@@ -184,10 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAllMarkers();
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
-            
-            // Tässä on uusi, älykäs seurantalogikka
-            const CHECK_INTERVAL_METERS = 500; // Tarkistusväli metreinä (muuta tarvittaessa)
-            
+            const CHECK_MUNICIPALITY_INTERVAL_METERS = 500;
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
@@ -195,13 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         userMarker.setLatLng([latitude, longitude]);
                         if (!map.getBounds().contains(userMarker.getLatLng())) map.setView([latitude, longitude], 13);
                         
-                        // SUORITA KUNTATARKISTUS VAIN JOS ON LIIKUTTU TARPEEKSI
-                        if (!lastCheckedCoords || getDistance(lastCheckedCoords.lat, lastCheckedCoords.lon, latitude, longitude) > CHECK_INTERVAL_METERS) {
-                            console.log(`Liikuttu yli ${CHECK_INTERVAL_METERS}m, tarkistetaan kunta...`);
+                        // KEVYT TARKISTUS: Tarkista kätköjen etäisyys joka paikannuksella
+                        checkCacheProximity(latitude, longitude);
+
+                        // RASKAAMPI TARKISTUS: Tarkista kunta harvemmin
+                        if (!lastCheckedCoords || getDistance(lastCheckedCoords.lat, lastCheckedCoords.lon, latitude, longitude) > CHECK_MUNICIPALITY_INTERVAL_METERS) {
                             lastCheckedCoords = { lat: latitude, lon: longitude };
                             checkCurrentMunicipality(latitude, longitude);
                         } else {
-                            // Päivitä vain koordinaatit näytölle, mutta älä tee verkkokyselyä
                              updateStatusDisplay({ municipality: lastCheckedMunicipality, lat: latitude, lon: longitude });
                         }
                     }
@@ -215,6 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const render = () => {
+        // Render-funktion sisältö pysyy samana...
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
         municipalities.forEach((municipality, munIndex) => {
@@ -330,15 +346,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if(input === null) return;
             const coords = parseDDMCoordinates(input);
             if(coords) {
-                cache.lat = coords.lat;
-                cache.lon = coords.lon;
-                needsSave = true;
-                needsRender = true;
+                cache.lat = coords.lat; cache.lon = coords.lon;
+                needsSave = true; needsRender = true;
             } else if (input.trim() === '') {
-                delete cache.lat;
-                delete cache.lon;
-                needsSave = true;
-                needsRender = true;
+                delete cache.lat; delete cache.lon;
+                needsSave = true; needsRender = true;
             } else {
                 alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
             }
@@ -348,8 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const newName = prompt("Muokkaa kunnan nimeä:", oldName);
             if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
                 municipalities[munIndex].name = newName.trim();
-                delete municipalities[munIndex].lat;
-                delete municipalities[munIndex].lon;
+                delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
                 needsSave = true; needsRender = true;
                 ensureAllCoordsAreFetched(municipalities);
             }
@@ -382,6 +393,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (button.type === 'checkbox') {
             const cache = municipalities[munIndex].caches[button.dataset.cacheIndex];
             cache.done = button.checked;
+            // UUSI: Nollataan ilmoitukset, jos kätkö merkitään löytämättömäksi
+            if (!button.checked) {
+                delete cache.alert_approach_given;
+                delete cache.alert_target_given;
+            }
             needsSave = true; needsRender = true;
         }
         if (needsSave) saveMunicipalities();
