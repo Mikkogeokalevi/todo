@@ -36,18 +36,30 @@
                 
                 <hr class="custom-hr">
 
-                <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
-
-                <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
-
-                <div id="bulkAddContainer" class="bulk-add hidden">
-                    <h3>Lisää kunnat listana</h3>
-                    <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
-                    <button id="bulkAddBtn">Lisää listasta</button>
+                <div class="view-toggles">
+                    <button id="showTripListBtn" class="view-toggle-btn active">Reissulista</button>
+                    <button id="showFoundLogBtn" class="view-toggle-btn">Loki</button>
                 </div>
 
-                <ul id="municipalityList">
-                </ul>
+                <div id="tripListView">
+                    <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
+                    <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
+                    <div id="bulkAddContainer" class="bulk-add hidden">
+                        <h3>Lisää kunnat listana</h3>
+                        <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
+                        <button id="bulkAddBtn">Lisää listasta</button>
+                    </div>
+                    <ul id="municipalityList"></ul>
+                </div>
+
+                <div id="foundLogView" class="hidden">
+                    <h2 class="alaotsikko">Löydetyt kätköt</h2>
+                    <div class="direct-add-cache">
+                        <input type="text" id="directAddInput" placeholder="Liitä kätkön URL (coord.info/GC...)">
+                        <button id="directAddBtn">Lisää lokiin</button>
+                    </div>
+                    <ul id="foundCachesList"></ul>
+                </div>
             </div>
         </div>
     </div>
