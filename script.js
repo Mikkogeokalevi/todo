@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 // --- ASETUKSET ---
 const FIREBASE_PATH = 'paalista';
@@ -16,8 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const database = getDatabase(app);
 
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
+    const bulkAddInput = document.getElementById('bulkAddMunicipalities');
+    const bulkAddBtn = document.getElementById('bulkAddBtn');
     const municipalityList = document.getElementById('municipalityList');
     const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
+    const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
+    const bulkAddContainer = document.getElementById('bulkAddContainer');
     const toggleTrackingBtn = document.getElementById('toggleTrackingBtn');
     const locationStatusDisplay = document.getElementById('location-status-display');
     const speedDisplay = document.getElementById('speed-display');
@@ -28,9 +32,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const directAddInput = document.getElementById('directAddInput');
     const directAddBtn = document.getElementById('directAddBtn');
     const foundCachesList = document.getElementById('foundCachesList');
-    const pgcInput = document.getElementById('pgcInput');
-    const addFromPgcBtn = document.getElementById('addFromPgcBtn');
-
 
     let municipalities = [];
     let foundCaches = [];
@@ -47,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ALERT_APPROACH_DISTANCE = 1500;
     const ALERT_TARGET_DISTANCE = 200;
 
+    // ... (Kaikki apufunktiot kuten getDistance, parseCoordinates, etc. pysyvät ennallaan) ...
     const getDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
         const Δφ = (lat2 - lat1) * Math.PI / 180; const Δλ = (lon2 - lon1) * Math.PI / 180;
@@ -89,23 +91,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameCandidates = [address.municipality, address.city, address.town, address.village];
         return nameCandidates.find(name => name && !name.toLowerCase().includes('seutukunta')) || null;
     };
-    const formatCoordinatesToDDM = (lat, lon) => {
-        const latHemi = lat >= 0 ? 'N' : 'S';
-        const lonHemi = lon >= 0 ? 'E' : 'W';
-        const formatPart = (val, hemi) => {
-            const absVal = Math.abs(val);
-            const deg = Math.floor(absVal);
-            const min = ((absVal - deg) * 60).toFixed(3);
-            return `${hemi} ${deg}° ${min.padStart(6, '0')}'`;
-        };
-        return `${formatPart(lat, latHemi)} ${formatPart(lon, lonHemi)}`;
+    const handleMapClick = async (e) => {
+        if (trackingWatcher) return;
+        const { lat, lng } = e.latlng;
+        if (clickMarker) clickMarker.removeFrom(map);
+        clickMarker = L.marker([lat, lng]).addTo(map);
+        clickMarker.bindPopup('Haetaan kuntaa...').openPopup();
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10`);
+            if (!response.ok) throw new Error('Haku epäonnistui');
+            const data = await response.json();
+            const municipalityName = getMunicipalityFromResponse(data) || 'Tuntematon sijainti';
+            clickMarker.getPopup().setContent(`<b>${municipalityName}</b>`);
+        } catch (error) {
+            clickMarker.getPopup().setContent('Kunnan haku epäonnistui.');
+            console.error(error);
+        }
     };
-    const unlockAudio = () => {
-        const sound = new Audio("data:audio/mpeg;base64,SUQzBAAAAAABEVRYWFgAAAAtAAADY29tbWVudABCaWdTb3VuZEJhbmsuY29tIC8gTGFTb25vdGhlcXVlLm9yZwBURU5DAAAAHQAAA1N3aXRjaCBQbHVzIMKpIE5DSCBTb2Z0d2FyZQBUSVQyAAAABgAAAzIyMzU0UFRNRAAAACgAAAZwYWdlIChNaWNyb2xhYiBBRDIpAAAAAOutlAJsAQAAAAgAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV");
-        sound.volume = 0;
-        sound.play().catch(e => console.warn("Audio unlock failed.", e));
-    };
-
     const initMap = () => {
         map = L.map('map').setView([61.9, 25.7], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
@@ -113,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
         map.on('click', handleMapClick);
     };
-
     const showNotification = (message, type = 'info') => {
         const existing = document.querySelector('.notification');
         if (existing) existing.remove();
@@ -123,17 +124,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(notification);
         setTimeout(() => { notification.remove(); }, 8000);
     };
-    
     const updateStatusDisplay = (data) => {
         if (!data) {
             locationStatusDisplay.innerHTML = `<p>Aloita seuranta tai klikkaa karttaa.</p>`;
             return;
         }
         const kuntaText = data.municipality ? `<strong>${data.municipality}</strong>` : 'Haetaan kuntaa...';
-        const koordinaatitText = formatCoordinatesToDDM(data.lat, data.lon);
+        const koordinaatitText = `N: ${data.lat.toFixed(5)}, E: ${data.lon.toFixed(5)}`;
         locationStatusDisplay.innerHTML = `<p class="status-kunta">${kuntaText}</p><p class="status-koordinaatit">${koordinaatitText}</p>`;
     };
-
     const updateAllMarkers = () => {
         municipalityMarkers.forEach(marker => marker.removeFrom(map)); municipalityMarkers = [];
         cacheMarkers.forEach(marker => marker.removeFrom(map)); cacheMarkers = [];
@@ -156,21 +155,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (bounds.length > 0 && !trackingWatcher) map.fitBounds(bounds, { padding: [50, 50] });
     };
-
     const checkCacheProximity = (userLat, userLon) => {
         let needsSave = false;
         municipalities.forEach(mun => {
             (mun.caches || []).forEach(cache => {
-                if (cache.lat && cache.lon) {
+                if (cache.lat && cache.lon && !cache.done) {
                     const distance = getDistance(userLat, userLon, cache.lat, cache.lon);
                     if (distance <= ALERT_APPROACH_DISTANCE && !cache.alert_approach_given) {
                         showNotification(`Lähestyt kätköä: ${cache.name} (${Math.round(distance)}m)`, 'approach');
-                        try { new Audio('approach.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä: approach.mp3", e); }
+                        try { new Audio('approach.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä approach.mp3"); }
                         cache.alert_approach_given = true; needsSave = true;
                     }
                     if (distance <= ALERT_TARGET_DISTANCE && !cache.alert_target_given) {
                         showNotification(`Olet lähellä kätköä: ${cache.name} (${Math.round(distance)}m)`, 'target');
-                        try { new Audio('target.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä: target.mp3", e); }
+                        try { new Audio('target.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä target.mp3"); }
                         cache.alert_target_given = true; needsSave = true;
                     }
                 }
@@ -178,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (needsSave) saveMunicipalities();
     };
-
     const checkCurrentMunicipality = async (lat, lon) => {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
@@ -192,20 +189,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.municipality-item.highlight').forEach(el => el.classList.remove('highlight'));
                 if (foundMunIndex !== -1) {
                     showNotification(`Saavuit kuntaan: ${currentMunicipality}!`, 'info');
-                    try { new Audio('kunta.mp3').play(); } catch(e) { console.warn("Ei voitu soittaa ääntä: kunta.mp3", e); }
                     const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
                     if (munElement) munElement.classList.add('highlight');
                 }
             }
         } catch (error) { console.error("Kuntatarkistusvirhe:", error); }
     };
-
     const getZoomLevelForSpeed = (speedKmh) => {
         if (speedKmh < 10) return 16; if (speedKmh < 30) return 15;
         if (speedKmh < 60) return 14; if (speedKmh < 90) return 13;
         return 12;
     };
-
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
@@ -214,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) { console.error(`${err.name}, ${err.message}`); }
         }
     };
-
     const toggleTracking = async () => {
         if (clickMarker) { clickMarker.removeFrom(map); clickMarker = null; }
         if (trackingWatcher) {
@@ -225,20 +218,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             toggleTrackingBtn.textContent = '🛰️ Aloita seuranta';
             toggleTrackingBtn.classList.remove('tracking-active');
-            speedDisplay.textContent = '--,- km/h';
+            speedDisplay.textContent = '-- km/h';
             lastCheckedMunicipality = null;
             updateStatusDisplay(null);
             updateAllMarkers();
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
-            unlockAudio();
             await requestWakeLock();
             const CHECK_MUNICIPALITY_INTERVAL_METERS = 500;
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude, speed } = position.coords;
-                    const speedKmh = speed ? (speed * 3.6) : 0;
-                    speedDisplay.textContent = `${speedKmh.toFixed(1)} km/h`;
+                    const speedKmh = speed ? Math.round(speed * 3.6) : 0;
+                    speedDisplay.textContent = `${speedKmh} km/h`;
                     if (map && userMarker) {
                         userMarker.setLatLng([latitude, longitude]);
                         const newZoom = getZoomLevelForSpeed(speedKmh);
@@ -291,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(oikeaAvain)}&nonefound=on&submit=Filter`;
                 pgcLinkHtml = `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${kunnanNimi} Project-GC:ssä" class="pgc-link">🗺️</a>`;
             }
-            munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul>`;
+            munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul><div class="add-cache"><input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi">${cacheTypeSelectorTemplate.innerHTML}<button class="add-cache-btn" data-mun-index="${munIndex}">+</button></div>`;
             municipalityList.appendChild(munItem);
         });
     };
@@ -302,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
         sortedCaches.forEach((cache) => {
             const li = document.createElement('li');
             li.className = 'found-cache-item';
-            li.dataset.cacheId = cache.id;
             const date = new Date(cache.timestamp);
             const formattedDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} klo ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
             const loggersHtml = LOGGERS.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
@@ -358,77 +349,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveMunicipalities = () => set(ref(database, `${FIREBASE_PATH}/municipalities`), municipalities);
     const saveFoundCaches = () => set(ref(database, `${FIREBASE_PATH}/foundCaches`), foundCaches);
     const savePgcProfileName = () => set(ref(database, `${FIREBASE_PATH}/pgcProfileName`), pgcProfileNameInput.value);
-    
-    addFromPgcBtn.addEventListener('click', async () => {
-        const text = pgcInput.value;
-        const lines = text.split('\n').filter(line => line.trim().startsWith('GC'));
-        if (lines.length === 0) return alert("Syötteestä ei löytynyt GC-alkuisia rivejä.");
 
-        addFromPgcBtn.disabled = true;
-        addFromPgcBtn.textContent = 'Lisätään...';
-
-        for (const line of lines) {
-            const gcCodeMatch = line.match(/^(GC[A-Z0-9]+)/);
-            if (!gcCodeMatch) continue;
-
-            const coordsStringMatch = line.match(/(N\s+.*)$/);
-            if (!coordsStringMatch) continue;
-
-            const coords = parseCoordinates(coordsStringMatch[0]);
-            if (!coords) continue;
-            
-            const DTRatingMatch = line.match(/(\d\.\d)\s*\/\s*(\d\.\d)/);
-            const typeMatch = line.match(/(Traditional|Unknown|Multi|Letterbox|Event|Wherigo)/i);
-            const sizeMatch = line.match(/\/(Micro|Small|Regular|Large|Other|Not Chosen)\//i);
-            const namePart = line.substring(gcCodeMatch[0].length, line.indexOf(typeMatch ? typeMatch[0] : (DTRatingMatch ? DTRatingMatch[0] : ''))).replace(/-\s*.*FP.*/, '').replace(/-/g, ' ').trim();
-
-            const newCache = {
-                id: Date.now() + Math.random(),
-                name: `${gcCodeMatch[0]} ${namePart}`,
-                type: typeMatch ? typeMatch[0].replace(' Cache', '') : 'Muu',
-                size: sizeMatch ? sizeMatch[1] : '',
-                difficulty: DTRatingMatch ? DTRatingMatch[1] : '',
-                terrain: DTRatingMatch ? DTRatingMatch[2] : '',
-                lat: coords.lat,
-                lon: coords.lon,
-            };
-            
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${coords.lat}&lon=${coords.lon}&zoom=10`);
-            const data = await response.json();
-            const munName = getMunicipalityFromResponse(data) || "Tuntematon";
-            
-            let mun = municipalities.find(m => m.name.toLowerCase() === munName.toLowerCase());
-            if (!mun) {
-                mun = { name: munName, caches: [] };
-                municipalities.push(mun);
-            }
-            if (!mun.caches) mun.caches = [];
-            
-            if (!mun.caches.some(c => c.name.startsWith(newCache.name.split(' ')[0]))) {
-                 mun.caches.push(newCache);
+    const handleBulkAdd = async () => {
+        const text = bulkAddInput.value.trim(); if (!text) return;
+        bulkAddBtn.disabled = true; bulkAddBtn.textContent = 'Haetaan...';
+        const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
+        let notFound = [];
+        for (const name of newNames) {
+            if (!municipalities.some(m => m.name.toLowerCase() === name.toLowerCase())) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name + ', Finland')}&format=json&limit=1`);
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        municipalities.push({ name: name, caches: [], lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
+                    } else { notFound.push(name); }
+                } catch (error) { console.error("Virhe haettaessa kuntaa:", name, error); notFound.push(name); }
             }
         }
-        await ensureAllCoordsAreFetched(municipalities);
+        if (notFound.length > 0) alert(`Seuraavia kuntia ei löytynyt: ${notFound.join(', ')}`);
+        bulkAddInput.value = ''; bulkAddBtn.disabled = false; bulkAddBtn.textContent = 'Lisää listasta';
         saveMunicipalities();
-        pgcInput.value = '';
-        addFromPgcBtn.disabled = false;
-        addFromPgcBtn.textContent = 'Lisää kätköt reissulistalle';
-    });
+    };
 
+    toggleBulkAddBtn.addEventListener('click', () => {
+        const isHidden = bulkAddContainer.classList.toggle('hidden');
+        toggleBulkAddBtn.textContent = isHidden ? 'Lisää kunnat listana' : 'Piilota lisäysalue';
+    });
+    bulkAddBtn.addEventListener('click', handleBulkAdd);
+    
     municipalityList.addEventListener('click', (e) => {
         const button = e.target.closest('button, input[type="checkbox"]');
         if (!button) return;
         const munIndex = parseInt(button.dataset.munIndex, 10);
-        if (isNaN(munIndex) || !municipalities[munIndex]) return;
-
-        let needsAtomicUpdate = false;
-        let needsLocalUpdate = false;
-
+        if (isNaN(munIndex)) return;
+        
         if (button.type === 'checkbox') {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
-            if(isNaN(cacheIndex) || !municipalities[munIndex].caches[cacheIndex]) return;
-            
-            const cacheToMove = municipalities[munIndex].caches.splice(cacheIndex, 1)[0];
+            const cacheToMove = municipalities[munIndex].caches[cacheIndex];
             const loggers = {};
             LOGGERS.forEach(name => { loggers[name] = false; });
             const gcCodeMatch = cacheToMove.name.match(/(GC[A-Z0-9]+)/i);
@@ -438,8 +395,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 timestamp: new Date().toISOString(), loggers: loggers
             };
             foundCaches.push(newFoundCache);
-            needsAtomicUpdate = true;
+            municipalities[munIndex].caches.splice(cacheIndex, 1);
+            saveMunicipalities(); saveFoundCaches();
         } else {
+            let needsSave = false; let needsRender = false;
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             if (button.classList.contains('set-coords-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
@@ -447,10 +406,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
                 if(input !== null) {
                     const coords = parseCoordinates(input);
-                    if(coords) { cache.lat = coords.lat; cache.lon = coords.lon; } 
-                    else if (input.trim() === '') { delete cache.lat; delete cache.lon; } 
-                    else { alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341"); }
-                    needsLocalUpdate = true;
+                    if(coords) {
+                        cache.lat = coords.lat; cache.lon = coords.lon;
+                    } else if (input.trim() === '') {
+                        delete cache.lat; delete cache.lon;
+                    } else {
+                        alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
+                    }
+                    needsSave = true; needsRender = true;
                 }
             } else if (button.classList.contains('edit-municipality-btn')) {
                 const oldName = municipalities[munIndex].name;
@@ -458,36 +421,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
                     municipalities[munIndex].name = newName.trim();
                     delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
+                    needsSave = true; needsRender = true;
                     ensureAllCoordsAreFetched(municipalities);
-                    needsLocalUpdate = true;
                 }
             } else if (button.classList.contains('delete-municipality-btn')) {
                 if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
                     municipalities.splice(munIndex, 1);
-                    needsLocalUpdate = true;
+                    needsSave = true; needsRender = true;
+                }
+            } else if (button.classList.contains('add-cache-btn')) {
+                const container = button.closest('.add-cache');
+                const nameInput = container.querySelector('.new-cache-name');
+                if (nameInput.value.trim()) {
+                    if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
+                    municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: container.querySelector('.cache-type-selector').value });
+                    nameInput.value = '';
+                    needsSave = true; needsRender = true;
                 }
             } else if (button.classList.contains('delete-cache-btn')) {
                 if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
                     municipalities[munIndex].caches.splice(cacheIndex, 1);
-                    needsLocalUpdate = true;
+                    needsSave = true; needsRender = true;
                 }
             } else if (button.classList.contains('edit-cache-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
                 const newName = prompt("Muokkaa kätkön nimeä:", cache.name);
                 if (newName && newName.trim()) {
                     cache.name = newName.trim();
-                    needsLocalUpdate = true;
+                    needsSave = true; needsRender = true;
                 }
             }
-        }
-
-        if (needsAtomicUpdate) {
-            const updates = {};
-            updates[`${FIREBASE_PATH}/municipalities`] = municipalities;
-            updates[`${FIREBASE_PATH}/foundCaches`] = foundCaches;
-            update(ref(database), updates);
-        } else if (needsLocalUpdate) {
-            saveMunicipalities();
+            if (needsSave) saveMunicipalities();
+            if (needsRender) { render(); updateAllMarkers(); }
         }
     });
 
@@ -510,7 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target;
         const cacheItem = target.closest('.found-cache-item');
         if (!cacheItem) return;
-        const cacheId = parseInt(cacheItem.dataset.cacheId, 10);
+        const cacheId = parseInt(target.closest('button, label > input')?.dataset.cacheId, 10);
         if (isNaN(cacheId)) return;
         
         const cacheIndex = foundCaches.findIndex(c => c.id === cacheId);
@@ -519,24 +484,20 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (target.type === 'checkbox') {
             const loggerName = target.dataset.logger;
-            if (!cache.loggers) cache.loggers = {};
             cache.loggers[loggerName] = target.checked;
             saveFoundCaches();
-        } else {
-            const button = target.closest('button');
-            if (button && button.classList.contains('edit-found-btn')) {
-                const newName = prompt("Muokkaa nimeä/GC-koodia:", cache.name);
-                if (newName && newName.trim()) {
-                    cache.name = newName.trim();
-                    const gcCodeMatch = newName.match(/(GC[A-Z0-9]+)/i);
-                    cache.gcCode = gcCodeMatch ? gcCodeMatch[0].toUpperCase() : newName;
-                    saveFoundCaches();
-                }
-            } else if (button && button.classList.contains('delete-found-btn')) {
-                if (confirm(`Haluatko varmasti poistaa lokista kätkön "${cache.name}"?`)) {
-                    foundCaches.splice(cacheIndex, 1);
-                    saveFoundCaches();
-                }
+        } else if (target.classList.contains('edit-found-btn')) {
+            const newName = prompt("Muokkaa nimeä/GC-koodia:", cache.name);
+            if (newName && newName.trim()) {
+                cache.name = newName.trim();
+                const gcCodeMatch = newName.match(/(GC[A-Z0-9]+)/i);
+                cache.gcCode = gcCodeMatch ? gcCodeMatch[0].toUpperCase() : newName;
+                saveFoundCaches();
+            }
+        } else if (target.classList.contains('delete-found-btn')) {
+            if (confirm(`Haluatko varmasti poistaa lokista kätkön "${cache.name}"?`)) {
+                foundCaches.splice(cacheIndex, 1);
+                saveFoundCaches();
             }
         }
     });
