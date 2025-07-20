@@ -3,7 +3,6 @@ body {
     font-family: 'Georgia', serif;
     margin: 0;
     padding: 10px;
-    transition: padding 0.3s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -31,6 +30,8 @@ body {
     z-index: 1002;
 }
 
+.hidden { display: none !important; }
+
 .teksti-alue {
     color: #F8F8F8;
     line-height: 1.7;
@@ -38,424 +39,88 @@ body {
     font-size: 1.0em;
 }
 
-.logo-container {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 15px;
-}
+.logo-container { display: flex; align-items: center; margin-bottom: 20px; gap: 15px; }
+.logo { width: 50px; height: 50px; border: 2px solid #90EE90; border-radius: 50%; box-shadow: 1px 1px 3px rgba(0,0,0,0.4); background-color: #3D4F2B; padding: 3px; flex-shrink: 0; }
+.paaotsikko { color: #90EE90; text-align: left; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-size: 1.2em; letter-spacing: 0.5px; }
+.alaotsikko { color: #90EE90; text-align: center; margin-top: 20px; margin-bottom: 15px; font-size: 1.2em; text-shadow: 1px 1px 1px rgba(0,0,0,0.6); }
+.custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 20px 0; }
+.container { padding: 0 5px; }
 
-.logo {
-    width: 50px;
-    height: 50px;
-    border: 2px solid #90EE90;
-    border-radius: 50%;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.4);
-    background-color: #3D4F2B;
-    padding: 3px;
-    flex-shrink: 0;
-}
+input[type="text"], textarea, select { flex-grow: 1; padding: 10px; border: 1px solid #2A381C; border-radius: 4px; font-size: 15px; width: 100%; box-sizing: border-box; background-color: #2A381C; color: #F8F8F8; font-family: 'Georgia', serif; }
+input[type="text"]::placeholder, textarea::placeholder { color: #cccccc; opacity: 0.7; }
+button { padding: 10px 15px; border: 1px solid #90EE90; background-color: transparent; color: #90EE90; border-radius: 4px; cursor: pointer; font-size: 15px; font-family: 'Georgia', serif; transition: all 0.2s; flex-shrink: 0; }
+button:hover { background-color: #90EE90; color: #1a2015; }
 
-.paaotsikko {
-    color: #90EE90;
-    text-align: left;
-    margin: 0;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-    font-size: 1.2em;
-    letter-spacing: 0.5px;
-}
+.toggle-button { background-color: #4a5c3a; border-color: #556B2F; margin-bottom: 15px; width: 100%; }
+.toggle-button:hover { background-color: #556B2F; color: #FFFFFF; }
+.profile-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background-color: #2A381C; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
+.profile-controls label { font-weight: bold; color: #E6E6E6; flex-shrink: 0; }
+.profile-controls input { background-color: #3D4F2B; border-color: #556B2F; }
 
-.alaotsikko {
-    color: #90EE90;
-    text-align: center;
-    margin-top: 20px;
-    margin-bottom: 15px;
-    font-size: 1.2em;
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.6);
-}
+.bulk-add { background-color: #2A381C; border: 1px solid #556B2F; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+.bulk-add h3 { margin: 0 0 10px 0; text-align: center; color: #E6E6E6; font-size: 1.1em; }
+.bulk-add button { margin-top: 10px; width: 100%; }
 
-.custom-hr {
-    border: none;
-    height: 1px;
-    background-color: #2A381C;
-    margin: 20px 0;
-}
+ul { list-style: none; padding: 0; }
+.municipality-item { background: #4a5c3a; border: 1px solid #2A381C; padding: 10px; margin-bottom: 10px; border-radius: 5px; cursor: grab; transition: all 0.3s ease; }
+.municipality-item.dragging { opacity: 0.8; border: 1px dashed #FFD700; }
+.municipality-header { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; font-weight: bold; color: #FFFFFF; margin-bottom: 5px; }
+.cache-list { padding-left: 0; margin-top: 10px; }
+.cache-item { display: flex; align-items: center; padding: 5px; border-top: 1px solid #556B2F; }
+.cache-info { flex-grow: 1; word-break: break-word; }
+.cache-info span.done { text-decoration: line-through; color: #bbbbbb; }
+.cache-info a { color: inherit; text-decoration: underline; text-decoration-color: #cccccc; transition: color 0.2s; }
+.cache-info a:hover { color: #FFD700; }
+.cache-type { font-size: 0.8em; background-color: #2A381C; color: #dddddd; padding: 2px 8px; border-radius: 10px; margin-right: 8px; white-space: nowrap; }
+.actions { display: flex; align-items: center; }
+.cache-actions button, .municipality-header .actions button { background: none; border: none; font-size: 1.2em; padding: 0 4px; color: #cccccc; width: auto; }
+.cache-actions button:hover, .municipality-header .actions button:hover { color: #FFD700; }
 
-.container {
-    padding: 0 5px;
-}
+.set-coords-btn { border: 2px solid transparent !important; border-radius: 50%; transition: all 0.3s ease; line-height: 1; }
+.set-coords-btn.coords-set { border-color: #2ecc71 !important; transform: scale(1.1); }
 
-input[type="text"], textarea, select {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #2A381C;
-    border-radius: 4px;
-    font-size: 15px;
-    width: 100%;
-    box-sizing: border-box;
-    background-color: #2A381C;
-    color: #F8F8F8;
-    font-family: 'Georgia', serif;
-}
+.add-cache { display: flex; flex-direction: row; gap: 8px; margin-top: 10px; align-items: center; }
+.add-cache .new-cache-name { flex-grow: 1; min-width: 50px; }
+.add-cache .cache-type-selector { flex-grow: 0; flex-shrink: 1; min-width: 80px; }
+.add-cache button { flex-grow: 0; flex-shrink: 0; width: auto; padding: 10px 12px; }
 
-input[type="text"]::placeholder, textarea::placeholder {
-    color: #cccccc;
-    opacity: 0.7;
-}
+.municipality-name-link { color: #FFFFFF; text-decoration: none; transition: color 0.2s; }
+.municipality-name-link:hover { color: #FFD700; text-decoration: underline; }
+.actions .pgc-link { font-size: 1.2em; text-decoration: none; margin-right: 8px; transition: transform 0.2s; display: inline-block; }
+.actions .pgc-link:hover { transform: scale(1.2); }
 
-button {
-    padding: 10px 15px;
-    border: 1px solid #90EE90;
-    background-color: transparent;
-    color: #90EE90;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 15px;
-    font-family: 'Georgia', serif;
-    transition: all 0.2s;
-    flex-shrink: 0;
-}
-
-button:hover {
-    background-color: #90EE90;
-    color: #1a2015;
-}
-
-.toggle-button {
-    background-color: #4a5c3a;
-    border-color: #556B2F;
-    margin-bottom: 15px;
-    width: 100%;
-}
-
-.toggle-button:hover {
-    background-color: #556B2F;
-    color: #FFFFFF;
-}
-
-.profile-controls {
-    display: flex;
-    flex-wrap: wrap; 
-    align-items: center;
-    gap: 10px;
-    background-color: #2A381C;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.profile-controls label {
-    font-weight: bold;
-    color: #E6E6E6;
-    flex-shrink: 0;
-}
-
-.profile-controls input {
-    background-color: #3D4F2B;
-    border-color: #556B2F;
-}
-
-.bulk-add {
-    background-color: #2A381C;
-    border: 1px solid #556B2F;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.bulk-add.hidden {
-    display: none;
-}
-
-.bulk-add h3 {
-    margin: 0 0 10px 0;
-    text-align: center;
-    color: #E6E6E6;
-    font-size: 1.1em;
-}
-
-.bulk-add button {
-    margin-top: 10px;
-    width: 100%;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-.municipality-item {
-    background: #4a5c3a;
-    border: 1px solid #2A381C;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    cursor: grab;
-    transition: all 0.3s ease;
-}
-
-.municipality-item.dragging {
-    opacity: 0.8;
-    border: 1px dashed #FFD700;
-}
-
-.municipality-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.1em;
-    font-weight: bold;
-    color: #FFFFFF;
-    margin-bottom: 5px;
-}
-
-.cache-list {
-    padding-left: 0;
-    margin-top: 10px;
-}
-
-.cache-item {
-    display: flex;
-    align-items: center;
-    padding: 5px;
-    border-top: 1px solid #556B2F;
-}
-
-.cache-info {
-    flex-grow: 1;
-    word-break: break-word;
-}
-
-.cache-info span.done {
-    text-decoration: line-through;
-    color: #bbbbbb;
-}
-
-.cache-info a {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-color: #cccccc;
-    transition: color 0.2s;
-}
-
-.cache-info a:hover {
-    color: #FFD700;
-}
-
-.cache-info span.done a {
-    color: #bbbbbb;
-    text-decoration-color: #bbbbbb;
-}
-
-.cache-type {
-    font-size: 0.8em;
-    background-color: #2A381C;
-    color: #dddddd;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-right: 8px;
-    white-space: nowrap;
-}
-
-.actions {
-    display: flex;
-    align-items: center;
-}
-
-.cache-actions button, .municipality-header .actions button {
-    background: none;
-    border: none;
-    font-size: 1.2em;
-    padding: 0 4px;
-    color: #cccccc;
-    width: auto;
-}
-
-.cache-actions button:hover, .municipality-header .actions button:hover {
-    color: #FFD700;
-}
-
-/* KORJATTU TYYLI koordinaattipainikkeelle */
-.set-coords-btn {
-    border: 2px solid transparent !important; /* Lisätty !important varmuuden vuoksi */
-    border-radius: 50%;
-    transition: all 0.3s ease;
-    line-height: 1; /* Tasaa emojin paremmin */
-}
-
-.set-coords-btn.coords-set {
-    border-color: #2ecc71 !important; /* Vihreä reunus */
-    transform: scale(1.1);
-}
-
-.add-cache {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    margin-top: 10px;
-    align-items: center;
-}
-
-.add-cache .new-cache-name {
-    flex-grow: 1;
-    min-width: 50px;
-}
-
-.add-cache .cache-type-selector {
-    flex-grow: 0;
-    flex-shrink: 1;
-    min-width: 80px;
-}
-
-.add-cache button {
-    flex-grow: 0;
-    flex-shrink: 0;
-    width: auto;
-    padding: 10px 12px;
-}
-
-.municipality-name-link {
-    color: #FFFFFF;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.municipality-name-link:hover {
-    color: #FFD700;
-    text-decoration: underline;
-}
-
-.actions .pgc-link {
-    font-size: 1.2em;
-    text-decoration: none;
-    margin-right: 8px;
-    transition: transform 0.2s;
-    display: inline-block;
-}
-
-.actions .pgc-link:hover {
-    transform: scale(1.2);
-}
-
-#location-status-display {
-    background-color: #2A381C;
-    border-radius: 8px;
-    padding: 10px 15px;
-    margin-bottom: 20px;
-    text-align: center;
-    border: 1px solid #4a5c3a;
-}
-#location-status-display p {
-    margin: 0;
-    line-height: 1.4;
-}
-.status-kunta {
-    font-size: 1.2em;
-    color: #FFD700;
-}
-.status-kunta strong {
-    font-weight: 600;
-}
-.status-koordinaatit {
-    font-size: 0.9em;
-    color: #bbbbbb;
-    font-family: monospace;
-}
-
-#map {
-    height: 300px;
-    width: 100%;
-    margin-top: 0;
-    margin-bottom: 20px;
-    border-radius: 12px;
-    border: 2px solid #2A381C;
-    z-index: 1;
-}
-
-.user-marker {
-    background-color: #3498db;
-    border: 3px solid #ffffff;
-    border-radius: 50%;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    width: 18px;
-    height: 18px;
-}
-
-.municipality-item.highlight {
-    background-color: #FFD700;
-    border-color: #fff;
-    transform: scale(1.03);
-}
-.municipality-item.highlight .municipality-name-link {
-    color: #1a2015;
-    font-weight: bold;
-}
-
-#toggleTrackingBtn {
-    background-color: #3498db;
-    color: white;
-    border-color: #3498db;
-    font-weight: bold;
-}
-
-#toggleTrackingBtn.tracking-active {
-    background-color: #e74c3c;
-    border-color: #e74c3c;
-}
-
-.notification {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #2ecc71;
-    color: white;
-    padding: 15px 25px;
-    border-radius: 8px;
-    z-index: 1001;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    font-size: 1.1em;
-    font-weight: bold;
-    animation: fadeInOut 8s ease-in-out;
-    text-align: center;
-    max-width: 90%;
-}
+#location-status-display { background-color: #2A381C; border-radius: 8px; padding: 10px 15px; margin-bottom: 20px; text-align: center; border: 1px solid #4a5c3a; }
+#location-status-display p { margin: 0; line-height: 1.4; }
+.status-kunta { font-size: 1.2em; color: #FFD700; }
+.status-kunta strong { font-weight: 600; }
+.status-koordinaatit { font-size: 0.9em; color: #bbbbbb; font-family: monospace; }
+#map { height: 300px; width: 100%; margin-top: 0; margin-bottom: 20px; border-radius: 12px; border: 2px solid #2A381C; z-index: 1; }
+.user-marker { background-color: #3498db; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); width: 18px; height: 18px; }
+.municipality-item.highlight { background-color: #FFD700; border-color: #fff; transform: scale(1.03); }
+.municipality-item.highlight .municipality-name-link { color: #1a2015; font-weight: bold; }
+#toggleTrackingBtn { background-color: #3498db; color: white; border-color: #3498db; font-weight: bold; }
+#toggleTrackingBtn.tracking-active { background-color: #e74c3c; border-color: #e74c3c; }
+.notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #2ecc71; color: white; padding: 15px 25px; border-radius: 8px; z-index: 1001; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 1.1em; font-weight: bold; animation: fadeInOut 8s ease-in-out; text-align: center; max-width: 90%; }
 .notification.approach { background-color: #3498db; }
 .notification.target { background-color: #e67e22; }
+@keyframes fadeInOut { 0% { opacity: 0; top: 0; } 15% { opacity: 1; top: 20px; } 85% { opacity: 1; top: 20px; } 100% { opacity: 0; top: -50px; } }
+.municipality-marker { background: rgba(42, 56, 28, 0.8); color: #FFD700; border: 1px solid #FFD700; border-radius: 5px; padding: 2px 5px; font-size: 12px; font-weight: bold; text-align: center; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.4); pointer-events: none; }
+.cache-marker { background-color: #FFD700; border: 2px solid #ffffff; border-radius: 50%; width: 12px; height: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
+/* UUDET TYYLIT LOKIA VARTEN */
+.view-toggles { display: flex; margin-bottom: 20px; border: 1px solid #4a5c3a; border-radius: 8px; overflow: hidden; }
+.view-toggle-btn { flex: 1; padding: 12px; border: none; background-color: transparent; color: #cccccc; cursor: pointer; font-size: 1.1em; transition: all 0.3s; border-radius: 0; }
+.view-toggle-btn.active { background-color: #FFD700; color: #1a2015; font-weight: bold; }
+.direct-add-cache { display: flex; gap: 10px; margin-bottom: 20px; }
+#directAddBtn { flex-shrink: 1; }
+.found-cache-item { background: #2A381C; padding: 12px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #90EE90; }
+.found-cache-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.found-cache-header a { font-weight: bold; font-size: 1.1em; color: #FFFFFF; text-decoration: none; }
+.found-cache-header a:hover { text-decoration: underline; color: #FFD700; }
+.timestamp { font-size: 0.8em; color: #cccccc; }
+.loggers { display: flex; gap: 15px; flex-wrap: wrap; }
+.loggers label { display: flex; align-items: center; gap: 5px; color: #dddddd; }
 
-@keyframes fadeInOut {
-  0% { opacity: 0; top: 0; }
-  15% { opacity: 1; top: 20px; }
-  85% { opacity: 1; top: 20px; }
-  100% { opacity: 0; top: -50px; }
-}
-
-.municipality-marker {
-    background: rgba(42, 56, 28, 0.8);
-    color: #FFD700;
-    border: 1px solid #FFD700;
-    border-radius: 5px;
-    padding: 2px 5px;
-    font-size: 12px;
-    font-weight: bold;
-    text-align: center;
-    white-space: nowrap;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    pointer-events: none;
-}
-
-.cache-marker {
-    background-color: #FFD700;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
-}
-
-
-/* MOBIILIOPTIMOINTI */
 @media (max-width: 600px) {
     body { padding: 5px; }
     .sisalto-laatikko { margin: 5px auto; padding: 5px; }
