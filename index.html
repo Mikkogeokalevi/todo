@@ -13,7 +13,7 @@
 <body>
 
     <div class="sisalto-laatikko">
-        <div id="speed-display">-- km/h</div>
+        <div id="speed-display">--,- km/h</div>
 
         <div class="teksti-alue">
             <div class="logo-container">
@@ -22,9 +22,7 @@
             </div>
 
             <div class="container">
-                <div class="profile-controls">
-                    <label for="pgcProfileName">Project-GC nimi:</label>
-                    <input type="text" id="pgcProfileName" placeholder="Oma kätköilynimesi...">
+                <div class="top-controls">
                     <button id="toggleTrackingBtn">🛰️ Aloita seuranta</button>
                 </div>
 
@@ -33,6 +31,11 @@
                 </div>
 
                 <div id="map"></div>
+
+                <div class="profile-controls">
+                    <label for="pgcProfileName">Project-GC nimi:</label>
+                    <input type="text" id="pgcProfileName" placeholder="Oma kätköilynimesi...">
+                </div>
                 
                 <hr class="custom-hr">
 
@@ -43,11 +46,10 @@
 
                 <div id="tripListView">
                     <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
-                    <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
-                    <div id="bulkAddContainer" class="bulk-add hidden">
-                        <h3>Lisää kunnat listana</h3>
-                        <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
-                        <button id="bulkAddBtn">Lisää listasta</button>
+                    <div id="pgc-importer" class="bulk-add">
+                        <h3>Lisää kätköjä Project-GC:stä</h3>
+                        <textarea id="pgcInput" rows="4" placeholder="Liitä tähän Project-GC:stä kopioidut kätkötiedot..."></textarea>
+                        <button id="addFromPgcBtn">Lisää kätköt reissulistalle</button>
                     </div>
                     <ul id="municipalityList"></ul>
                 </div>
