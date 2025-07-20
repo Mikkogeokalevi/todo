@@ -96,7 +96,58 @@ document.addEventListener('DOMContentLoaded', () => {
     let userMarker;
     let trackingWatcher = null;
     let lastCheckedMunicipality = null;
-    let municipalityMarkers = []; // UUSI: Taulukko kuntien merkeille
+    let municipalityMarkers = [];
+    let clickMarker = null; // UUSI: Kartan klikkauksen merkki
+
+    // MUOKATTU: Funktio kuntanimen selvittämiseen luotettavammin
+    const getMunicipalityFromResponse = (data) => {
+        const address = data.address;
+        if (!address) return 'Tuntematon sijainti';
+
+        // Luotettavimmat kentät ensin
+        if (address.municipality) return address.municipality;
+        if (address.city) return address.city;
+        if (address.town) return address.town;
+        if (address.village) return address.village;
+
+        // Vältetään "seutukunta" ja muut epämääräiset nimet display_namesta
+        if (data.display_name) {
+            const nameParts = data.display_name.split(',');
+            // Etsitään ensimmäinen osa, joka ei ole numero tai postinumero
+            for (const part of nameParts) {
+                const trimmedPart = part.trim();
+                if (isNaN(trimmedPart) && !/^\d{5}$/.test(trimmedPart) && !trimmedPart.toLowerCase().includes('seutukunta')) {
+                    return trimmedPart;
+                }
+            }
+        }
+        return 'Tuntematon sijainti';
+    };
+
+    // UUSI: Kartan klikkauksen käsittelijä
+    const handleMapClick = async (e) => {
+        if (trackingWatcher) return; // Älä tee mitään, jos reaaliaikainen seuranta on päällä
+
+        const { lat, lng } = e.latlng;
+        
+        if (clickMarker) {
+            clickMarker.removeFrom(map);
+        }
+        
+        clickMarker = L.marker([lat, lng]).addTo(map);
+        clickMarker.bindPopup('Haetaan kuntaa...').openPopup();
+
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10`);
+            if (!response.ok) throw new Error('Haku epäonnistui');
+            const data = await response.json();
+            const municipalityName = getMunicipalityFromResponse(data);
+            clickMarker.getPopup().setContent(`<b>${municipalityName}</b>`);
+        } catch (error) {
+            clickMarker.getPopup().setContent('Kunnan haku epäonnistui.');
+            console.error(error);
+        }
+    };
 
     const initMap = () => {
         map = L.map('map').setView([61.9, 25.7], 6);
@@ -106,6 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const userIcon = L.divIcon({className: 'user-marker'});
         userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
+
+        map.on('click', handleMapClick); // UUSI: Lisätään klikkauskuuntelija
     };
 
     const showNotification = (message) => {
@@ -121,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const updateStatusDisplay = (data) => {
         if (!data) {
-            locationStatusDisplay.innerHTML = `<p>Aloita seuranta nähdäksesi sijaintisi...</p>`;
+            locationStatusDisplay.innerHTML = `<p>Aloita seuranta tai klikkaa karttaa.</p>`;
             return;
         }
         const kuntaText = data.municipality ? `<strong>${data.municipality}</strong>` : 'Haetaan kuntaa...';
@@ -132,9 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    // UUSI: Funktio kuntien merkkien päivittämiseen kartalle
     const updateMunicipalityMarkers = () => {
-        // Poista vanhat merkit
         municipalityMarkers.forEach(marker => marker.removeFrom(map));
         municipalityMarkers = [];
         
@@ -144,21 +195,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const markerIcon = L.divIcon({
                     className: 'municipality-marker',
                     html: `<span>${mun.name}</span>`,
-                    iconSize: [100, 20] 
+                    iconSize: 'auto' 
                 });
                 const marker = L.marker([mun.lat, mun.lon], { icon: markerIcon }).addTo(map);
-                // marker.bindTooltip(mun.name); // Tooltip on hyvä vaihtoehto jos nimiä on paljon
                 municipalityMarkers.push(marker);
                 bounds.push([mun.lat, mun.lon]);
             }
         });
 
-        // Zoomaa kartta näyttämään kaikki merkit, jos seuranta ei ole päällä
         if (bounds.length > 0 && !trackingWatcher) {
             map.fitBounds(bounds, { padding: [50, 50] });
         }
     };
-
 
     const checkCurrentMunicipality = async (lat, lon) => {
         updateStatusDisplay({ municipality: null, lat, lon });
@@ -166,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
             if (!response.ok) return;
             const data = await response.json();
-            const currentMunicipality = data.address.municipality || data.address.town || data.address.village || 'Tuntematon sijainti';
+            const currentMunicipality = getMunicipalityFromResponse(data); // MUOKATTU
 
             updateStatusDisplay({ municipality: currentMunicipality, lat, lon });
 
@@ -189,6 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const toggleTracking = () => {
+        if (clickMarker) { clickMarker.removeFrom(map); clickMarker = null; } // Poista klikkausmerkki
+
         if (trackingWatcher) {
             navigator.geolocation.clearWatch(trackingWatcher);
             trackingWatcher = null;
@@ -196,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleTrackingBtn.classList.remove('tracking-active');
             lastCheckedMunicipality = null;
             updateStatusDisplay(null);
-            updateMunicipalityMarkers(); // Päivitä markkerit ja zoomaus kun seuranta loppuu
+            updateMunicipalityMarkers();
         } else {
             if (!("geolocation" in navigator)) {
                 alert("Selaimesi ei tue paikannusta.");
@@ -207,7 +257,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { latitude, longitude } = position.coords;
                     if (map && userMarker) {
                         userMarker.setLatLng([latitude, longitude]);
-                        map.setView([latitude, longitude], 13);
+                        if (!map.getBounds().contains(userMarker.getLatLng())) {
+                           map.setView([latitude, longitude], 13);
+                        }
                         checkCurrentMunicipality(latitude, longitude);
                     }
                 },
@@ -226,8 +278,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const render = () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
+        // render-funktion sisältö pysyy samana...
         municipalities.forEach((municipality, munIndex) => {
-            // render-funktion sisältö pysyy samana...
             const munItem = document.createElement('li');
             munItem.className = 'municipality-item';
             munItem.draggable = true;
@@ -312,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
              render();
         }
-        updateMunicipalityMarkers(); // MUOKATTU: Päivitä markkerit aina kun data muuttuu
+        updateMunicipalityMarkers();
     });
 
     const saveMunicipalities = () => set(ref(database, 'paalista/municipalities'), municipalities);
@@ -321,7 +373,6 @@ document.addEventListener('DOMContentLoaded', () => {
         render(); 
     };
 
-    // MUOKATTU: handleBulkAdd hakee nyt koordinaatit
     const handleBulkAdd = async () => {
         const text = bulkAddInput.value.trim();
         if (!text) return;
@@ -339,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const data = await response.json();
                     if (data && data.length > 0) {
                         municipalities.push({ 
-                            name: name, 
+                            name: getMunicipalityFromResponse({address: data[0].address, display_name: data[0].display_name}), // Varmistetaan oikea nimi
                             caches: [], 
                             lat: parseFloat(data[0].lat), 
                             lon: parseFloat(data[0].lon) 
@@ -372,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
     municipalityList.addEventListener('click', (e) => {
-        // Tämän funktion sisältö pysyy täysin samana
+        // Sisältö pysyy samana
         if (e.target.matches('a')) {
             e.stopPropagation();
             return;
@@ -434,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pgcProfileNameInput.addEventListener('change', savePgcProfileName);
     toggleTrackingBtn.addEventListener('click', toggleTracking);
     
-    // Raahaus- ja pudotustoiminnallisuus pysyy täysin samana
+    // Raahaus- ja pudotustoiminnallisuus pysyy samana
     let draggedIndex = null;
     municipalityList.addEventListener('dragstart', (e) => {
         if (e.target.classList.contains('municipality-item')) {
