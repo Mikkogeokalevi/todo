@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
+    // ... (muut elementtien määrittelyt säilyvät ennallaan) ...
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
     const bulkAddBtn = document.getElementById('bulkAddBtn');
@@ -37,8 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalPgcAddContainer = document.getElementById('globalPgcAddContainer');
     const globalPgcPasteArea = document.getElementById('globalPgcPasteArea');
     const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
-    
-    // UUDEN MUOKKAUSIKKUNAN ELEMENTIT
     const editCacheModal = document.getElementById('editCacheModal');
     const editCacheForm = document.getElementById('editCacheForm');
     const modalCancelBtn = document.querySelector('.modal-cancel-btn');
@@ -76,6 +75,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     };
+    
+    // UUSI APUFUNKTIO KOORDINAATTIEN MUOTOILUUN
+    const formatCoordinates = (lat, lon) => {
+        if (typeof lat !== 'number' || typeof lon !== 'number') return '';
+
+        const formatPart = (coord, hemiPositive, hemiNegative) => {
+            const hemi = coord >= 0 ? hemiPositive : hemiNegative;
+            const coordAbs = Math.abs(coord);
+            const deg = Math.floor(coordAbs);
+            const min = (coordAbs - deg) * 60;
+            const minStr = min < 10 ? '0' + min.toFixed(3) : min.toFixed(3);
+            return `${hemi} ${deg}° ${minStr}`;
+        };
+
+        const latFormatted = formatPart(lat, 'N', 'S');
+        const lonFormatted = formatPart(lon, 'E', 'W');
+
+        return `${latFormatted} ${lonFormatted}`;
+    };
+
     const parseCoordinates = (str) => {
         if (!str) return null;
         let cleaned = str.toString().trim().toUpperCase().replace(/,/g, '.').replace(/°|´|`|'/g, ' ');
@@ -169,15 +188,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(notification);
         setTimeout(() => { notification.remove(); }, 8000);
     };
+
+    // PÄIVITETTY FUNKTIO
     const updateStatusDisplay = (data) => {
         if (!data) {
             locationStatusDisplay.innerHTML = `<p>Aloita seuranta tai klikkaa karttaa.</p>`;
             return;
         }
         const kuntaText = data.municipality ? `<strong>${data.municipality}</strong>` : 'Haetaan kuntaa...';
-        const koordinaatitText = `N: ${data.lat.toFixed(5)}, E: ${data.lon.toFixed(5)}`;
+        // Käytetään uutta muotoilufunktiota
+        const koordinaatitText = formatCoordinates(data.lat, data.lon);
         locationStatusDisplay.innerHTML = `<p class="status-kunta">${kuntaText}</p><p class="status-koordinaatit">${koordinaatitText}</p>`;
     };
+
     const updateAllMarkers = () => {
         municipalityMarkers.forEach(marker => marker.removeFrom(map)); municipalityMarkers = [];
         cacheMarkers.forEach(marker => marker.removeFrom(map)); cacheMarkers = [];
@@ -297,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const render = () => {
+        // ... (render-funktion alkuosa säilyy ennallaan) ...
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
         municipalities.forEach((municipality, munIndex) => {
@@ -348,6 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
+    // ... (muut funktiot kuten renderFoundList, ensureAllCoordsAreFetched, jne. säilyvät ennallaan) ...
     const renderFoundList = () => {
         foundCachesList.innerHTML = '';
         const sortedCaches = [...foundCaches].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -593,7 +618,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     needsSave = true; needsRender = true;
                 }
             } else if (button.classList.contains('edit-cache-btn')) {
-                // UUSI LOGIIKKA: AVAA MUOKKAUSIKKUNA
                 const cache = municipalities[munIndex].caches[cacheIndex];
                 
                 editMunIndexInput.value = munIndex;
@@ -606,7 +630,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 editDifficultyInput.value = cache.difficulty || '';
                 editTerrainInput.value = cache.terrain || '';
                 editFpInput.value = cache.fp || '';
-                editCoordsInput.value = (cache.lat && cache.lon) ? `N ${cache.lat.toFixed(5)} E ${cache.lon.toFixed(5)}` : '';
+                // KÄYTETÄÄN UUTTA MUOTOILUFUNKTIOTA
+                editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
                 
                 editCacheModal.classList.remove('hidden');
             }
@@ -623,7 +648,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // MUOKKAUSIKKUNAN TAPAHTUMANKÄSITTELIJÄT
     editCacheForm.addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -667,7 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
+    // ... (muut tapahtumankäsittelijät säilyvät ennallaan) ...
     directAddBtn.addEventListener('click', () => {
         const input = directAddInput.value.trim(); if (!input) return;
         const gcCodeMatch = input.match(/(GC[A-Z0-9]+)/i);
