@@ -17,7 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // ... (muut elementtien määrittelyt säilyvät ennallaan) ...
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
     const bulkAddBtn = document.getElementById('bulkAddBtn');
@@ -52,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editFpInput = document.getElementById('editFp');
     const editCoordsInput = document.getElementById('editCoords');
 
-
     let municipalities = [];
     let foundCaches = [];
     let map;
@@ -76,10 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return R * c;
     };
     
-    // UUSI APUFUNKTIO KOORDINAATTIEN MUOTOILUUN
     const formatCoordinates = (lat, lon) => {
         if (typeof lat !== 'number' || typeof lon !== 'number') return '';
-
         const formatPart = (coord, hemiPositive, hemiNegative) => {
             const hemi = coord >= 0 ? hemiPositive : hemiNegative;
             const coordAbs = Math.abs(coord);
@@ -88,10 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const minStr = min < 10 ? '0' + min.toFixed(3) : min.toFixed(3);
             return `${hemi} ${deg}° ${minStr}`;
         };
-
         const latFormatted = formatPart(lat, 'N', 'S');
         const lonFormatted = formatPart(lon, 'E', 'W');
-
         return `${latFormatted} ${lonFormatted}`;
     };
 
@@ -189,14 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { notification.remove(); }, 8000);
     };
 
-    // PÄIVITETTY FUNKTIO
     const updateStatusDisplay = (data) => {
         if (!data) {
             locationStatusDisplay.innerHTML = `<p>Aloita seuranta tai klikkaa karttaa.</p>`;
             return;
         }
         const kuntaText = data.municipality ? `<strong>${data.municipality}</strong>` : 'Haetaan kuntaa...';
-        // Käytetään uutta muotoilufunktiota
         const koordinaatitText = formatCoordinates(data.lat, data.lon);
         locationStatusDisplay.innerHTML = `<p class="status-kunta">${kuntaText}</p><p class="status-koordinaatit">${koordinaatitText}</p>`;
     };
@@ -320,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const render = () => {
-        // ... (render-funktion alkuosa säilyy ennallaan) ...
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
         municipalities.forEach((municipality, munIndex) => {
@@ -372,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // ... (muut funktiot kuten renderFoundList, ensureAllCoordsAreFetched, jne. säilyvät ennallaan) ...
     const renderFoundList = () => {
         foundCachesList.innerHTML = '';
         const sortedCaches = [...foundCaches].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -630,7 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 editDifficultyInput.value = cache.difficulty || '';
                 editTerrainInput.value = cache.terrain || '';
                 editFpInput.value = cache.fp || '';
-                // KÄYTETÄÄN UUTTA MUOTOILUFUNKTIOTA
                 editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
                 
                 editCacheModal.classList.remove('hidden');
@@ -676,8 +665,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         saveMunicipalities();
-        render();
-        updateAllMarkers();
         editCacheModal.classList.add('hidden');
     });
 
@@ -691,7 +678,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ... (muut tapahtumankäsittelijät säilyvät ennallaan) ...
     directAddBtn.addEventListener('click', () => {
         const input = directAddInput.value.trim(); if (!input) return;
         const gcCodeMatch = input.match(/(GC[A-Z0-9]+)/i);
