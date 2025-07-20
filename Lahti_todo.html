@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geokätköreissun Suunnittelija (Lahti)</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,22 +16,22 @@
         <div class="teksti-alue">
             <div class="logo-container">
                 <img src="https://img.geocaching.com:443/84454fa6-e23a-4aad-a8a4-612b77f23abe.png" alt="Oma logo" class="logo" />
-                <h1 class="paaotsikko">— Geokätköreissun Suunnittelija —</h1>
+                <h1 class="paaotsikko">— Reissuapurisi —</h1>
             </div>
 
             <div class="container">
-                <div class="controls">
-                    <input type="text" id="startLocation" placeholder="Syötä lähtöpaikka (esim. Lahti)">
-                    <button id="optimizeRouteBtn">🚀 Optimoi ja järjestä reitti</button>
-                </div>
-
                 <div class="profile-controls">
                     <label for="pgcProfileName">Project-GC nimi:</label>
                     <input type="text" id="pgcProfileName" placeholder="Oma kätköilynimesi...">
+                    <button id="toggleTrackingBtn">🛰️ Aloita seuranta</button>
                 </div>
-                
-                <div id="routeResult" class="route-result" style="display: none;"></div>
 
+                <div id="location-status-display">
+                    <p>Aloita seuranta nähdäksesi sijaintisi...</p>
+                </div>
+
+                <div id="map"></div>
+                
                 <hr class="custom-hr">
 
                 <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
