@@ -26,7 +26,42 @@ document.addEventListener('DOMContentLoaded', () => {
     let trackingWatcher = null;
     let lastCheckedMunicipality = null;
     let municipalityMarkers = [];
+    let cacheMarkers = []; // UUSI: Taulukko kätköjen merkeille
     let clickMarker = null;
+
+    // UUSI: Funktio DDM-koordinaattien muuntamiseen
+    const parseDDM = (input) => {
+        try {
+            input = input.toUpperCase().replace(/,/g, '.').replace('°', ' ');
+            const parts = input.split(' ').filter(p => p.trim() !== '');
+            let lat, lon;
+            
+            if (parts.length === 4) { // Esim. N 60 59.123 E 25 39.456 TAI 60 59.123 N 25 39.456 E
+                const [p1, p2, p3, p4] = parts;
+                if (p1 === 'N' || p1 === 'S') { // N 60 59.123 E...
+                     lat = parseFloat(p2) + parseFloat(p3) / 60;
+                     if (p1 === 'S') lat = -lat;
+                     // Loput osat ovat lon
+                     const lonParts = input.split(p3)[1].trim().split(' ');
+                     lon = parseFloat(lonParts[1]) + parseFloat(lonParts[2]) / 60;
+                     if(lonParts[0] === 'W') lon = -lon;
+                } else { // 60 59.123 N ...
+                     lat = parseFloat(p1) + parseFloat(p2) / 60;
+                     if(p3 === 'S') lat = -lat;
+                     lon = parseFloat(parts.slice(4)[0]) + parseFloat(parts.slice(4)[1]) / 60;
+                     if(parts.slice(4)[2] === 'W') lon = -lon;
+                }
+            } else { // Esim. 62 58.794 E 26 11.341 (oletetaan N)
+                 lat = parseFloat(parts[0]) + parseFloat(parts[1]) / 60;
+                 lon = parseFloat(parts[3]) + parseFloat(parts[4]) / 60;
+                 if(parts[2] === 'W') lon = -lon;
+            }
+
+            return (isNaN(lat) || isNaN(lon)) ? null : { lat, lon };
+        } catch (e) {
+            return null;
+        }
+    };
 
     const getMunicipalityFromResponse = (data) => {
         const address = data.address;
@@ -55,9 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const initMap = () => {
         map = L.map('map').setView([61.9, 25.7], 6);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
         const userIcon = L.divIcon({className: 'user-marker'});
         userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
         map.on('click', handleMapClick);
@@ -83,9 +116,12 @@ document.addEventListener('DOMContentLoaded', () => {
         locationStatusDisplay.innerHTML = `<p class="status-kunta">${kuntaText}</p><p class="status-koordinaatit">${koordinaatitText}</p>`;
     };
 
-    const updateMunicipalityMarkers = () => {
+    const updateAllMarkers = () => {
         municipalityMarkers.forEach(marker => marker.removeFrom(map));
         municipalityMarkers = [];
+        cacheMarkers.forEach(marker => marker.removeFrom(map));
+        cacheMarkers = [];
+        
         const bounds = [];
         municipalities.forEach(mun => {
             if (mun.lat && mun.lon) {
@@ -94,7 +130,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 municipalityMarkers.push(marker);
                 bounds.push([mun.lat, mun.lon]);
             }
+            (mun.caches || []).forEach(cache => {
+                if (cache.lat && cache.lon) {
+                    const cacheIcon = L.divIcon({className: 'cache-marker'});
+                    const marker = L.marker([cache.lat, cache.lon], { icon: cacheIcon }).addTo(map).bindTooltip(cache.name);
+                    cacheMarkers.push(marker);
+                    bounds.push([cache.lat, cache.lon]);
+                }
+            });
         });
+
         if (bounds.length > 0 && !trackingWatcher) {
             map.fitBounds(bounds, { padding: [50, 50] });
         }
@@ -118,9 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (munElement) munElement.classList.add('highlight');
                 }
             }
-        } catch (error) {
-            console.error("Kuntatarkistusvirhe:", error);
-        }
+        } catch (error) { console.error("Kuntatarkistusvirhe:", error); }
     };
 
     const toggleTracking = () => {
@@ -132,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleTrackingBtn.classList.remove('tracking-active');
             lastCheckedMunicipality = null;
             updateStatusDisplay(null);
-            updateMunicipalityMarkers();
+            updateAllMarkers();
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
             trackingWatcher = navigator.geolocation.watchPosition(
@@ -140,9 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { latitude, longitude } = position.coords;
                     if (map && userMarker) {
                         userMarker.setLatLng([latitude, longitude]);
-                        if (!map.getBounds().contains(userMarker.getLatLng())) {
-                           map.setView([latitude, longitude], 13);
-                        }
+                        if (!map.getBounds().contains(userMarker.getLatLng())) map.setView([latitude, longitude], 13);
                         checkCurrentMunicipality(latitude, longitude);
                     }
                 },
@@ -174,7 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     cacheNameDisplay = cacheName;
                 }
-                return `<li class="cache-item"><input type="checkbox" ${cache.done ? 'checked' : ''} data-mun-index="${munIndex}" data-cache-index="${cacheIndex}"><div class="cache-info"><div><span class="cache-type">${cache.type}</span><span class="${cache.done ? 'done' : ''}">${cacheNameDisplay}</span></div></div><div class="cache-actions"><button class="edit-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">✏️</button><button class="delete-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">🗑️</button></div></li>`;
+                const coordsSetClass = (cache.lat && cache.lon) ? 'coords-set' : '';
+                return `<li class="cache-item"><input type="checkbox" ${cache.done ? 'checked' : ''} data-mun-index="${munIndex}" data-cache-index="${cacheIndex}"><div class="cache-info"><div><span class="cache-type">${cache.type}</span><span class="${cache.done ? 'done' : ''}">${cacheNameDisplay}</span></div></div><div class="cache-actions"><button class="set-coords-btn ${coordsSetClass}" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">📍</button><button class="edit-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">✏️</button><button class="delete-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">🗑️</button></div></li>`;
             }).join('');
             const kunnanNimi = municipality.name;
             const pgcProfileName = pgcProfileNameInput.value.trim();
@@ -205,25 +247,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (error) { console.error("Koordinaattien haku epäonnistui kunnalle:", mun.name, error); }
             }
         }
-        if (didChange) {
-            console.log("Paikannettiin puuttuvia koordinaatteja, tallennetaan...");
-            saveMunicipalities();
-        }
+        if (didChange) { console.log("Paikannettiin puuttuvia koordinaatteja, tallennetaan..."); saveMunicipalities(); }
     };
     
     initMap();
 
-    // MUOKATTU: Käytetään oikeaa `lahti_lista`-polkua
     onValue(ref(database, 'lahti_lista'), (snapshot) => {
         const data = snapshot.val();
         municipalities = (data && data.pgcProfileName !== undefined) ? (data.municipalities || []) : [];
         pgcProfileNameInput.value = data ? data.pgcProfileName || '' : '';
         render();
         ensureAllCoordsAreFetched(municipalities);
-        updateMunicipalityMarkers();
+        updateAllMarkers();
     });
 
-    // MUOKATTU: Käytetään oikeaa `lahti_lista`-polkua
     const saveMunicipalities = () => set(ref(database, 'lahti_lista/municipalities'), municipalities);
     const savePgcProfileName = () => set(ref(database, 'lahti_lista/pgcProfileName'), pgcProfileNameInput.value);
 
@@ -266,22 +303,43 @@ document.addEventListener('DOMContentLoaded', () => {
         if (munIndex === undefined) return;
         let needsSave = false;
         let needsRender = false;
-        if (button.classList.contains('edit-municipality-btn')) {
+
+        // UUSI: Koordinaattien asetuslogiikka
+        if (button.classList.contains('set-coords-btn')) {
+            const cache = municipalities[munIndex].caches[button.dataset.cacheIndex];
+            const currentCoords = cache.lat ? `${cache.lat} ${cache.lon}` : '';
+            const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
+            if(input === null) return;
+
+            const coords = parseDDM(input);
+            if(coords) {
+                cache.lat = coords.lat;
+                cache.lon = coords.lon;
+                needsSave = true;
+                needsRender = true;
+            } else if (input.trim() === '') { // Tyhjennetään koordinaatit
+                delete cache.lat;
+                delete cache.lon;
+                needsSave = true;
+                needsRender = true;
+            } else {
+                alert("Virheellinen koordinaattimuoto. Yritä uudelleen.\nEsimerkki: 62° 58.794 E 026° 11.341");
+            }
+        }
+        else if (button.classList.contains('edit-municipality-btn')) {
             const oldName = municipalities[munIndex].name;
             const newName = prompt("Muokkaa kunnan nimeä:", oldName);
             if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
                 municipalities[munIndex].name = newName.trim();
                 delete municipalities[munIndex].lat;
                 delete municipalities[munIndex].lon;
-                needsSave = true;
-                needsRender = true;
+                needsSave = true; needsRender = true;
                 ensureAllCoordsAreFetched(municipalities);
             }
         } else if (button.classList.contains('delete-municipality-btn')) {
             if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
                 municipalities.splice(munIndex, 1);
-                needsSave = true;
-                needsRender = true;
+                needsSave = true; needsRender = true;
             }
         } else if (button.classList.contains('add-cache-btn')) {
             const container = button.closest('.add-cache');
@@ -289,32 +347,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (nameInput.value.trim()) {
                 if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
                 municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: container.querySelector('.cache-type-selector').value, done: false });
-                nameInput.value = ''; // Tyhjennetään kenttä
-                needsSave = true;
-                needsRender = true;
+                nameInput.value = '';
+                needsSave = true; needsRender = true;
             }
         } else if (button.classList.contains('delete-cache-btn')) {
             if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[button.dataset.cacheIndex].name}"?`)) {
                 municipalities[munIndex].caches.splice(button.dataset.cacheIndex, 1);
-                needsSave = true;
-                needsRender = true;
+                needsSave = true; needsRender = true;
             }
         } else if (button.classList.contains('edit-cache-btn')) {
             const cache = municipalities[munIndex].caches[button.dataset.cacheIndex];
             const newName = prompt("Muokkaa kätkön nimeä:", cache.name);
             if (newName && newName.trim()) {
                 cache.name = newName.trim();
-                needsSave = true;
-                needsRender = true;
+                needsSave = true; needsRender = true;
             }
         } else if (button.type === 'checkbox') {
             const cache = municipalities[munIndex].caches[button.dataset.cacheIndex];
             cache.done = button.checked;
-            needsSave = true;
-            needsRender = true;
+            needsSave = true; needsRender = true;
         }
         if (needsSave) saveMunicipalities();
-        if (needsRender) { render(); updateMunicipalityMarkers(); }
+        if (needsRender) { render(); updateAllMarkers(); }
     });
 
     pgcProfileNameInput.addEventListener('change', savePgcProfileName);
@@ -323,10 +377,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedIndex = null;
     municipalityList.addEventListener('dragstart', (e) => {
         const munItem = e.target.closest('.municipality-item');
-        if (munItem) {
-            draggedIndex = parseInt(munItem.dataset.munIndex, 10);
-            setTimeout(() => munItem.classList.add('dragging'), 0);
-        } else { e.preventDefault(); }
+        if (munItem) { draggedIndex = parseInt(munItem.dataset.munIndex, 10); setTimeout(() => munItem.classList.add('dragging'), 0); } 
+        else { e.preventDefault(); }
     });
     municipalityList.addEventListener('dragover', (e) => {
         e.preventDefault();
