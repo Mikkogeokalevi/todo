@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const directAddInput = document.getElementById('directAddInput');
     const directAddBtn = document.getElementById('directAddBtn');
     const foundCachesList = document.getElementById('foundCachesList');
-    // UUSIEN GLOBAALIEN ELEMENTTIEN VIITTAUKSET
     const globalPgcPasteArea = document.getElementById('globalPgcPasteArea');
     const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
 
@@ -90,14 +89,36 @@ document.addEventListener('DOMContentLoaded', () => {
           return { lat, lon };
         } catch (e) { return null; }
     };
+
+    // --- KORJATTU FUNKTIO ---
     const getMunicipalityFromResponse = (data) => {
         const address = data.address;
         if (!address) return null;
-        const nameCandidates = [address.municipality, address.city, address.town, address.village];
-        return nameCandidates.find(name => name && !name.toLowerCase().includes('seutukunta')) || null;
+
+        // Lista mahdollisista kentistä, joissa kunnan nimi voi olla
+        const candidates = [
+            address.municipality,
+            address.city,
+            address.town,
+            address.village,
+            address.county // Otetaan county mukaan varmuuden vuoksi
+        ].filter(Boolean); // Poistetaan tyhjät arvot
+
+        // Haetaan ensimmäinen ehdokas, joka löytyy omasta kuntalistastamme
+        for (const candidate of candidates) {
+            // Etsitään vastinetta kuntadatasta (kirjainkoosta riippumaton)
+            const foundMunicipality = Object.keys(kuntaMaakuntaData).find(
+                (kunta) => kunta.toLowerCase() === candidate.toLowerCase()
+            );
+
+            if (foundMunicipality) {
+                return foundMunicipality; // Palautetaan oikein kirjoitettu nimi omasta datastamme
+            }
+        }
+
+        return null; // Palautetaan null, jos mitään sopivaa ei löytynyt
     };
     
-    // UUSI APUFUNKTIO KUNNAN HAKEMISEKSI KOORDINAATEILLA
     const getMunicipalityForCoordinates = async (lat, lon) => {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
@@ -117,11 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clickMarker = L.marker([lat, lng]).addTo(map);
         clickMarker.bindPopup('Haetaan kuntaa...').openPopup();
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&zoom=10`);
-            if (!response.ok) throw new Error('Haku epäonnistui');
-            const data = await response.json();
-            const municipalityName = getMunicipalityFromResponse(data) || 'Tuntematon sijainti';
-            clickMarker.getPopup().setContent(`<b>${municipalityName}</b>`);
+            const municipalityName = await getMunicipalityForCoordinates(lat, lng);
+            clickMarker.getPopup().setContent(`<b>${municipalityName || 'Tuntematon sijainti'}</b>`);
         } catch (error) {
             clickMarker.getPopup().setContent('Kunnan haku epäonnistui.');
             console.error(error);
@@ -197,11 +215,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const checkCurrentMunicipality = async (lat, lon) => {
         try {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
-            if (!response.ok) return;
-            const data = await response.json();
-            const currentMunicipality = getMunicipalityFromResponse(data) || 'Tuntematon sijainti';
-            updateStatusDisplay({ municipality: currentMunicipality, lat, lon });
+            const currentMunicipality = await getMunicipalityForCoordinates(lat, lon);
+            updateStatusDisplay({ municipality: currentMunicipality || 'Tuntematon sijainti', lat, lon });
+            
             if (currentMunicipality && currentMunicipality !== lastCheckedMunicipality) {
                 lastCheckedMunicipality = currentMunicipality;
                 const foundMunIndex = municipalities.findIndex(m => m.name.toLowerCase() === currentMunicipality.toLowerCase());
@@ -319,7 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(oikeaAvain)}&nonefound=on&submit=Filter`;
                 pgcLinkHtml = `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${kunnanNimi} Project-GC:ssä" class="pgc-link">🗺️</a>`;
             }
-            // PALAUTETTU ALKUPERÄINEN YKSINKERTAINEN LISÄYSKENTTÄ
             munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul><div class="add-cache"><input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi..."><button class="add-cache-btn" data-mun-index="${munIndex}">+</button></div>`;
             municipalityList.appendChild(munItem);
         });
@@ -414,7 +429,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     bulkAddBtn.addEventListener('click', handleBulkAdd);
     
-    // --- GLOBAALIN PGC-LISÄYKSEN KÄSITTELIÄ ---
     globalAddFromPgcBtn.addEventListener('click', async () => {
         const text = globalPgcPasteArea.value.trim();
         if (!text) return;
@@ -450,7 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     continue;
                 }
 
-                // Haetaan kunta koordinaattien perusteella
                 const munName = await getMunicipalityForCoordinates(coords.lat, coords.lon);
                 if (!munName) {
                     console.warn(`Ei löytynyt kuntaa koordinaateille: ${coords.lat}, ${coords.lon}`);
@@ -462,14 +475,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     difficulty, terrain, lat: coords.lat, lon: coords.lon, alert_approach_given: false, alert_target_given: false
                 };
 
-                // Etsi onko kunta jo listalla
                 let munIndex = municipalities.findIndex(m => m.name.toLowerCase() === munName.toLowerCase());
 
                 if (munIndex === -1) {
-                    // Jos kuntaa ei ole, luodaan se
                     municipalities.push({ name: munName, caches: [cacheData] });
                 } else {
-                    // Jos kunta on, lisätään kätkö sen listalle
                     if (!municipalities[munIndex].caches) {
                         municipalities[munIndex].caches = [];
                     }
@@ -483,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (cachesAddedCount > 0) {
-            await ensureAllCoordsAreFetched(municipalities); // Varmista, että uusilla kunnilla on koordinaatit
+            await ensureAllCoordsAreFetched(municipalities);
             saveMunicipalities();
             globalPgcPasteArea.value = '';
         } else {
@@ -493,7 +503,6 @@ document.addEventListener('DOMContentLoaded', () => {
         globalAddFromPgcBtn.disabled = false;
         globalAddFromPgcBtn.textContent = "Lisää ja paikanna";
     });
-
 
     municipalityList.addEventListener('click', (e) => {
         const button = e.target.closest('button, input[type="checkbox"]');
@@ -546,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     municipalities.splice(munIndex, 1);
                     needsSave = true; needsRender = true;
                 }
-            } else if (button.classList.contains('add-cache-btn')) { // YKSINKERTAISEN LISÄYKSEN LOGIIKKA
+            } else if (button.classList.contains('add-cache-btn')) {
                 const container = button.closest('.add-cache');
                 const nameInput = container.querySelector('.new-cache-name');
                 if (nameInput.value.trim()) {
@@ -557,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         id: Date.now(), 
                         name: gcCodeMatch ? name.replace(gcCodeMatch[0], '').trim() : name,
                         gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '',
-                        type: 'Muu' // Oletustyyppi yksinkertaiselle lisäykselle
+                        type: 'Muu'
                     });
                     nameInput.value = '';
                     needsSave = true; needsRender = true;
