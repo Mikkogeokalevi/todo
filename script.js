@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const directAddInput = document.getElementById('directAddInput');
     const directAddBtn = document.getElementById('directAddBtn');
     const foundCachesList = document.getElementById('foundCachesList');
+    const globalPgcAddContainer = document.getElementById('globalPgcAddContainer');
     const globalPgcPasteArea = document.getElementById('globalPgcPasteArea');
     const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
 
@@ -90,33 +91,25 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) { return null; }
     };
 
-    // --- KORJATTU FUNKTIO ---
     const getMunicipalityFromResponse = (data) => {
         const address = data.address;
         if (!address) return null;
-
-        // Lista mahdollisista kentistä, joissa kunnan nimi voi olla
         const candidates = [
             address.municipality,
             address.city,
             address.town,
             address.village,
-            address.county // Otetaan county mukaan varmuuden vuoksi
-        ].filter(Boolean); // Poistetaan tyhjät arvot
-
-        // Haetaan ensimmäinen ehdokas, joka löytyy omasta kuntalistastamme
+            address.county
+        ].filter(Boolean);
         for (const candidate of candidates) {
-            // Etsitään vastinetta kuntadatasta (kirjainkoosta riippumaton)
             const foundMunicipality = Object.keys(kuntaMaakuntaData).find(
                 (kunta) => kunta.toLowerCase() === candidate.toLowerCase()
             );
-
             if (foundMunicipality) {
-                return foundMunicipality; // Palautetaan oikein kirjoitettu nimi omasta datastamme
+                return foundMunicipality;
             }
         }
-
-        return null; // Palautetaan null, jos mitään sopivaa ei löytynyt
+        return null;
     };
     
     const getMunicipalityForCoordinates = async (lat, lon) => {
@@ -507,24 +500,32 @@ document.addEventListener('DOMContentLoaded', () => {
     municipalityList.addEventListener('click', (e) => {
         const button = e.target.closest('button, input[type="checkbox"]');
         if (!button) return;
+
+        let needsSave = false;
+        let needsRender = false;
         const munIndex = parseInt(button.dataset.munIndex, 10);
         if (isNaN(munIndex)) return;
         
         if (button.type === 'checkbox') {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
-            const cacheToMove = municipalities[munIndex].caches[cacheIndex];
+            const [cacheToMove] = municipalities[munIndex].caches.splice(cacheIndex, 1);
+
             const loggers = {};
             LOGGERS.forEach(name => { loggers[name] = false; });
             
             const newFoundCache = {
-                id: cacheToMove.id || Date.now(), name: cacheToMove.gcCode ? `${cacheToMove.gcCode} ${cacheToMove.name}` : cacheToMove.name,
-                gcCode: cacheToMove.gcCode || '', timestamp: new Date().toISOString(), loggers: loggers
+                id: cacheToMove.id || Date.now(),
+                name: cacheToMove.name,
+                gcCode: cacheToMove.gcCode || '',
+                timestamp: new Date().toISOString(),
+                loggers: loggers
             };
+
             foundCaches.push(newFoundCache);
-            municipalities[munIndex].caches.splice(cacheIndex, 1);
-            saveMunicipalities(); saveFoundCaches();
+            needsSave = true;
+            needsRender = true;
+
         } else {
-            let needsSave = false; let needsRender = false;
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             if (button.classList.contains('set-coords-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
@@ -584,8 +585,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     needsSave = true; needsRender = true;
                 }
             }
-            if (needsSave) saveMunicipalities();
-            if (needsRender) { render(); updateAllMarkers(); }
+        }
+        
+        if (needsSave) {
+            saveMunicipalities();
+            saveFoundCaches();
+        }
+        if (needsRender) {
+            render();
+            renderFoundList();
+            updateAllMarkers();
         }
     });
 
@@ -636,12 +645,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     showTripListBtn.addEventListener('click', () => {
-        tripListView.classList.remove('hidden'); foundLogView.classList.add('hidden');
-        showTripListBtn.classList.add('active'); showFoundLogBtn.classList.remove('active');
+        tripListView.classList.remove('hidden');
+        foundLogView.classList.add('hidden');
+        globalPgcAddContainer.classList.remove('hidden'); // Näytä PGC-kenttä
+        showTripListBtn.classList.add('active');
+        showFoundLogBtn.classList.remove('active');
     });
     showFoundLogBtn.addEventListener('click', () => {
-        tripListView.classList.add('hidden'); foundLogView.classList.remove('hidden');
-        showTripListBtn.classList.remove('active'); showFoundLogBtn.classList.add('active');
+        tripListView.classList.add('hidden');
+        foundLogView.classList.remove('hidden');
+        globalPgcAddContainer.classList.add('hidden'); // Piilota PGC-kenttä
+        showTripListBtn.classList.remove('active');
+        showFoundLogBtn.classList.add('active');
     });
 
     pgcProfileNameInput.addEventListener('change', savePgcProfileName);
