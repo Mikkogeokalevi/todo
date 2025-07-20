@@ -165,12 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     const distance = getDistance(userLat, userLon, cache.lat, cache.lon);
                     if (distance <= ALERT_APPROACH_DISTANCE && !cache.alert_approach_given) {
                         showNotification(`Lähestyt kätköä: ${cache.name} (${Math.round(distance)}m)`, 'approach');
-                        new Audio('approach.mp3').play().catch(e => console.warn("Ei voitu soittaa ääntä: approach.mp3", e));
+                        try { new Audio('approach.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä: approach.mp3", e); }
                         cache.alert_approach_given = true; needsSave = true;
                     }
                     if (distance <= ALERT_TARGET_DISTANCE && !cache.alert_target_given) {
                         showNotification(`Olet lähellä kätköä: ${cache.name} (${Math.round(distance)}m)`, 'target');
-                        new Audio('target.mp3').play().catch(e => console.warn("Ei voitu soittaa ääntä: target.mp3", e));
+                        try { new Audio('target.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä: target.mp3", e); }
                         cache.alert_target_given = true; needsSave = true;
                     }
                 }
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.municipality-item.highlight').forEach(el => el.classList.remove('highlight'));
                 if (foundMunIndex !== -1) {
                     showNotification(`Saavuit kuntaan: ${currentMunicipality}!`, 'info');
-                    new Audio('kunta.mp3').play().catch(e => console.warn("Ei voitu soittaa ääntä: kunta.mp3", e));
+                    try { new Audio('kunta.mp3').play(); } catch(e) { console.warn("Ei voitu soittaa ääntä: kunta.mp3", e); }
                     const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
                     if (munElement) munElement.classList.add('highlight');
                 }
@@ -419,13 +419,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = e.target.closest('button, input[type="checkbox"]');
         if (!button) return;
         const munIndex = parseInt(button.dataset.munIndex, 10);
-        if (isNaN(munIndex)) return;
-        
+        if (isNaN(munIndex) || !municipalities[munIndex]) return;
+
+        let needsAtomicUpdate = false;
+        let needsLocalUpdate = false;
+
         if (button.type === 'checkbox') {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
-            if(isNaN(cacheIndex) || !municipalities[munIndex]?.caches[cacheIndex]) return;
+            if(isNaN(cacheIndex) || !municipalities[munIndex].caches[cacheIndex]) return;
             
-            const cacheToMove = municipalities[munIndex].caches[cacheIndex];
+            const cacheToMove = municipalities[munIndex].caches.splice(cacheIndex, 1)[0];
             const loggers = {};
             LOGGERS.forEach(name => { loggers[name] = false; });
             const gcCodeMatch = cacheToMove.name.match(/(GC[A-Z0-9]+)/i);
@@ -434,17 +437,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : cacheToMove.name,
                 timestamp: new Date().toISOString(), loggers: loggers
             };
-
-            const updates = {};
-            municipalities[munIndex].caches.splice(cacheIndex, 1);
             foundCaches.push(newFoundCache);
-            updates[`${FIREBASE_PATH}/municipalities`] = municipalities;
-            updates[`${FIREBASE_PATH}/foundCaches`] = foundCaches;
-            update(ref(database), updates);
-
+            needsAtomicUpdate = true;
         } else {
-            let needsSave = false;
-            let needsRender = false;
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             if (button.classList.contains('set-coords-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
@@ -452,14 +447,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
                 if(input !== null) {
                     const coords = parseCoordinates(input);
-                    if(coords) {
-                        cache.lat = coords.lat; cache.lon = coords.lon;
-                    } else if (input.trim() === '') {
-                        delete cache.lat; delete cache.lon;
-                    } else {
-                        alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
-                    }
-                    needsSave = true; needsRender = true;
+                    if(coords) { cache.lat = coords.lat; cache.lon = coords.lon; } 
+                    else if (input.trim() === '') { delete cache.lat; delete cache.lon; } 
+                    else { alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341"); }
+                    needsLocalUpdate = true;
                 }
             } else if (button.classList.contains('edit-municipality-btn')) {
                 const oldName = municipalities[munIndex].name;
@@ -468,28 +459,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     municipalities[munIndex].name = newName.trim();
                     delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
                     ensureAllCoordsAreFetched(municipalities);
-                    needsSave = true; needsRender = true;
+                    needsLocalUpdate = true;
                 }
             } else if (button.classList.contains('delete-municipality-btn')) {
                 if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
                     municipalities.splice(munIndex, 1);
-                    needsSave = true; needsRender = true;
+                    needsLocalUpdate = true;
                 }
             } else if (button.classList.contains('delete-cache-btn')) {
                 if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
                     municipalities[munIndex].caches.splice(cacheIndex, 1);
-                    needsSave = true; needsRender = true;
+                    needsLocalUpdate = true;
                 }
             } else if (button.classList.contains('edit-cache-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
                 const newName = prompt("Muokkaa kätkön nimeä:", cache.name);
                 if (newName && newName.trim()) {
                     cache.name = newName.trim();
-                    needsSave = true; needsRender = true;
+                    needsLocalUpdate = true;
                 }
             }
-            if (needsSave) saveMunicipalities();
-            if (needsRender) { render(); updateAllMarkers(); }
+        }
+
+        if (needsAtomicUpdate) {
+            const updates = {};
+            updates[`${FIREBASE_PATH}/municipalities`] = municipalities;
+            updates[`${FIREBASE_PATH}/foundCaches`] = foundCaches;
+            update(ref(database), updates);
+        } else if (needsLocalUpdate) {
+            saveMunicipalities();
         }
     });
 
