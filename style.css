@@ -261,9 +261,9 @@ ul {
     color: #FFD700;
 }
 
-/* UUSI TYYLI koordinaattipainikkeelle */
 .set-coords-btn.coords-set {
-    color: #FFD700; /* Muuta väriä, kun koordinaatit on asetettu */
+    color: #FFD700;
+    transform: scale(1.2);
 }
 
 .add-cache {
@@ -420,7 +420,6 @@ ul {
     pointer-events: none;
 }
 
-/* UUSI: Kätkömerkin tyyli */
 .cache-marker {
     background-color: #FFD700;
     border: 2px solid #ffffff;
