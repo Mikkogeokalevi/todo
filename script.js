@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Kuntadata pysyy ennallaan
+    // Kuntadata pysyy ennallaan...
     const kuntaMaakuntaData = {
         "Akaa": "Pirkanmaa", "Alajärvi": "Etelä-Pohjanmaa", "Alavieska": "Pohjois-Pohjanmaa", "Alavus": "Etelä-Pohjanmaa", "Asikkala": "Päijät-Häme",
         "Askola": "Uusimaa", "Aura": "Varsinais-Suomi", "Brändö": "Ahvenanmaa", "Eckerö": "Ahvenanmaa", "Enonkoski": "Etelä-Savo", "Enontekiö": "Lappi",
@@ -81,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // Poistettu turhat elementtihaut
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
     const bulkAddBtn = document.getElementById('bulkAddBtn');
@@ -90,13 +89,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
     const bulkAddContainer = document.getElementById('bulkAddContainer');
     const toggleTrackingBtn = document.getElementById('toggleTrackingBtn');
-    const locationStatusDisplay = document.getElementById('location-status-display'); // Uusi
+    const locationStatusDisplay = document.getElementById('location-status-display');
 
     let municipalities = [];
     let map;
     let userMarker;
     let trackingWatcher = null;
     let lastCheckedMunicipality = null;
+    let municipalityMarkers = []; // UUSI: Taulukko kuntien merkeille
 
     const initMap = () => {
         map = L.map('map').setView([61.9, 25.7], 6);
@@ -119,40 +119,61 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { notification.remove(); }, 5000);
     };
     
-    // UUSI: Funktio sijaintitekstin päivittämiseen
     const updateStatusDisplay = (data) => {
         if (!data) {
             locationStatusDisplay.innerHTML = `<p>Aloita seuranta nähdäksesi sijaintisi...</p>`;
             return;
         }
-
         const kuntaText = data.municipality ? `<strong>${data.municipality}</strong>` : 'Haetaan kuntaa...';
         const koordinaatitText = `N: ${data.lat.toFixed(5)}, E: ${data.lon.toFixed(5)}`;
-
         locationStatusDisplay.innerHTML = `
             <p class="status-kunta">${kuntaText}</p>
             <p class="status-koordinaatit">${koordinaatitText}</p>
         `;
     };
 
-    const checkCurrentMunicipality = async (lat, lon) => {
-        updateStatusDisplay({ municipality: null, lat, lon }); // Päivitetään heti koordinaatit
+    // UUSI: Funktio kuntien merkkien päivittämiseen kartalle
+    const updateMunicipalityMarkers = () => {
+        // Poista vanhat merkit
+        municipalityMarkers.forEach(marker => marker.removeFrom(map));
+        municipalityMarkers = [];
+        
+        const bounds = [];
+        municipalities.forEach(mun => {
+            if (mun.lat && mun.lon) {
+                const markerIcon = L.divIcon({
+                    className: 'municipality-marker',
+                    html: `<span>${mun.name}</span>`,
+                    iconSize: [100, 20] 
+                });
+                const marker = L.marker([mun.lat, mun.lon], { icon: markerIcon }).addTo(map);
+                // marker.bindTooltip(mun.name); // Tooltip on hyvä vaihtoehto jos nimiä on paljon
+                municipalityMarkers.push(marker);
+                bounds.push([mun.lat, mun.lon]);
+            }
+        });
 
+        // Zoomaa kartta näyttämään kaikki merkit, jos seuranta ei ole päällä
+        if (bounds.length > 0 && !trackingWatcher) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+    };
+
+
+    const checkCurrentMunicipality = async (lat, lon) => {
+        updateStatusDisplay({ municipality: null, lat, lon });
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
             if (!response.ok) return;
             const data = await response.json();
             const currentMunicipality = data.address.municipality || data.address.town || data.address.village || 'Tuntematon sijainti';
 
-            updateStatusDisplay({ municipality: currentMunicipality, lat, lon }); // Päivitetään kunnan nimi
+            updateStatusDisplay({ municipality: currentMunicipality, lat, lon });
 
             if (currentMunicipality && currentMunicipality !== lastCheckedMunicipality) {
                 lastCheckedMunicipality = currentMunicipality;
-                
                 const foundMunIndex = municipalities.findIndex(m => m.name.toLowerCase() === currentMunicipality.toLowerCase());
-                
                 document.querySelectorAll('.municipality-item.highlight').forEach(el => el.classList.remove('highlight'));
-
                 if (foundMunIndex !== -1) {
                     showNotification(`Saavuit kuntaan: ${currentMunicipality}!`);
                     const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
@@ -174,7 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleTrackingBtn.textContent = '🛰️ Aloita seuranta';
             toggleTrackingBtn.classList.remove('tracking-active');
             lastCheckedMunicipality = null;
-            updateStatusDisplay(null); // Tyhjennetään näyttö
+            updateStatusDisplay(null);
+            updateMunicipalityMarkers(); // Päivitä markkerit ja zoomaus kun seuranta loppuu
         } else {
             if (!("geolocation" in navigator)) {
                 alert("Selaimesi ei tue paikannusta.");
@@ -205,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
         municipalities.forEach((municipality, munIndex) => {
+            // render-funktion sisältö pysyy samana...
             const munItem = document.createElement('li');
             munItem.className = 'municipality-item';
             munItem.draggable = true;
@@ -289,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
              render();
         }
+        updateMunicipalityMarkers(); // MUOKATTU: Päivitä markkerit aina kun data muuttuu
     });
 
     const saveMunicipalities = () => set(ref(database, 'paalista/municipalities'), municipalities);
@@ -297,17 +321,46 @@ document.addEventListener('DOMContentLoaded', () => {
         render(); 
     };
 
-    const handleBulkAdd = () => {
-        if (!municipalities) municipalities = [];
+    // MUOKATTU: handleBulkAdd hakee nyt koordinaatit
+    const handleBulkAdd = async () => {
         const text = bulkAddInput.value.trim();
         if (!text) return;
+
+        bulkAddBtn.disabled = true;
+        bulkAddBtn.textContent = 'Haetaan...';
+
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
-        newNames.forEach(name => {
+        let notFound = [];
+
+        for (const name of newNames) {
             if (!municipalities.some(m => m.name.toLowerCase() === name.toLowerCase())) {
-                municipalities.push({ name: name, caches: [] });
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name + ', Finland')}&format=json&limit=1`);
+                    const data = await response.json();
+                    if (data && data.length > 0) {
+                        municipalities.push({ 
+                            name: name, 
+                            caches: [], 
+                            lat: parseFloat(data[0].lat), 
+                            lon: parseFloat(data[0].lon) 
+                        });
+                    } else {
+                        notFound.push(name);
+                    }
+                } catch (error) {
+                    console.error("Virhe haettaessa kuntaa:", name, error);
+                    notFound.push(name);
+                }
             }
-        });
+        }
+        
+        if (notFound.length > 0) {
+            alert(`Seuraavia kuntia ei löytynyt: ${notFound.join(', ')}`);
+        }
+
         bulkAddInput.value = '';
+        bulkAddBtn.disabled = false;
+        bulkAddBtn.textContent = 'Lisää listasta';
         saveMunicipalities();
     };
 
@@ -319,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
     municipalityList.addEventListener('click', (e) => {
-        // ... Tämän funktion sisältö pysyy täysin samana ...
+        // Tämän funktion sisältö pysyy täysin samana
         if (e.target.matches('a')) {
             e.stopPropagation();
             return;
@@ -333,8 +386,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let needsSave = false;
         if (button.classList.contains('edit-municipality-btn')) {
-            const newName = prompt("Muokkaa kunnan nimeä:", municipalities[munIndex].name);
-            if (newName && newName.trim()) {
+            const oldName = municipalities[munIndex].name;
+            const newName = prompt("Muokkaa kunnan nimeä:", oldName);
+            if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
+                // Tässä voisi lisätä logiikan koordinaattien uudelleen hakemiseksi, jos nimi muuttuu
                 municipalities[munIndex].name = newName.trim();
                 needsSave = true;
             }
@@ -378,9 +433,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pgcProfileNameInput.addEventListener('change', savePgcProfileName);
     toggleTrackingBtn.addEventListener('click', toggleTracking);
-
+    
+    // Raahaus- ja pudotustoiminnallisuus pysyy täysin samana
     let draggedIndex = null;
-    // ... Raahaus- ja pudotustoiminnallisuus pysyy täysin samana ...
     municipalityList.addEventListener('dragstart', (e) => {
         if (e.target.classList.contains('municipality-item')) {
             draggedIndex = parseInt(e.target.dataset.munIndex, 10);
