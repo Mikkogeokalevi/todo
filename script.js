@@ -37,6 +37,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalPgcAddContainer = document.getElementById('globalPgcAddContainer');
     const globalPgcPasteArea = document.getElementById('globalPgcPasteArea');
     const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
+    
+    // UUDEN MUOKKAUSIKKUNAN ELEMENTIT
+    const editCacheModal = document.getElementById('editCacheModal');
+    const editCacheForm = document.getElementById('editCacheForm');
+    const modalCancelBtn = document.querySelector('.modal-cancel-btn');
+    const editMunIndexInput = document.getElementById('editMunIndex');
+    const editCacheIndexInput = document.getElementById('editCacheIndex');
+    const editGcCodeInput = document.getElementById('editGcCode');
+    const editNameInput = document.getElementById('editName');
+    const editTypeInput = document.getElementById('editType');
+    const editSizeInput = document.getElementById('editSize');
+    const editDifficultyInput = document.getElementById('editDifficulty');
+    const editTerrainInput = document.getElementById('editTerrain');
+    const editFpInput = document.getElementById('editFp');
+    const editCoordsInput = document.getElementById('editCoords');
 
 
     let municipalities = [];
@@ -578,12 +593,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     needsSave = true; needsRender = true;
                 }
             } else if (button.classList.contains('edit-cache-btn')) {
+                // UUSI LOGIIKKA: AVAA MUOKKAUSIKKUNA
                 const cache = municipalities[munIndex].caches[cacheIndex];
-                const newName = prompt("Muokkaa kätkön nimeä:", cache.name);
-                if (newName && newName.trim()) {
-                    cache.name = newName.trim();
-                    needsSave = true; needsRender = true;
-                }
+                
+                editMunIndexInput.value = munIndex;
+                editCacheIndexInput.value = cacheIndex;
+
+                editGcCodeInput.value = cache.gcCode || '';
+                editNameInput.value = cache.name || '';
+                editTypeInput.value = cache.type || '';
+                editSizeInput.value = cache.size || '';
+                editDifficultyInput.value = cache.difficulty || '';
+                editTerrainInput.value = cache.terrain || '';
+                editFpInput.value = cache.fp || '';
+                editCoordsInput.value = (cache.lat && cache.lon) ? `N ${cache.lat.toFixed(5)} E ${cache.lon.toFixed(5)}` : '';
+                
+                editCacheModal.classList.remove('hidden');
             }
         }
         
@@ -597,6 +622,51 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAllMarkers();
         }
     });
+
+    // MUOKKAUSIKKUNAN TAPAHTUMANKÄSITTELIJÄT
+    editCacheForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const munIndex = parseInt(editMunIndexInput.value, 10);
+        const cacheIndex = parseInt(editCacheIndexInput.value, 10);
+
+        if (isNaN(munIndex) || isNaN(cacheIndex)) return;
+
+        const cache = municipalities[munIndex].caches[cacheIndex];
+
+        cache.gcCode = editGcCodeInput.value.trim().toUpperCase();
+        cache.name = editNameInput.value.trim();
+        cache.type = editTypeInput.value.trim();
+        cache.size = editSizeInput.value.trim();
+        cache.difficulty = editDifficultyInput.value.trim();
+        cache.terrain = editTerrainInput.value.trim();
+        cache.fp = editFpInput.value.trim();
+        
+        const coords = parseCoordinates(editCoordsInput.value);
+        if (coords) {
+            cache.lat = coords.lat;
+            cache.lon = coords.lon;
+        } else if(editCoordsInput.value.trim() === '') {
+            delete cache.lat;
+            delete cache.lon;
+        }
+
+        saveMunicipalities();
+        render();
+        updateAllMarkers();
+        editCacheModal.classList.add('hidden');
+    });
+
+    modalCancelBtn.addEventListener('click', () => {
+        editCacheModal.classList.add('hidden');
+    });
+    
+    editCacheModal.addEventListener('click', (e) => {
+        if (e.target === editCacheModal) {
+            editCacheModal.classList.add('hidden');
+        }
+    });
+
 
     directAddBtn.addEventListener('click', () => {
         const input = directAddInput.value.trim(); if (!input) return;
@@ -647,14 +717,14 @@ document.addEventListener('DOMContentLoaded', () => {
     showTripListBtn.addEventListener('click', () => {
         tripListView.classList.remove('hidden');
         foundLogView.classList.add('hidden');
-        globalPgcAddContainer.classList.remove('hidden'); // Näytä PGC-kenttä
+        globalPgcAddContainer.classList.remove('hidden');
         showTripListBtn.classList.add('active');
         showFoundLogBtn.classList.remove('active');
     });
     showFoundLogBtn.addEventListener('click', () => {
         tripListView.classList.add('hidden');
         foundLogView.classList.remove('hidden');
-        globalPgcAddContainer.classList.add('hidden'); // Piilota PGC-kenttä
+        globalPgcAddContainer.classList.add('hidden');
         showTripListBtn.classList.remove('active');
         showFoundLogBtn.classList.add('active');
     });
