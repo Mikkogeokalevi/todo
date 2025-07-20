@@ -121,7 +121,7 @@ button:hover {
 
 .profile-controls {
     display: flex;
-    flex-wrap: wrap; /* Sallii rivittymisen mobiilissa */
+    flex-wrap: wrap; 
     align-items: center;
     gap: 10px;
     background-color: #2A381C;
@@ -261,6 +261,11 @@ ul {
     color: #FFD700;
 }
 
+/* UUSI TYYLI koordinaattipainikkeelle */
+.set-coords-btn.coords-set {
+    color: #FFD700; /* Muuta väriä, kun koordinaatit on asetettu */
+}
+
 .add-cache {
     display: flex;
     flex-direction: row;
@@ -309,8 +314,6 @@ ul {
 .actions .pgc-link:hover {
     transform: scale(1.2);
 }
-
-/* UUDET JA PÄIVITETYT TYYLIT */
 
 #location-status-display {
     background-color: #2A381C;
@@ -403,7 +406,6 @@ ul {
   100% { opacity: 0; top: -50px; }
 }
 
-/* KUNTIEN MERKKIEN TYYLIT */
 .municipality-marker {
     background: rgba(42, 56, 28, 0.8);
     color: #FFD700;
@@ -415,34 +417,27 @@ ul {
     text-align: center;
     white-space: nowrap;
     box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    pointer-events: none; /* Estää merkin klikkaamisen, antaa kartan hoitaa klikkaukset */
+    pointer-events: none;
+}
+
+/* UUSI: Kätkömerkin tyyli */
+.cache-marker {
+    background-color: #FFD700;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    width: 12px;
+    height: 12px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
 
 /* MOBIILIOPTIMOINTI */
 @media (max-width: 600px) {
-    body {
-        padding: 5px;
-    }
-    .sisalto-laatikko {
-        margin: 5px auto;
-        padding: 5px;
-    }
-    .paaotsikko {
-        font-size: 1.1em;
-    }
-    button, .profile-controls input {
-        width: 100%; /* Varmistaa että elementit täyttävät tilan */
-    }
-    .profile-controls {
-        flex-direction: column; /* Pinoa elementit päällekkäin */
-    }
-    .profile-controls label {
-        width: 100%;
-        text-align: center;
-        margin-bottom: -5px; /* Pienentää väliä */
-    }
-    #map {
-        height: 250px; /* Pienempi kartta mobiilissa */
-    }
+    body { padding: 5px; }
+    .sisalto-laatikko { margin: 5px auto; padding: 5px; }
+    .paaotsikko { font-size: 1.1em; }
+    button, .profile-controls input { width: 100%; }
+    .profile-controls { flex-direction: column; }
+    .profile-controls label { width: 100%; text-align: center; margin-bottom: -5px; }
+    #map { height: 250px; }
 }
