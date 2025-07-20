@@ -28,6 +28,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let municipalityMarkers = [];
     let cacheMarkers = [];
     let clickMarker = null;
+    let lastCheckedCoords = null; 
+
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 6371e3;
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    };
 
     const parseDDMCoordinates = (str) => {
         if (!str) return null;
@@ -116,7 +128,6 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalityMarkers = [];
         cacheMarkers.forEach(marker => marker.removeFrom(map));
         cacheMarkers = [];
-        
         const bounds = [];
         municipalities.forEach(mun => {
             if (mun.lat && mun.lon) {
@@ -134,14 +145,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         if (bounds.length > 0 && !trackingWatcher) {
             map.fitBounds(bounds, { padding: [50, 50] });
         }
     };
 
     const checkCurrentMunicipality = async (lat, lon) => {
-        updateStatusDisplay({ municipality: null, lat, lon });
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
             if (!response.ok) return;
@@ -166,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (trackingWatcher) {
             navigator.geolocation.clearWatch(trackingWatcher);
             trackingWatcher = null;
+            lastCheckedCoords = null;
             toggleTrackingBtn.textContent = '🛰️ Aloita seuranta';
             toggleTrackingBtn.classList.remove('tracking-active');
             lastCheckedMunicipality = null;
@@ -173,13 +183,20 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAllMarkers();
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
+            const CHECK_INTERVAL_METERS = 500;
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     if (map && userMarker) {
                         userMarker.setLatLng([latitude, longitude]);
                         if (!map.getBounds().contains(userMarker.getLatLng())) map.setView([latitude, longitude], 13);
-                        checkCurrentMunicipality(latitude, longitude);
+                        if (!lastCheckedCoords || getDistance(lastCheckedCoords.lat, lastCheckedCoords.lon, latitude, longitude) > CHECK_INTERVAL_METERS) {
+                            console.log(`Liikuttu yli ${CHECK_INTERVAL_METERS}m, tarkistetaan kunta...`);
+                            lastCheckedCoords = { lat: latitude, lon: longitude };
+                            checkCurrentMunicipality(latitude, longitude);
+                        } else {
+                             updateStatusDisplay({ municipality: lastCheckedMunicipality, lat: latitude, lon: longitude });
+                        }
                     }
                 },
                 (error) => { console.error("Paikannusvirhe:", error); alert("Paikannus epäonnistui."); updateStatusDisplay(null); },
@@ -247,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     initMap();
 
-    // TÄRKEÄÄ: Tämä käyttää `lahti_lista`-polkua
     onValue(ref(database, 'lahti_lista'), (snapshot) => {
         const data = snapshot.val();
         municipalities = (data && data.pgcProfileName !== undefined) ? (data.municipalities || []) : [];
@@ -257,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAllMarkers();
     });
 
-    // TÄRKEÄÄ: Tämä käyttää `lahti_lista`-polkua
     const saveMunicipalities = () => set(ref(database, 'lahti_lista/municipalities'), municipalities);
     const savePgcProfileName = () => set(ref(database, 'lahti_lista/pgcProfileName'), pgcProfileNameInput.value);
 
@@ -306,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentCoords = cache.lat ? `${cache.lat} ${cache.lon}` : '';
             const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
             if(input === null) return;
-            const coords = parseDDMCoordinates(input); // KÄYTETÄÄN UUTTA FUNKTIOTA
+            const coords = parseDDMCoordinates(input);
             if(coords) {
                 cache.lat = coords.lat;
                 cache.lon = coords.lon;
