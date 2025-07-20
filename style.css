@@ -15,7 +15,6 @@ body {
     border: 3px solid #11150C;
     border-radius: 12px;
     box-shadow: 5px 5px 15px rgba(0,0,0,0.6);
-    transition: margin 0.3s ease;
 }
 
 .teksti-alue {
@@ -23,7 +22,6 @@ body {
     line-height: 1.7;
     padding: 5px;
     font-size: 1.0em;
-    transition: font-size 0.3s ease;
 }
 
 .logo-container {
@@ -100,10 +98,8 @@ button {
     cursor: pointer;
     font-size: 15px;
     font-family: 'Georgia', serif;
-    transition: background-color 0.2s, color 0.2s;
+    transition: all 0.2s;
     flex-shrink: 0;
-    width: 100%;
-    box-sizing: border-box;
 }
 
 button:hover {
@@ -115,6 +111,7 @@ button:hover {
     background-color: #4a5c3a;
     border-color: #556B2F;
     margin-bottom: 15px;
+    width: 100%;
 }
 
 .toggle-button:hover {
@@ -122,27 +119,9 @@ button:hover {
     color: #FFFFFF;
 }
 
-#optimizeRouteBtn {
-    background-color: #FFD700;
-    color: #1a2015;
-    border-color: #FFD700;
-    font-weight: bold;
-}
-
-#optimizeRouteBtn:hover {
-    background-color: #e6c200;
-}
-
-.controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
 .profile-controls {
     display: flex;
+    flex-wrap: wrap; /* Sallii rivittymisen mobiilissa */
     align-items: center;
     gap: 10px;
     background-color: #2A381C;
@@ -183,6 +162,7 @@ button:hover {
 
 .bulk-add button {
     margin-top: 10px;
+    width: 100%;
 }
 
 ul {
@@ -197,6 +177,7 @@ ul {
     margin-bottom: 10px;
     border-radius: 5px;
     cursor: grab;
+    transition: all 0.3s ease;
 }
 
 .municipality-item.dragging {
@@ -306,20 +287,6 @@ ul {
     padding: 10px 12px;
 }
 
-.route-result {
-    margin: 15px 0;
-    padding: 12px;
-    background-color: #2A381C;
-    border-left: 4px solid #90EE90;
-    word-wrap: break-word;
-    color: #FFFFFF;
-}
-
-.route-result a {
-    color: #FFD700;
-    font-weight: bold;
-}
-
 .municipality-name-link {
     color: #FFFFFF;
     text-decoration: none;
@@ -343,28 +310,43 @@ ul {
     transform: scale(1.2);
 }
 
-@media (min-width: 600px) {
-    button {
-        width: auto;
-    }
-    .toggle-button {
-      width: 100%;
-    }
+/* UUDET JA PÄIVITETYT TYYLIT */
+
+#location-status-display {
+    background-color: #2A381C;
+    border-radius: 8px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    text-align: center;
+    border: 1px solid #4a5c3a;
+}
+#location-status-display p {
+    margin: 0;
+    line-height: 1.4;
+}
+.status-kunta {
+    font-size: 1.2em;
+    color: #FFD700;
+}
+.status-kunta strong {
+    font-weight: 600;
+}
+.status-koordinaatit {
+    font-size: 0.9em;
+    color: #bbbbbb;
+    font-family: monospace;
 }
 
-/* UUDET TYYLIT */
-
-/* KARTAN TYYLIT */
 #map {
     height: 300px;
     width: 100%;
-    margin: 20px 0;
+    margin-top: 0;
+    margin-bottom: 20px;
     border-radius: 12px;
     border: 2px solid #2A381C;
-    z-index: 1; /* Varmistaa, että kartta on muiden elementtien alla */
+    z-index: 1;
 }
 
-/* KÄYTTÄJÄN SIJAINNIN MERKKI */
 .user-marker {
     background-color: #3498db;
     border: 3px solid #ffffff;
@@ -374,31 +356,28 @@ ul {
     height: 18px;
 }
 
-/* KUNTALISTAN KOROSTUS */
 .municipality-item.highlight {
-    background-color: #FFD700; /* Keltainen korostusväri */
+    background-color: #FFD700;
     border-color: #fff;
     transform: scale(1.03);
-    transition: all 0.4s ease;
 }
 .municipality-item.highlight .municipality-name-link {
-    color: #1a2015; /* Tumma teksti korostuksella */
+    color: #1a2015;
     font-weight: bold;
 }
 
-/* SEURANTAPAINIKKEEN TYYLIT */
 #toggleTrackingBtn {
     background-color: #3498db;
     color: white;
     border-color: #3498db;
+    font-weight: bold;
 }
 
 #toggleTrackingBtn.tracking-active {
-    background-color: #e74c3c; /* Punainen, kun aktiivinen */
+    background-color: #e74c3c;
     border-color: #e74c3c;
 }
 
-/* ILMOITUS TYYLI */
 .notification {
     position: fixed;
     top: 20px;
@@ -408,11 +387,13 @@ ul {
     color: white;
     padding: 15px 25px;
     border-radius: 8px;
-    z-index: 1001; /* Varmistaa, että näkyy kartan päällä */
+    z-index: 1001;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     font-size: 1.1em;
     font-weight: bold;
     animation: fadeInOut 5s ease-in-out;
+    text-align: center;
+    max-width: 90%;
 }
 
 @keyframes fadeInOut {
@@ -420,4 +401,32 @@ ul {
   20% { opacity: 1; top: 20px; }
   80% { opacity: 1; top: 20px; }
   100% { opacity: 0; top: -50px; }
+}
+
+/* MOBIILIOPTIMOINTI */
+@media (max-width: 600px) {
+    body {
+        padding: 5px;
+    }
+    .sisalto-laatikko {
+        margin: 5px auto;
+        padding: 5px;
+    }
+    .paaotsikko {
+        font-size: 1.1em;
+    }
+    button, .profile-controls input {
+        width: 100%; /* Varmistaa että elementit täyttävät tilan */
+    }
+    .profile-controls {
+        flex-direction: column; /* Pinoa elementit päällekkäin */
+    }
+    .profile-controls label {
+        width: 100%;
+        text-align: center;
+        margin-bottom: -5px; /* Pienentää väliä */
+    }
+    #map {
+        height: 250px; /* Pienempi kartta mobiilissa */
+    }
 }
