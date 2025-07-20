@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 document.addEventListener('DOMContentLoaded', () => {
-    // KORJATTU JA TÄYDENNETTY KUNTALISTA (säilytetään ennallaan)
+    // Kuntadata pysyy ennallaan
     const kuntaMaakuntaData = {
         "Akaa": "Pirkanmaa", "Alajärvi": "Etelä-Pohjanmaa", "Alavieska": "Pohjois-Pohjanmaa", "Alavus": "Etelä-Pohjanmaa", "Asikkala": "Päijät-Häme",
         "Askola": "Uusimaa", "Aura": "Varsinais-Suomi", "Brändö": "Ahvenanmaa", "Eckerö": "Ahvenanmaa", "Enonkoski": "Etelä-Savo", "Enontekiö": "Lappi",
@@ -81,66 +81,76 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    const startLocationInput = document.getElementById('startLocation');
+    // Poistettu turhat elementtihaut
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
     const bulkAddBtn = document.getElementById('bulkAddBtn');
     const municipalityList = document.getElementById('municipalityList');
-    const optimizeRouteBtn = document.getElementById('optimizeRouteBtn');
-    const routeResultDiv = document.getElementById('routeResult');
     const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
     const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
     const bulkAddContainer = document.getElementById('bulkAddContainer');
-    const toggleTrackingBtn = document.getElementById('toggleTrackingBtn'); // UUSI
+    const toggleTrackingBtn = document.getElementById('toggleTrackingBtn');
+    const locationStatusDisplay = document.getElementById('location-status-display'); // Uusi
 
     let municipalities = [];
-
-    // UUDET MUUTTUJAT KARTTAA JA SEURANTAA VARTEN
     let map;
     let userMarker;
     let trackingWatcher = null;
     let lastCheckedMunicipality = null;
 
-    // UUSI: Kartan alustusfunktio
     const initMap = () => {
-        map = L.map('map').setView([61.9, 25.7], 6); // Asetetaan Suomen keskelle
+        map = L.map('map').setView([61.9, 25.7], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '© OpenStreetMap contributors'
         }).addTo(map);
         
         const userIcon = L.divIcon({className: 'user-marker'});
         userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
     };
 
-    // UUSI: Funktio ilmoituksen näyttämiseen
     const showNotification = (message) => {
         const existingNotification = document.querySelector('.notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
+        if (existingNotification) existingNotification.remove();
+        
         const notification = document.createElement('div');
         notification.className = 'notification';
         notification.textContent = message;
         document.body.appendChild(notification);
-        setTimeout(() => {
-            notification.remove();
-        }, 5000);
+        setTimeout(() => { notification.remove(); }, 5000);
     };
     
-    // UUSI: Funktio kuntatarkistukseen ja ilmoitukseen
+    // UUSI: Funktio sijaintitekstin päivittämiseen
+    const updateStatusDisplay = (data) => {
+        if (!data) {
+            locationStatusDisplay.innerHTML = `<p>Aloita seuranta nähdäksesi sijaintisi...</p>`;
+            return;
+        }
+
+        const kuntaText = data.municipality ? `<strong>${data.municipality}</strong>` : 'Haetaan kuntaa...';
+        const koordinaatitText = `N: ${data.lat.toFixed(5)}, E: ${data.lon.toFixed(5)}`;
+
+        locationStatusDisplay.innerHTML = `
+            <p class="status-kunta">${kuntaText}</p>
+            <p class="status-koordinaatit">${koordinaatitText}</p>
+        `;
+    };
+
     const checkCurrentMunicipality = async (lat, lon) => {
+        updateStatusDisplay({ municipality: null, lat, lon }); // Päivitetään heti koordinaatit
+
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
             if (!response.ok) return;
             const data = await response.json();
-            const currentMunicipality = data.address.municipality || data.address.town || data.address.village;
+            const currentMunicipality = data.address.municipality || data.address.town || data.address.village || 'Tuntematon sijainti';
+
+            updateStatusDisplay({ municipality: currentMunicipality, lat, lon }); // Päivitetään kunnan nimi
 
             if (currentMunicipality && currentMunicipality !== lastCheckedMunicipality) {
                 lastCheckedMunicipality = currentMunicipality;
                 
                 const foundMunIndex = municipalities.findIndex(m => m.name.toLowerCase() === currentMunicipality.toLowerCase());
                 
-                // Poistetaan vanha korostus
                 document.querySelectorAll('.municipality-item.highlight').forEach(el => el.classList.remove('highlight'));
 
                 if (foundMunIndex !== -1) {
@@ -157,15 +167,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // UUSI: Funktio jatkuvan seurannan aloittamiseen ja lopettamiseen
     const toggleTracking = () => {
-        if (trackingWatcher) { // Jos seuranta on päällä, lopetetaan se
+        if (trackingWatcher) {
             navigator.geolocation.clearWatch(trackingWatcher);
             trackingWatcher = null;
             toggleTrackingBtn.textContent = '🛰️ Aloita seuranta';
             toggleTrackingBtn.classList.remove('tracking-active');
-            lastCheckedMunicipality = null; // Nollataan, jotta ilmoitus tulee uudelleen
-        } else { // Jos seuranta ei ole päällä, aloitetaan se
+            lastCheckedMunicipality = null;
+            updateStatusDisplay(null); // Tyhjennetään näyttö
+        } else {
             if (!("geolocation" in navigator)) {
                 alert("Selaimesi ei tue paikannusta.");
                 return;
@@ -175,13 +185,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const { latitude, longitude } = position.coords;
                     if (map && userMarker) {
                         userMarker.setLatLng([latitude, longitude]);
-                        map.setView([latitude, longitude], 13); // Keskittää kartan käyttäjään
+                        map.setView([latitude, longitude], 13);
                         checkCurrentMunicipality(latitude, longitude);
                     }
                 },
                 (error) => {
                     console.error("Paikannusvirhe:", error);
                     alert("Paikannus epäonnistui. Tarkista selaimen luvat.");
+                    updateStatusDisplay(null);
                 },
                 { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
             );
@@ -190,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // MUOKATTU: render-funktioon lisätään id ja data-attribuutti kuntalistalle
     const render = () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
@@ -199,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.className = 'municipality-item';
             munItem.draggable = true;
             munItem.dataset.munIndex = munIndex;
-            munItem.id = `mun-item-${munIndex}`; // UUSI ID korostusta varten
+            munItem.id = `mun-item-${munIndex}`;
 
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
                 const cacheName = cache.name.trim();
@@ -262,9 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // Alkuperäinen koodi jatkuu...
-    
-    initMap(); // UUSI: Kutsutaan kartan alustusta
+    initMap();
 
     onValue(ref(database, 'paalista'), (snapshot) => {
         const data = snapshot.val();
@@ -273,10 +281,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const newMunicipalities = JSON.stringify(data.municipalities || []);
             
             municipalities = data.municipalities || [];
-            startLocationInput.value = data.startLocation || '';
             pgcProfileNameInput.value = data.pgcProfileName || '';
 
-            // Renderöidään vain jos data on muuttunut, vältetään turha uudelleenpiirto
             if (oldMunicipalities !== newMunicipalities) {
                 render();
             }
@@ -286,7 +292,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const saveMunicipalities = () => set(ref(database, 'paalista/municipalities'), municipalities);
-    const saveStartLocation = () => set(ref(database, 'paalista/startLocation'), startLocationInput.value);
     const savePgcProfileName = () => {
         set(ref(database, 'paalista/pgcProfileName'), pgcProfileNameInput.value);
         render(); 
@@ -314,6 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bulkAddBtn.addEventListener('click', handleBulkAdd);
 
     municipalityList.addEventListener('click', (e) => {
+        // ... Tämän funktion sisältö pysyy täysin samana ...
         if (e.target.matches('a')) {
             e.stopPropagation();
             return;
@@ -370,11 +376,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    startLocationInput.addEventListener('change', saveStartLocation);
     pgcProfileNameInput.addEventListener('change', savePgcProfileName);
-    toggleTrackingBtn.addEventListener('click', toggleTracking); // UUSI
+    toggleTrackingBtn.addEventListener('click', toggleTracking);
 
     let draggedIndex = null;
+    // ... Raahaus- ja pudotustoiminnallisuus pysyy täysin samana ...
     municipalityList.addEventListener('dragstart', (e) => {
         if (e.target.classList.contains('municipality-item')) {
             draggedIndex = parseInt(e.target.dataset.munIndex, 10);
@@ -405,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const draggingElement = document.querySelector('.dragging');
         if (draggingElement) {
             const newIndex = Array.from(municipalityList.children).indexOf(draggingElement);
-            if (newIndex > -1 && draggedIndex !== null) { // Varmistetaan että draggedIndex ei ole null
+            if (newIndex > -1 && draggedIndex !== null) {
                 const [removed] = municipalities.splice(draggedIndex, 1);
                 municipalities.splice(newIndex, 0, removed);
                 saveMunicipalities();
@@ -424,42 +430,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
-
-    optimizeRouteBtn.addEventListener('click', async () => {
-        const startLoc = startLocationInput.value.trim();
-        if (!startLoc) return alert('Syötä lähtöpaikka!');
-        if (!municipalities || municipalities.length === 0) return alert('Lisää vähintään yksi kunta.');
-        routeResultDiv.style.display = 'block';
-        routeResultDiv.textContent = 'Haetaan koordinaatteja... ⏳';
-        const locations = [startLoc, ...municipalities.map(m => m.name)];
-        const coords = {};
-        for (const loc of locations) {
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(loc + ', Finland')}&format=json&limit=1`);
-                if (!response.ok) throw new Error(`Verkkovastaus ei ollut kunnossa.`);
-                const data = await response.json();
-                if (data && data.length > 0) coords[loc] = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
-                else throw new Error(`Sijaintia ei löytynyt: ${loc}`);
-            } catch (error) {
-                routeResultDiv.innerHTML = `❌ Virhe haettaessa sijaintia '<strong>${loc}</strong>'.`;
-                return;
-            }
-        }
-        routeResultDiv.textContent = 'Optimoidaan reittiä...';
-        let unvisited = [...municipalities.map(m => m.name)];
-        let currentLoc = startLoc;
-        const route = [startLoc];
-        const distance = (p1, p2) => Math.sqrt(Math.pow(p1.lat - p2.lat, 2) + Math.pow(p1.lon - p2.lon, 2));
-        while (unvisited.length > 0) {
-            let nearest = unvisited.reduce((a, b) => distance(coords[currentLoc], coords[a]) < distance(coords[currentLoc], coords[b]) ? a : b);
-            route.push(nearest);
-            unvisited = unvisited.filter(l => l !== nearest);
-            currentLoc = nearest;
-        }
-        const optimizedOrder = route.slice(1);
-        municipalities.sort((a, b) => optimizedOrder.indexOf(a.name) - optimizedOrder.indexOf(b.name));
-        const mapsUrl = `https://www.google.com/maps/dir/${route.map(r => encodeURIComponent(r)).join('/')}`;
-        routeResultDiv.innerHTML = `✅ Reitti optimoitu! <a href="${mapsUrl}" target="_blank">Avaa reitti Google Mapsissa</a>`;
-        saveMunicipalities();
-    });
 });
