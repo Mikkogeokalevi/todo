@@ -7,9 +7,9 @@ const LOGGERS = ["Toni", "Jukka", "Riikka", "Vesa"];
 // --- ASETUKSET PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Kuntadata...
+    // Kuntadata pysyy ennallaan...
     const kuntaMaakuntaData = { "Akaa": "Pirkanmaa", "Alajärvi": "Etelä-Pohjanmaa", "Alavieska": "Pohjois-Pohjanmaa", "Alavus": "Etelä-Pohjanmaa", "Asikkala": "Päijät-Häme", "Askola": "Uusimaa", "Aura": "Varsinais-Suomi", "Brändö": "Ahvenanmaa", "Eckerö": "Ahvenanmaa", "Enonkoski": "Etelä-Savo", "Enontekiö": "Lappi", "Espoo": "Uusimaa", "Eura": "Satakunta", "Eurajoki": "Satakunta", "Evijärvi": "Etelä-Pohjanmaa", "Finström": "Ahvenanmaa", "Forssa": "Kanta-Häme", "Föglö": "Ahvenanmaa", "Geta": "Ahvenanmaa", "Haapajärvi": "Pohjois-Pohjanmaa", "Haapavesi": "Pohjois-Pohjanmaa", "Hailuoto": "Pohjois-Pohjanmaa", "Halsua": "Keski-Pohjanmaa", "Hamina": "Kymenlaakso", "Hammarland": "Ahvenanmaa", "Hankasalmi": "Keski-Suomi", "Hanko": "Uusimaa", "Harjavalta": "Satakunta", "Hartola": "Päijät-Häme", "Hattula": "Kanta-Häme", "Hausjärvi": "Kanta-Häme", "Heinola": "Päijät-Häme", "Heinävesi": "Pohjois-Karjala", "Helsinki": "Uusimaa", "Hirvensalmi": "Etelä-Savo", "Hollola": "Päijät-Häme", "Huittinen": "Satakunta", "Humppila": "Kanta-Häme", "Hyrynsalmi": "Kainuu", "Hyvinkää": "Uusimaa", "Hämeenkyrö": "Pirkanmaa", "Hämeenlinna": "Kanta-Häme", "Ii": "Pohjois-Pohjanmaa", "Iisalmi": "Pohjois-Savo", "Iitti": "Päijät-Häme", "Ikaalinen": "Pirkanmaa", "Ilmajoki": "Etelä-Pohjanmaa", "Ilomantsi": "Pohjois-Karjala", "Imatra": "Etelä-Karjala", "Inari": "Lappi", "Inkoo": "Uusimaa", "Isojoki": "Etelä-Pohjanmaa", "Isokyrö": "Etelä-Pohjanmaa", "Janakkala": "Kanta-Häme", "Joensuu": "Pohjois-Karjala", "Jokioinen": "Kanta-Häme", "Jomala": "Ahvenanmaa", "Joroinen": "Pohjois-Savo", "Joutsa": "Keski-Suomi", "Juuka": "Pohjois-Karjala", "Juupajoki": "Pirkanmaa", "Juva": "Etelä-Savo", "Jyväskylä": "Keski-Suomi", "Jämijärvi": "Satakunta", "Jämsä": "Keski-Suomi", "Järvenpää": "Uusimaa", "Kaarina": "Varsinais-Suomi", "Kaavi": "Pohjois-Savo", "Kajaani": "Kainuu", "Kalajoki": "Pohjois-Pohjanmaa", "Kangasala": "Pirkanmaa", "Kangasniemi": "Etelä-Savo", "Kankaanpää": "Satakunta", "Kannonkoski": "Keski-Suomi", "Kannus": "Keski-Pohjanmaa", "Karijoki": "Etelä-Pohjanmaa", "Karkkila": "Uusimaa", "Karstula": "Keski-Suomi", "Karvia": "Satakunta", "Kaskinen": "Pohjanmaa", "Kauhajoki": "Etelä-Pohjanmaa", "Kauhava": "Etelä-Pohjanmaa", "Kauniainen": "Uusimaa", "Kaustinen": "Keski-Pohjanmaa", "Keitele": "Pohjois-Savo", "Kemi": "Lappi", "Kemijärvi": "Lappi", "Keminmaa": "Lappi", "Kemiönsaari": "Varsinais-Suomi", "Kempele": "Pohjois-Pohjanmaa", "Kerava": "Uusimaa", "Keuruu": "Keski-Suomi", "Kihniö": "Pirkanmaa", "Kinnula": "Keski-Suomi", "Kirkkonummi": "Uusimaa", "Kitee": "Pohjois-Karjala", "Kittilä": "Lappi", "Kiuruvesi": "Pohjois-Savo", "Kivijärvi": "Keski-Suomi", "Kokemäki": "Satakunta", "Kokkola": "Keski-Pohjanmaa", "Kolar": "Lappi", "Konnevesi": "Keski-Suomi", "Kontiolahti": "Pohjois-Karjala", "Korsnäs": "Pohjanmaa", "Koski Tl": "Varsinais-Suomi", "Kotka": "Kymenlaakso", "Kouvola": "Kymenlaakso", "Kristiinankaupunki": "Pohjanmaa", "Kruunupyy": "Pohjanmaa", "Kuhmo": "Kainuu", "Kuhmoinen": "Pirkanmaa", "Kumlinge": "Ahvenanmaa", "Kuopio": "Pohjois-Savo", "Kuortane": "Etelä-Pohjanmaa", "Kurikka": "Etelä-Pohjanmaa", "Kustavi": "Varsinais-Suomi", "Kuusamo": "Pohjois-Pohjanmaa", "Kyyjärvi": "Keski-Suomi", "Kärkölä": "Päijät-Häme", "Kärsämäki": "Pohjois-Pohjanmaa", "Kökar": "Ahvenanmaa", "Lahti": "Päijät-Häme", "Laihia": "Pohjanmaa", "Laitila": "Varsinais-Suomi", "Lapinjärvi": "Uusimaa", "Lapinlahti": "Pohjois-Savo", "Lappajärvi": "Etelä-Pohjanmaa", "Lappeenranta": "Etelä-Karjala", "Lapua": "Etelä-Pohjanmaa", "Laukaa": "Keski-Suomi", "Lemi": "Etelä-Karjala", "Lemland": "Ahvenanmaa", "Lempäälä": "Pirkanmaa", "Leppävirta": "Pohjois-Savo", "Lestijärvi": "Keski-Pohjanmaa", "Lieksa": "Pohjois-Karjala", "Lieto": "Varsinais-Suomi", "Liminka": "Pohjois-Pohjanmaa", "Liperi": "Pohjois-Karjala", "Lohja": "Uusimaa", "Loimaa": "Varsinais-Suomi", "Loppi": "Kanta-Häme", "Loviisa": "Uusimaa", "Luhanka": "Keski-Suomi", "Lumijoki": "Pohjois-Pohjanmaa", "Lumparland": "Ahvenanmaa", "Luoto": "Pohjanmaa", "Luumäki": "Etelä-Karjala", "Maalahti": "Pohjanmaa", "Maarianhamina": "Ahvenanmaa", "Marttila": "Varsinais-Suomi", "Masku": "Varsinais-Suomi", "Merijärvi": "Pohjois-Pohjanmaa", "Merikarvia": "Satakunta", "Miehikkälä": "Kymenlaakso", "Mikkeli": "Etelä-Savo", "Muhos": "Pohjois-Pohjanmaa", "Multia": "Keski-Suomi", "Muonio": "Lappi", "Mustasaari": "Pohjanmaa", "Muurame": "Keski-Suomi", "Mynämäki": "Varsinais-Suomi", "Myrskylä": "Uusimaa", "Mäntsälä": "Uusimaa", "Mänttä-Vilppula": "Pirkanmaa", "Mäntyharju": "Etelä-Savo", "Naantali": "Varsinais-Suomi", "Nakkila": "Satakunta", "Nivala": "Pohjois-Pohjanmaa", "Nokia": "Pirkanmaa", "Nousiainen": "Varsinais-Suomi", "Nurmes": "Pohjois-Karjala", "Nurmijärvi": "Uusimaa", "Närpiö": "Pohjanmaa", "Orimattila": "Päijät-Häme", "Oripää": "Varsinais-Suomi", "Orivesi": "Pirkanmaa", "Oulainen": "Pohjois-Pohjanmaa", "Oulu": "Pohjois-Pohjanmaa", "Outokumpu": "Pohjois-Karjala", "Padasjoki": "Päijät-Häme", "Paimio": "Varsinais-Suomi", "Paltamo": "Kainuu", "Parainen": "Varsinais-Suomi", "Parikkala": "Etelä-Karjala", "Parkano": "Pirkanmaa", "Pedersören kunta": "Pohjanmaa", "Pelkosenniemi": "Lappi", "Pello": "Lappi", "Perho": "Keski-Pohjanmaa", "Pertunmaa": "Etelä-Savo", "Petäjävesi": "Keski-Suomi", "Pieksämäki": "Etelä-Savo", "Pielavesi": "Pohjois-Savo", "Pietarsaari": "Pohjanmaa", "Pihtipudas": "Keski-Suomi", "Pirkkala": "Pirkanmaa", "Polvijärvi": "Pohjois-Karjala", "Pomarkku": "Satakunta", "Pori": "Satakunta", "Pornainen": "Uusimaa", "Porvoo": "Uusimaa", "Posio": "Lappi", "Pudasjärvi": "Pohjois-Pohjanmaa", "Pukkila": "Uusimaa", "Punkalaidun": "Pirkanmaa", "Puolanka": "Kainuu", "Puumala": "Etelä-Savo", "Pyhtää": "Kymenlaakso", "Pyhäjoki": "Pohjois-Pohjanmaa", "Pyhäjärvi": "Pohjois-Pohjanmaa", "Pyhäntä": "Pohjois-Pohjanmaa", "Pyhäranta": "Varsinais-Suomi", "Pälkäne": "Pirkanmaa", "Pöytyä": "Varsinais-Suomi", "Raahe": "Pohjois-Pohjanmaa", "Raasepori": "Uusimaa", "Raisio": "Varsinais-Suomi", "Rantasalmi": "Etelä-Savo", "Ranua": "Lappi", "Rauma": "Satakunta", "Rautalampi": "Pohjois-Savo", "Rautavaara": "Pohjois-Savo", "Rautjärvi": "Etelä-Karjala", "Reisjärvi": "Pohjois-Pohjanmaa", "Riihimäki": "Kanta-Häme", "Ristijärvi": "Kainuu", "Rovaniemi": "Lappi", "Ruokolahti": "Etelä-Karjala", "Ruovesi": "Pirkanmaa", "Rusko": "Varsinais-Suomi", "Rääkkylä": "Pohjois-Karjala", "Saarijärvi": "Keski-Suomi", "Salla": "Lappi", "Salo": "Varsinais-Suomi", "Saltvik": "Ahvenanmaa", "Sastamala": "Pirkanmaa", "Sauvo": "Varsinais-Suomi", "Savitaipale": "Etelä-Karjala", "Savonlinna": "Etelä-Savo", "Savukoski": "Lappi", "Seinäjoki": "Etelä-Pohjanmaa", "Sievi": "Pohjois-Pohjanmaa", "Siikainen": "Satakunta", "Siikajoki": "Pohjois-Pohjanmaa", "Siilinjärvi": "Pohjois-Savo", "Simo": "Lappi", "Sipoo": "Uusimaa", "Siuntio": "Uusimaa", "Sodankylä": "Lappi", "Soini": "Etelä-Pohjanmaa", "Somero": "Varsinais-Suomi", "Sonkajärvi": "Pohjois-Savo", "Sotkamo": "Kainuu", "Sottunga": "Ahvenanmaa", "Sulkava": "Etelä-Savo", "Sund": "Ahvenanmaa", "Suomussalmi": "Kainuu", "Suonenjoki": "Pohjois-Savo", "Sysmä": "Päijät-Häme", "Säkylä": "Satakunta", "Taipalsaari": "Etelä-Karjala", "Taivalkoski": "Pohjois-Pohjanmaa", "Taivassalo": "Varsinais-Suomi", "Tammela": "Kanta-Häme", "Tampere": "Pirkanmaa", "Tervo": "Pohjois-Savo", "Tervola": "Lappi", "Teuva": "Etelä-Pohjanmaa", "Tohmajärvi": "Pohjois-Karjala", "Toholampi": "Keski-Pohjanmaa", "Toivakka": "Keski-Suomi", "Tornio": "Lappi", "Turku": "Varsinais-Suomi", "Tuusniemi": "Pohjois-Savo", "Tuusula": "Uusimaa", "Tyrnävä": "Pohjois-Pohjanmaa", "Ulvila": "Satakunta", "Urjala": "Pirkanmaa", "Utajärvi": "Pohjois-Pohjanmaa", "Utsjoki": "Lappi", "Uurainen": "Keski-Suomi", "Uusikaarlepyy": "Pohjanmaa", "Uusikaupunki": "Varsinais-Suomi", "Vaala": "Pohjois-Pohjanmaa", "Vaasa": "Pohjanmaa", "Valkeakoski": "Pirkanmaa", "Vantaa": "Uusimaa", "Varkaus": "Pohjois-Savo", "Vehmaa": "Varsinais-Suomi", "Vesanto": "Pohjois-Savo", "Vesilahti": "Pirkanmaa", "Veteli": "Keski-Pohjanmaa", "Vieremä": "Pohjois-Savo", "Vihti": "Uusimaa", "Viitasaari": "Keski-Suomi", "Vimpeli": "Etelä-Pohjanmaa", "Virolahti": "Kymenlaakso", "Virrat": "Pirkanmaa", "Vårdö": "Ahvenanmaa", "Vöyri": "Pohjanmaa", "Ylitornio": "Lappi", "Ylivieska": "Pohjois-Pohjanmaa", "Ylöjärvi": "Pirkanmaa", "Ypäjä": "Kanta-Häme", "Ähtäri": "Etelä-Pohjanmaa", "Äänekoski": "Keski-Suomi" };
-
+    
     const firebaseConfig = { apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M", authDomain: "geokatkosuunnittelija.firebaseapp.com", databaseURL: "https://geokatkosuunnittelija-default-rtdb.europe-west1.firebasedatabase.app", projectId: "geokatkosuunnittelija", storageBucket: "geokatkosuunnittelija.appspot.com", messagingSenderId: "745498680990", appId: "1:745498680990:web:869074eb0f0b72565ca58f" };
 
     const app = initializeApp(firebaseConfig);
@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ALERT_APPROACH_DISTANCE = 1500;
     const ALERT_TARGET_DISTANCE = 200;
 
+    // ... (Kaikki apufunktiot kuten getDistance, parseCoordinates, etc. pysyvät ennallaan) ...
     const getDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
         const Δφ = (lat2 - lat1) * Math.PI / 180; const Δλ = (lon2 - lon1) * Math.PI / 180;
@@ -55,7 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
     };
-
     const parseCoordinates = (str) => {
         if (!str) return null;
         let cleaned = str.toString().trim().toUpperCase().replace(/,/g, '.').replace(/°|´|`|'/g, ' ');
@@ -85,14 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
           return { lat, lon };
         } catch (e) { return null; }
     };
-    
     const getMunicipalityFromResponse = (data) => {
         const address = data.address;
         if (!address) return null;
         const nameCandidates = [address.municipality, address.city, address.town, address.village];
         return nameCandidates.find(name => name && !name.toLowerCase().includes('seutukunta')) || null;
     };
-
     const handleMapClick = async (e) => {
         if (trackingWatcher) return;
         const { lat, lng } = e.latlng;
@@ -110,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(error);
         }
     };
-
     const initMap = () => {
         map = L.map('map').setView([61.9, 25.7], 6);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
@@ -118,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
         userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
         map.on('click', handleMapClick);
     };
-
     const showNotification = (message, type = 'info') => {
         const existing = document.querySelector('.notification');
         if (existing) existing.remove();
@@ -128,7 +124,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(notification);
         setTimeout(() => { notification.remove(); }, 8000);
     };
-    
     const updateStatusDisplay = (data) => {
         if (!data) {
             locationStatusDisplay.innerHTML = `<p>Aloita seuranta tai klikkaa karttaa.</p>`;
@@ -138,7 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const koordinaatitText = `N: ${data.lat.toFixed(5)}, E: ${data.lon.toFixed(5)}`;
         locationStatusDisplay.innerHTML = `<p class="status-kunta">${kuntaText}</p><p class="status-koordinaatit">${koordinaatitText}</p>`;
     };
-
     const updateAllMarkers = () => {
         municipalityMarkers.forEach(marker => marker.removeFrom(map)); municipalityMarkers = [];
         cacheMarkers.forEach(marker => marker.removeFrom(map)); cacheMarkers = [];
@@ -161,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (bounds.length > 0 && !trackingWatcher) map.fitBounds(bounds, { padding: [50, 50] });
     };
-
     const checkCacheProximity = (userLat, userLon) => {
         let needsSave = false;
         municipalities.forEach(mun => {
@@ -183,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (needsSave) saveMunicipalities();
     };
-
     const checkCurrentMunicipality = async (lat, lon) => {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
@@ -203,13 +195,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) { console.error("Kuntatarkistusvirhe:", error); }
     };
-
     const getZoomLevelForSpeed = (speedKmh) => {
         if (speedKmh < 10) return 16; if (speedKmh < 30) return 15;
         if (speedKmh < 60) return 14; if (speedKmh < 90) return 13;
         return 12;
     };
-
     const requestWakeLock = async () => {
         if ('wakeLock' in navigator) {
             try {
@@ -218,7 +208,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) { console.error(`${err.name}, ${err.message}`); }
         }
     };
-
     const toggleTracking = async () => {
         if (clickMarker) { clickMarker.removeFrom(map); clickMarker = null; }
         if (trackingWatcher) {
@@ -265,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const render = () => {
-        // ...
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
         municipalities.forEach((municipality, munIndex) => {
@@ -282,9 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const gcCode = spaceIndex === -1 ? cacheName : cacheName.substring(0, spaceIndex);
                     const description = spaceIndex === -1 ? '' : cacheName.substring(spaceIndex);
                     cacheNameDisplay = `<a href="https://coord.info/${gcCode}" target="_blank" rel="noopener noreferrer">${gcCode}</a>${description}`;
-                } else {
-                    cacheNameDisplay = cacheName;
-                }
+                } else { cacheNameDisplay = cacheName; }
                 const coordsSetClass = (cache.lat && cache.lon) ? 'coords-set' : '';
                 return `<li class="cache-item"><input type="checkbox" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}"><div class="cache-info"><div><span class="cache-type">${cache.type}</span><span>${cacheNameDisplay}</span></div></div><div class="cache-actions"><button class="set-coords-btn ${coordsSetClass}" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">📍</button><button class="edit-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">✏️</button><button class="delete-cache-btn" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">🗑️</button></div></li>`;
             }).join('');
@@ -305,20 +291,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderFoundList = () => {
         foundCachesList.innerHTML = '';
         const sortedCaches = [...foundCaches].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        sortedCaches.forEach((cache, index) => {
+        sortedCaches.forEach((cache) => {
             const li = document.createElement('li');
             li.className = 'found-cache-item';
             const date = new Date(cache.timestamp);
             const formattedDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} klo ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-            const loggersHtml = LOGGERS.map(logger => `
-                <label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers[logger] ? 'checked' : ''}>${logger}</label>
-            `).join('');
+            const loggersHtml = LOGGERS.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
             li.innerHTML = `
                 <div class="found-cache-header">
-                    <a href="https://coord.info/${cache.gcCode}" target="_blank">${cache.name}</a>
+                    <a href="https://coord.info/${cache.gcCode}" target="_blank" class="found-cache-name">${cache.name}</a>
                     <div class="found-cache-actions">
-                        <button class="edit-found-btn" data-cache-id="${cache.id}">✏️</button>
-                        <button class="delete-found-btn" data-cache-id="${cache.id}">🗑️</button>
+                        <button class="edit-found-btn" data-cache-id="${cache.id}" title="Muokkaa">✏️</button>
+                        <button class="delete-found-btn" data-cache-id="${cache.id}" title="Poista">🗑️</button>
                     </div>
                 </div>
                 <div class="timestamp">${formattedDate}</div>
@@ -336,17 +320,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(mun.name + ', Finland')}&format=json&limit=1`);
                     const data = await response.json();
                     if (data && data.length > 0) {
-                        mun.lat = parseFloat(data[0].lat);
-                        mun.lon = parseFloat(data[0].lon);
-                        didChange = true;
+                        mun.lat = parseFloat(data[0].lat); mun.lon = parseFloat(data[0].lon); didChange = true;
                     }
                 } catch (error) { console.error("Koordinaattien haku epäonnistui kunnalle:", mun.name, error); }
             }
         }
         if (didChange) {
             console.log("Paikannettiin puuttuvia koordinaatteja, tallennetaan...");
-            saveMunicipalities();
-            return true;
+            saveMunicipalities(); return true;
         }
         return false;
     };
@@ -370,10 +351,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const savePgcProfileName = () => set(ref(database, `${FIREBASE_PATH}/pgcProfileName`), pgcProfileNameInput.value);
 
     const handleBulkAdd = async () => {
-        const text = bulkAddInput.value.trim();
-        if (!text) return;
-        bulkAddBtn.disabled = true;
-        bulkAddBtn.textContent = 'Haetaan...';
+        const text = bulkAddInput.value.trim(); if (!text) return;
+        bulkAddBtn.disabled = true; bulkAddBtn.textContent = 'Haetaan...';
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
         let notFound = [];
         for (const name of newNames) {
@@ -388,9 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (notFound.length > 0) alert(`Seuraavia kuntia ei löytynyt: ${notFound.join(', ')}`);
-        bulkAddInput.value = '';
-        bulkAddBtn.disabled = false;
-        bulkAddBtn.textContent = 'Lisää listasta';
+        bulkAddInput.value = ''; bulkAddBtn.disabled = false; bulkAddBtn.textContent = 'Lisää listasta';
         saveMunicipalities();
     };
 
@@ -398,7 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const isHidden = bulkAddContainer.classList.toggle('hidden');
         toggleBulkAddBtn.textContent = isHidden ? 'Lisää kunnat listana' : 'Piilota lisäysalue';
     });
-
     bulkAddBtn.addEventListener('click', handleBulkAdd);
     
     municipalityList.addEventListener('click', (e) => {
@@ -406,9 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!button) return;
         const munIndex = parseInt(button.dataset.munIndex, 10);
         if (isNaN(munIndex)) return;
-        let needsSave = false;
-        let needsRender = false;
-
+        
         if (button.type === 'checkbox') {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             const cacheToMove = municipalities[munIndex].caches[cacheIndex];
@@ -416,77 +390,74 @@ document.addEventListener('DOMContentLoaded', () => {
             LOGGERS.forEach(name => { loggers[name] = false; });
             const gcCodeMatch = cacheToMove.name.match(/(GC[A-Z0-9]+)/i);
             const newFoundCache = {
-                id: cacheToMove.id || Date.now(),
-                name: cacheToMove.name,
+                id: cacheToMove.id || Date.now(), name: cacheToMove.name,
                 gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : cacheToMove.name,
-                timestamp: new Date().toISOString(),
-                loggers: loggers
+                timestamp: new Date().toISOString(), loggers: loggers
             };
             foundCaches.push(newFoundCache);
             municipalities[munIndex].caches.splice(cacheIndex, 1);
-            saveMunicipalities();
-            saveFoundCaches();
+            saveMunicipalities(); saveFoundCaches();
+        } else {
+            let needsSave = false; let needsRender = false;
+            const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
+            if (button.classList.contains('set-coords-btn')) {
+                const cache = municipalities[munIndex].caches[cacheIndex];
+                const currentCoords = cache.lat ? `${cache.lat.toFixed(6)} ${cache.lon.toFixed(6)}` : '';
+                const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
+                if(input !== null) {
+                    const coords = parseCoordinates(input);
+                    if(coords) {
+                        cache.lat = coords.lat; cache.lon = coords.lon;
+                    } else if (input.trim() === '') {
+                        delete cache.lat; delete cache.lon;
+                    } else {
+                        alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
+                    }
+                    needsSave = true; needsRender = true;
+                }
+            } else if (button.classList.contains('edit-municipality-btn')) {
+                const oldName = municipalities[munIndex].name;
+                const newName = prompt("Muokkaa kunnan nimeä:", oldName);
+                if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
+                    municipalities[munIndex].name = newName.trim();
+                    delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
+                    needsSave = true; needsRender = true;
+                    ensureAllCoordsAreFetched(municipalities);
+                }
+            } else if (button.classList.contains('delete-municipality-btn')) {
+                if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
+                    municipalities.splice(munIndex, 1);
+                    needsSave = true; needsRender = true;
+                }
+            } else if (button.classList.contains('add-cache-btn')) {
+                const container = button.closest('.add-cache');
+                const nameInput = container.querySelector('.new-cache-name');
+                if (nameInput.value.trim()) {
+                    if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
+                    municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: container.querySelector('.cache-type-selector').value });
+                    nameInput.value = '';
+                    needsSave = true; needsRender = true;
+                }
+            } else if (button.classList.contains('delete-cache-btn')) {
+                if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
+                    municipalities[munIndex].caches.splice(cacheIndex, 1);
+                    needsSave = true; needsRender = true;
+                }
+            } else if (button.classList.contains('edit-cache-btn')) {
+                const cache = municipalities[munIndex].caches[cacheIndex];
+                const newName = prompt("Muokkaa kätkön nimeä:", cache.name);
+                if (newName && newName.trim()) {
+                    cache.name = newName.trim();
+                    needsSave = true; needsRender = true;
+                }
+            }
+            if (needsSave) saveMunicipalities();
+            if (needsRender) { render(); updateAllMarkers(); }
         }
-        else if (button.classList.contains('set-coords-btn')) {
-            const cache = municipalities[munIndex].caches[button.dataset.cacheIndex];
-            const currentCoords = cache.lat ? `${cache.lat.toFixed(6)} ${cache.lon.toFixed(6)}` : '';
-            const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
-            if(input === null) return;
-            const coords = parseCoordinates(input);
-            if(coords) {
-                cache.lat = coords.lat; cache.lon = coords.lon;
-                needsSave = true; needsRender = true;
-            } else if (input.trim() === '') {
-                delete cache.lat; delete cache.lon;
-                needsSave = true; needsRender = true;
-            } else {
-                alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
-            }
-        }
-        // ... loput else if -ehdot ...
-        else if (button.classList.contains('edit-municipality-btn')) {
-            const oldName = municipalities[munIndex].name;
-            const newName = prompt("Muokkaa kunnan nimeä:", oldName);
-            if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
-                municipalities[munIndex].name = newName.trim();
-                delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
-                needsSave = true; needsRender = true;
-                ensureAllCoordsAreFetched(municipalities);
-            }
-        } else if (button.classList.contains('delete-municipality-btn')) {
-            if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
-                municipalities.splice(munIndex, 1);
-                needsSave = true; needsRender = true;
-            }
-        } else if (button.classList.contains('add-cache-btn')) {
-            const container = button.closest('.add-cache');
-            const nameInput = container.querySelector('.new-cache-name');
-            if (nameInput.value.trim()) {
-                if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
-                municipalities[munIndex].caches.push({ id: Date.now(), name: nameInput.value.trim(), type: container.querySelector('.cache-type-selector').value, done: false });
-                nameInput.value = '';
-                needsSave = true; needsRender = true;
-            }
-        } else if (button.classList.contains('delete-cache-btn')) {
-            if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[button.dataset.cacheIndex].name}"?`)) {
-                municipalities[munIndex].caches.splice(button.dataset.cacheIndex, 1);
-                needsSave = true; needsRender = true;
-            }
-        } else if (button.classList.contains('edit-cache-btn')) {
-            const cache = municipalities[munIndex].caches[button.dataset.cacheIndex];
-            const newName = prompt("Muokkaa kätkön nimeä:", cache.name);
-            if (newName && newName.trim()) {
-                cache.name = newName.trim();
-                needsSave = true; needsRender = true;
-            }
-        }
-        if (needsSave) saveMunicipalities();
-        if (needsRender) { render(); updateAllMarkers(); }
     });
 
     directAddBtn.addEventListener('click', () => {
-        const input = directAddInput.value.trim();
-        if (!input) return;
+        const input = directAddInput.value.trim(); if (!input) return;
         const gcCodeMatch = input.match(/(GC[A-Z0-9]+)/i);
         if (!gcCodeMatch) return alert("Syötteestä ei löytynyt GC-koodia.");
         const gcCode = gcCodeMatch[0].toUpperCase();
@@ -502,7 +473,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     foundCachesList.addEventListener('click', (e) => {
         const target = e.target;
-        const cacheId = parseInt(target.closest('.found-cache-item, button')?.dataset.cacheId, 10);
+        const cacheItem = target.closest('.found-cache-item');
+        if (!cacheItem) return;
+        const cacheId = parseInt(target.closest('button, label > input')?.dataset.cacheId, 10);
         if (isNaN(cacheId)) return;
         
         const cacheIndex = foundCaches.findIndex(c => c.id === cacheId);
@@ -541,7 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
     pgcProfileNameInput.addEventListener('change', savePgcProfileName);
     toggleTrackingBtn.addEventListener('click', toggleTracking);
     
-    // Raahauslogiikka pysyy samana...
     let draggedIndex = null;
     municipalityList.addEventListener('dragstart', (e) => {
         const munItem = e.target.closest('.municipality-item');
