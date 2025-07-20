@@ -2,19 +2,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebas
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 // --- ASETUKSET ---
-// Luetaan selaimen osoiteriviltä URL-parametrit
 const urlParams = new URLSearchParams(window.location.search);
-// Haetaan parametrin "lista" arvo (esim. "lahti_lista")
 const listNameFromUrl = urlParams.get('lista');
-// Asetetaan FIREBASE_PATH olemaan URL:sta saatu arvo.
-// Jos URL:ssa ei ole määritetty listaa, käytetään oletuksena 'paalista'.
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 
 const LOGGERS = ["Toni", "Jukka", "Riikka", "Vesa"];
 // --- ASETUKSET PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Kuntadata pysyy ennallaan...
     const kuntaMaakuntaData = { "Akaa": "Pirkanmaa", "Alajärvi": "Etelä-Pohjanmaa", "Alavieska": "Pohjois-Pohjanmaa", "Alavus": "Etelä-Pohjanmaa", "Asikkala": "Päijät-Häme", "Askola": "Uusimaa", "Aura": "Varsinais-Suomi", "Brändö": "Ahvenanmaa", "Eckerö": "Ahvenanmaa", "Enonkoski": "Etelä-Savo", "Enontekiö": "Lappi", "Espoo": "Uusimaa", "Eura": "Satakunta", "Eurajoki": "Satakunta", "Evijärvi": "Etelä-Pohjanmaa", "Finström": "Ahvenanmaa", "Forssa": "Kanta-Häme", "Föglö": "Ahvenanmaa", "Geta": "Ahvenanmaa", "Haapajärvi": "Pohjois-Pohjanmaa", "Haapavesi": "Pohjois-Pohjanmaa", "Hailuoto": "Pohjois-Pohjanmaa", "Halsua": "Keski-Pohjanmaa", "Hamina": "Kymenlaakso", "Hammarland": "Ahvenanmaa", "Hankasalmi": "Keski-Suomi", "Hanko": "Uusimaa", "Harjavalta": "Satakunta", "Hartola": "Päijät-Häme", "Hattula": "Kanta-Häme", "Hausjärvi": "Kanta-Häme", "Heinola": "Päijät-Häme", "Heinävesi": "Pohjois-Karjala", "Helsinki": "Uusimaa", "Hirvensalmi": "Etelä-Savo", "Hollola": "Päijät-Häme", "Huittinen": "Satakunta", "Humppila": "Kanta-Häme", "Hyrynsalmi": "Kainuu", "Hyvinkää": "Uusimaa", "Hämeenkyrö": "Pirkanmaa", "Hämeenlinna": "Kanta-Häme", "Ii": "Pohjois-Pohjanmaa", "Iisalmi": "Pohjois-Savo", "Iitti": "Päijät-Häme", "Ikaalinen": "Pirkanmaa", "Ilmajoki": "Etelä-Pohjanmaa", "Ilomantsi": "Pohjois-Karjala", "Imatra": "Etelä-Karjala", "Inari": "Lappi", "Inkoo": "Uusimaa", "Isojoki": "Etelä-Pohjanmaa", "Isokyrö": "Etelä-Pohjanmaa", "Janakkala": "Kanta-Häme", "Joensuu": "Pohjois-Karjala", "Jokioinen": "Kanta-Häme", "Jomala": "Ahvenanmaa", "Joroinen": "Pohjois-Savo", "Joutsa": "Keski-Suomi", "Juuka": "Pohjois-Karjala", "Juupajoki": "Pirkanmaa", "Juva": "Etelä-Savo", "Jyväskylä": "Keski-Suomi", "Jämijärvi": "Satakunta", "Jämsä": "Keski-Suomi", "Järvenpää": "Uusimaa", "Kaarina": "Varsinais-Suomi", "Kaavi": "Pohjois-Savo", "Kajaani": "Kainuu", "Kalajoki": "Pohjois-Pohjanmaa", "Kangasala": "Pirkanmaa", "Kangasniemi": "Etelä-Savo", "Kankaanpää": "Satakunta", "Kannonkoski": "Keski-Suomi", "Kannus": "Keski-Pohjanmaa", "Karijoki": "Etelä-Pohjanmaa", "Karkkila": "Uusimaa", "Karstula": "Keski-Suomi", "Karvia": "Satakunta", "Kaskinen": "Pohjanmaa", "Kauhajoki": "Etelä-Pohjanmaa", "Kauhava": "Etelä-Pohjanmaa", "Kauniainen": "Uusimaa", "Kaustinen": "Keski-Pohjanmaa", "Keitele": "Pohjois-Savo", "Kemi": "Lappi", "Kemijärvi": "Lappi", "Keminmaa": "Lappi", "Kemiönsaari": "Varsinais-Suomi", "Kempele": "Pohjois-Pohjanmaa", "Kerava": "Uusimaa", "Keuruu": "Keski-Suomi", "Kihniö": "Pirkanmaa", "Kinnula": "Keski-Suomi", "Kirkkonummi": "Uusimaa", "Kitee": "Pohjois-Karjala", "Kittilä": "Lappi", "Kiuruvesi": "Pohjois-Savo", "Kivijärvi": "Keski-Suomi", "Kokemäki": "Satakunta", "Kokkola": "Keski-Pohjanmaa", "Kolar": "Lappi", "Konnevesi": "Keski-Suomi", "Kontiolahti": "Pohjois-Karjala", "Korsnäs": "Pohjanmaa", "Koski Tl": "Varsinais-Suomi", "Kotka": "Kymenlaakso", "Kouvola": "Kymenlaakso", "Kristiinankaupunki": "Pohjanmaa", "Kruunupyy": "Pohjanmaa", "Kuhmo": "Kainuu", "Kuhmoinen": "Pirkanmaa", "Kumlinge": "Ahvenanmaa", "Kuopio": "Pohjois-Savo", "Kuortane": "Etelä-Pohjanmaa", "Kurikka": "Etelä-Pohjanmaa", "Kustavi": "Varsinais-Suomi", "Kuusamo": "Pohjois-Pohjanmaa", "Kyyjärvi": "Keski-Suomi", "Kärkölä": "Päijät-Häme", "Kärsämäki": "Pohjois-Pohjanmaa", "Kökar": "Ahvenanmaa", "Lahti": "Päijät-Häme", "Laihia": "Pohjanmaa", "Laitila": "Varsinais-Suomi", "Lapinjärvi": "Uusimaa", "Lapinlahti": "Pohjois-Savo", "Lappajärvi": "Etelä-Pohjanmaa", "Lappeenranta": "Etelä-Karjala", "Lapua": "Etelä-Pohjanmaa", "Laukaa": "Keski-Suomi", "Lemi": "Etelä-Karjala", "Lemland": "Ahvenanmaa", "Lempäälä": "Pirkanmaa", "Leppävirta": "Pohjois-Savo", "Lestijärvi": "Keski-Pohjanmaa", "Lieksa": "Pohjois-Karjala", "Lieto": "Varsinais-Suomi", "Liminka": "Pohjois-Pohjanmaa", "Liperi": "Pohjois-Karjala", "Lohja": "Uusimaa", "Loimaa": "Varsinais-Suomi", "Loppi": "Kanta-Häme", "Loviisa": "Uusimaa", "Luhanka": "Keski-Suomi", "Lumijoki": "Pohjois-Pohjanmaa", "Lumparland": "Ahvenanmaa", "Luoto": "Pohjanmaa", "Luumäki": "Etelä-Karjala", "Maalahti": "Pohjanmaa", "Maarianhamina": "Ahvenanmaa", "Marttila": "Varsinais-Suomi", "Masku": "Varsinais-Suomi", "Merijärvi": "Pohjois-Pohjanmaa", "Merikarvia": "Satakunta", "Miehikkälä": "Kymenlaakso", "Mikkeli": "Etelä-Savo", "Muhos": "Pohjois-Pohjanmaa", "Multia": "Keski-Suomi", "Muonio": "Lappi", "Mustasaari": "Pohjanmaa", "Muurame": "Keski-Suomi", "Mynämäki": "Varsinais-Suomi", "Myrskylä": "Uusimaa", "Mäntsälä": "Uusimaa", "Mänttä-Vilppula": "Pirkanmaa", "Mäntyharju": "Etelä-Savo", "Naantali": "Varsinais-Suomi", "Nakkila": "Satakunta", "Nivala": "Pohjois-Pohjanmaa", "Nokia": "Pirkanmaa", "Nousiainen": "Varsinais-Suomi", "Nurmes": "Pohjois-Karjala", "Nurmijärvi": "Uusimaa", "Närpiö": "Pohjanmaa", "Orimattila": "Päijät-Häme", "Oripää": "Varsinais-Suomi", "Orivesi": "Pirkanmaa", "Oulainen": "Pohjois-Pohjanmaa", "Oulu": "Pohjois-Pohjanmaa", "Outokumpu": "Pohjois-Karjala", "Padasjoki": "Päijät-Häme", "Paimio": "Varsinais-Suomi", "Paltamo": "Kainuu", "Parainen": "Varsinais-Suomi", "Parikkala": "Etelä-Karjala", "Parkano": "Pirkanmaa", "Pedersören kunta": "Pohjanmaa", "Pelkosenniemi": "Lappi", "Pello": "Lappi", "Perho": "Keski-Pohjanmaa", "Pertunmaa": "Etelä-Savo", "Petäjävesi": "Keski-Suomi", "Pieksämäki": "Etelä-Savo", "Pielavesi": "Pohjois-Savo", "Pietarsaari": "Pohjanmaa", "Pihtipudas": "Keski-Suomi", "Pirkkala": "Pirkanmaa", "Polvijärvi": "Pohjois-Karjala", "Pomarkku": "Satakunta", "Pori": "Satakunta", "Pornainen": "Uusimaa", "Porvoo": "Uusimaa", "Posio": "Lappi", "Pudasjärvi": "Pohjois-Pohjanmaa", "Pukkila": "Uusimaa", "Punkalaidun": "Pirkanmaa", "Puolanka": "Kainuu", "Puumala": "Etelä-Savo", "Pyhtää": "Kymenlaakso", "Pyhäjoki": "Pohjois-Pohjanmaa", "Pyhäjärvi": "Pohjois-Pohjanmaa", "Pyhäntä": "Pohjois-Pohjanmaa", "Pyhäranta": "Varsinais-Suomi", "Pälkäne": "Pirkanmaa", "Pöytyä": "Varsinais-Suomi", "Raahe": "Pohjois-Pohjanmaa", "Raasepori": "Uusimaa", "Raisio": "Varsinais-Suomi", "Rantasalmi": "Etelä-Savo", "Ranua": "Lappi", "Rauma": "Satakunta", "Rautalampi": "Pohjois-Savo", "Rautavaara": "Pohjois-Savo", "Rautjärvi": "Etelä-Karjala", "Reisjärvi": "Pohjois-Pohjanmaa", "Riihimäki": "Kanta-Häme", "Ristijärvi": "Kainuu", "Rovaniemi": "Lappi", "Ruokolahti": "Etelä-Karjala", "Ruovesi": "Pirkanmaa", "Rusko": "Varsinais-Suomi", "Rääkkylä": "Pohjois-Karjala", "Saarijärvi": "Keski-Suomi", "Salla": "Lappi", "Salo": "Varsinais-Suomi", "Saltvik": "Ahvenanmaa", "Sastamala": "Pirkanmaa", "Sauvo": "Varsinais-Suomi", "Savitaipale": "Etelä-Karjala", "Savonlinna": "Etelä-Savo", "Savukoski": "Lappi", "Seinäjoki": "Etelä-Pohjanmaa", "Sievi": "Pohjois-Pohjanmaa", "Siikainen": "Satakunta", "Siikajoki": "Pohjois-Pohjanmaa", "Siilinjärvi": "Pohjois-Savo", "Simo": "Lappi", "Sipoo": "Uusimaa", "Siuntio": "Uusimaa", "Sodankylä": "Lappi", "Soini": "Etelä-Pohjanmaa", "Somero": "Varsinais-Suomi", "Sonkajärvi": "Pohjois-Savo", "Sotkamo": "Kainuu", "Sottunga": "Ahvenanmaa", "Sulkava": "Etelä-Savo", "Sund": "Ahvenanmaa", "Suomussalmi": "Kainuu", "Suonenjoki": "Pohjois-Savo", "Sysmä": "Päijät-Häme", "Säkylä": "Satakunta", "Taipalsaari": "Etelä-Karjala", "Taivalkoski": "Pohjois-Pohjanmaa", "Taivassalo": "Varsinais-Suomi", "Tammela": "Kanta-Häme", "Tampere": "Pirkanmaa", "Tervo": "Pohjois-Savo", "Tervola": "Lappi", "Teuva": "Etelä-Pohjanmaa", "Tohmajärvi": "Pohjois-Karjala", "Toholampi": "Keski-Pohjanmaa", "Toivakka": "Keski-Suomi", "Tornio": "Lappi", "Turku": "Varsinais-Suomi", "Tuusniemi": "Pohjois-Savo", "Tuusula": "Uusimaa", "Tyrnävä": "Pohjois-Pohjanmaa", "Ulvila": "Satakunta", "Urjala": "Pirkanmaa", "Utajärvi": "Pohjois-Pohjanmaa", "Utsjoki": "Lappi", "Uurainen": "Keski-Suomi", "Uusikaarlepyy": "Pohjanmaa", "Uusikaupunki": "Varsinais-Suomi", "Vaala": "Pohjois-Pohjanmaa", "Vaasa": "Pohjanmaa", "Valkeakoski": "Pirkanmaa", "Vantaa": "Uusimaa", "Varkaus": "Pohjois-Savo", "Vehmaa": "Varsinais-Suomi", "Vesanto": "Pohjois-Savo", "Vesilahti": "Pirkanmaa", "Veteli": "Keski-Pohjanmaa", "Vieremä": "Pohjois-Savo", "Vihti": "Uusimaa", "Viitasaari": "Keski-Suomi", "Vimpeli": "Etelä-Pohjanmaa", "Virolahti": "Kymenlaakso", "Virrat": "Pirkanmaa", "Vårdö": "Ahvenanmaa", "Vöyri": "Pohjanmaa", "Ylitornio": "Lappi", "Ylivieska": "Pohjois-Pohjanmaa", "Ylöjärvi": "Pirkanmaa", "Ypäjä": "Kanta-Häme", "Ähtäri": "Etelä-Pohjanmaa", "Äänekoski": "Keski-Suomi" };
     
     const firebaseConfig = { apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M", authDomain: "geokatkosuunnittelija.firebaseapp.com", databaseURL: "https://geokatkosuunnittelija-default-rtdb.europe-west1.firebasedatabase.app", projectId: "geokatkosuunnittelija", storageBucket: "geokatkosuunnittelija.appspot.com", messagingSenderId: "745498680990", appId: "1:745498680990:web:869074eb0f0b72565ca58f" };
@@ -39,6 +34,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const directAddInput = document.getElementById('directAddInput');
     const directAddBtn = document.getElementById('directAddBtn');
     const foundCachesList = document.getElementById('foundCachesList');
+    // UUSIEN GLOBAALIEN ELEMENTTIEN VIITTAUKSET
+    const globalPgcPasteArea = document.getElementById('globalPgcPasteArea');
+    const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
+
 
     let municipalities = [];
     let foundCaches = [];
@@ -97,6 +96,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameCandidates = [address.municipality, address.city, address.town, address.village];
         return nameCandidates.find(name => name && !name.toLowerCase().includes('seutukunta')) || null;
     };
+    
+    // UUSI APUFUNKTIO KUNNAN HAKEMISEKSI KOORDINAATEILLA
+    const getMunicipalityForCoordinates = async (lat, lon) => {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=10`);
+            if (!response.ok) return null;
+            const data = await response.json();
+            return getMunicipalityFromResponse(data);
+        } catch (error) {
+            console.error("Reverse geocoding error:", error);
+            return null;
+        }
+    };
+
     const handleMapClick = async (e) => {
         if (trackingWatcher) return;
         const { lat, lng } = e.latlng;
@@ -231,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
             await requestWakeLock();
-            const CHECK_MUNICIPALIITY_INTERVAL_METERS = 500;
+            const CHECK_MUNICIPALITY_INTERVAL_METERS = 500;
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude, speed } = position.coords;
@@ -270,19 +283,14 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.id = `mun-item-${munIndex}`;
             
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
-                // Luodaan linkki GC-koodista, jos se on olemassa
                 const gcCodeLink = cache.gcCode ? `<a href="https://coord.info/${cache.gcCode}" target="_blank" rel="noopener noreferrer">${cache.gcCode}</a>` : '';
-
-                // Muotoillaan lisätiedot näytettäväksi
                 const detailsHtml = `
                     <span class="cache-detail-tag type">${cache.type || 'Muu'}</span>
                     <span class="cache-detail-tag size">${cache.size || ''}</span>
                     <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
                     ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
                 `;
-
                 const coordsSetClass = (cache.lat && cache.lon) ? 'coords-set' : '';
-                
                 return `
                     <li class="cache-item">
                         <input type="checkbox" data-mun-index="${munIndex}" data-cache-index="${cacheIndex}">
@@ -311,7 +319,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(oikeaAvain)}&nonefound=on&submit=Filter`;
                 pgcLinkHtml = `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${kunnanNimi} Project-GC:ssä" class="pgc-link">🗺️</a>`;
             }
-            munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul><div class="pgc-add-container"><textarea class="pgc-paste-area" placeholder="Liitä PGC:n kätkötiedot tähän (yksi per rivi)..." rows="4"></textarea><button class="add-from-pgc-btn" data-mun-index="${munIndex}">Lisää tekstistä</button></div>`;
+            // PALAUTETTU ALKUPERÄINEN YKSINKERTAINEN LISÄYSKENTTÄ
+            munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul><div class="add-cache"><input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi..."><button class="add-cache-btn" data-mun-index="${munIndex}">+</button></div>`;
             municipalityList.appendChild(munItem);
         });
     };
@@ -405,6 +414,87 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     bulkAddBtn.addEventListener('click', handleBulkAdd);
     
+    // --- GLOBAALIN PGC-LISÄYKSEN KÄSITTELIÄ ---
+    globalAddFromPgcBtn.addEventListener('click', async () => {
+        const text = globalPgcPasteArea.value.trim();
+        if (!text) return;
+        
+        globalAddFromPgcBtn.disabled = true;
+        globalAddFromPgcBtn.textContent = "Käsitellään...";
+
+        const lines = text.split('\n').filter(Boolean);
+        let cachesAddedCount = 0;
+
+        for (let i = 0; i < lines.length; i += 3) {
+            const line1 = lines[i];
+            const line2 = lines[i + 1];
+            const line3 = lines[i + 2];
+
+            if (!line1 || !line2 || !line3) continue;
+
+            try {
+                const frontParts = line1.split(/\s*-\s*/);
+                const gcCode = frontParts[0]?.trim();
+                const cacheName = frontParts[1]?.trim();
+                const fpInfo = frontParts.length > 2 ? frontParts.slice(2).join(' - ').trim() : '';
+
+                const detailsParts = line2.split('/');
+                const cacheType = detailsParts[0]?.trim();
+                const cacheSize = detailsParts[1]?.trim();
+                const difficulty = detailsParts[2]?.trim();
+                const terrain = detailsParts[3]?.trim();
+
+                const coords = parseCoordinates(line3);
+
+                if (!gcCode || !cacheName || !cacheType || !coords) {
+                    continue;
+                }
+
+                // Haetaan kunta koordinaattien perusteella
+                const munName = await getMunicipalityForCoordinates(coords.lat, coords.lon);
+                if (!munName) {
+                    console.warn(`Ei löytynyt kuntaa koordinaateille: ${coords.lat}, ${coords.lon}`);
+                    continue;
+                }
+                
+                const cacheData = {
+                    id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize,
+                    difficulty, terrain, lat: coords.lat, lon: coords.lon, alert_approach_given: false, alert_target_given: false
+                };
+
+                // Etsi onko kunta jo listalla
+                let munIndex = municipalities.findIndex(m => m.name.toLowerCase() === munName.toLowerCase());
+
+                if (munIndex === -1) {
+                    // Jos kuntaa ei ole, luodaan se
+                    municipalities.push({ name: munName, caches: [cacheData] });
+                } else {
+                    // Jos kunta on, lisätään kätkö sen listalle
+                    if (!municipalities[munIndex].caches) {
+                        municipalities[munIndex].caches = [];
+                    }
+                    municipalities[munIndex].caches.push(cacheData);
+                }
+                cachesAddedCount++;
+
+            } catch (e) {
+                console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e);
+            }
+        }
+        
+        if (cachesAddedCount > 0) {
+            await ensureAllCoordsAreFetched(municipalities); // Varmista, että uusilla kunnilla on koordinaatit
+            saveMunicipalities();
+            globalPgcPasteArea.value = '';
+        } else {
+            alert("Ei voitu jäsentää kelvollisia kätkötietoja syötetystä tekstistä.");
+        }
+        
+        globalAddFromPgcBtn.disabled = false;
+        globalAddFromPgcBtn.textContent = "Lisää ja paikanna";
+    });
+
+
     municipalityList.addEventListener('click', (e) => {
         const button = e.target.closest('button, input[type="checkbox"]');
         if (!button) return;
@@ -416,11 +506,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const cacheToMove = municipalities[munIndex].caches[cacheIndex];
             const loggers = {};
             LOGGERS.forEach(name => { loggers[name] = false; });
-            const gcCodeMatch = cacheToMove.name.match(/(GC[A-Z0-9]+)/i);
+            
             const newFoundCache = {
-                id: cacheToMove.id || Date.now(), name: cacheToMove.name,
-                gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : cacheToMove.name,
-                timestamp: new Date().toISOString(), loggers: loggers
+                id: cacheToMove.id || Date.now(), name: cacheToMove.gcCode ? `${cacheToMove.gcCode} ${cacheToMove.name}` : cacheToMove.name,
+                gcCode: cacheToMove.gcCode || '', timestamp: new Date().toISOString(), loggers: loggers
             };
             foundCaches.push(newFoundCache);
             municipalities[munIndex].caches.splice(cacheIndex, 1);
@@ -457,80 +546,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     municipalities.splice(munIndex, 1);
                     needsSave = true; needsRender = true;
                 }
-            } else if (button.classList.contains('add-from-pgc-btn')) {
-                const container = button.closest('.pgc-add-container');
-                const textArea = container.querySelector('.pgc-paste-area');
-                const text = textArea.value.trim();
-                if (!text) return;
-
-                const lines = text.split('\n').filter(Boolean);
-                const newCaches = [];
-
-                // Käydään rivit läpi kolmen ryhmissä
-                for (let i = 0; i < lines.length; i += 3) {
-                    const line1 = lines[i];
-                    const line2 = lines[i + 1];
-                    const line3 = lines[i + 2];
-
-                    // Varmistetaan, että meillä on kaikki kolme riviä käsiteltävänä
-                    if (!line1 || !line2 || !line3) continue;
-
-                    try {
-                        // Jäsennys uusitulla, rivikohtaisella logiikalla
-
-                        // Rivi 1: GC-koodi, Nimi, FP
-                        const frontParts = line1.split(/\s*-\s*/);
-                        const gcCode = frontParts[0]?.trim();
-                        const cacheName = frontParts[1]?.trim();
-                        const fpInfo = frontParts.length > 2 ? frontParts.slice(2).join(' - ').trim() : '';
-
-                        // Rivi 2: Tyyppi, Koko, D/T
-                        const detailsParts = line2.split('/');
-                        const cacheType = detailsParts[0]?.trim();
-                        const cacheSize = detailsParts[1]?.trim();
-                        const difficulty = detailsParts[2]?.trim();
-                        const terrain = detailsParts[3]?.trim();
-
-                        // Rivi 3: Koordinaatit
-                        const coords = parseCoordinates(line3);
-
-                        // Varmistetaan, että saimme vähintään perustiedot
-                        if (!gcCode || !cacheName || !cacheType || !coords) {
-                            console.warn("Ohitetaan epäkelpo lohko:", line1, line2, line3);
-                            continue; // Siirry seuraavaan 3 rivin lohkoon
-                        }
-
-                        const cacheData = {
-                            id: Date.now() + Math.random(),
-                            name: cacheName,
-                            gcCode: gcCode,
-                            fp: fpInfo,
-                            type: cacheType,
-                            size: cacheSize,
-                            difficulty: difficulty,
-                            terrain: terrain,
-                            lat: coords.lat,
-                            lon: coords.lon,
-                            alert_approach_given: false,
-                            alert_target_given: false
-                        };
-                        newCaches.push(cacheData);
-
-                    } catch (e) {
-                        console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e);
-                    }
-                }
-
-                if (newCaches.length > 0) {
-                    if (!municipalities[munIndex].caches) {
-                        municipalities[munIndex].caches = [];
-                    }
-                    municipalities[munIndex].caches.push(...newCaches);
-                    textArea.value = '';
-                    needsSave = true;
-                    needsRender = true;
-                } else {
-                    alert("Ei voitu jäsentää kelvollisia kätkötietoja syötetystä tekstistä.");
+            } else if (button.classList.contains('add-cache-btn')) { // YKSINKERTAISEN LISÄYKSEN LOGIIKKA
+                const container = button.closest('.add-cache');
+                const nameInput = container.querySelector('.new-cache-name');
+                if (nameInput.value.trim()) {
+                    if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
+                    const name = nameInput.value.trim();
+                    const gcCodeMatch = name.match(/(GC[A-Z0-9]+)/i);
+                    municipalities[munIndex].caches.push({ 
+                        id: Date.now(), 
+                        name: gcCodeMatch ? name.replace(gcCodeMatch[0], '').trim() : name,
+                        gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '',
+                        type: 'Muu' // Oletustyyppi yksinkertaiselle lisäykselle
+                    });
+                    nameInput.value = '';
+                    needsSave = true; needsRender = true;
                 }
             } else if (button.classList.contains('delete-cache-btn')) {
                 if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
