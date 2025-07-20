@@ -46,6 +46,8 @@
                     <textarea id="globalPgcPasteArea" rows="4" placeholder="Liitä PGC:n kätkötiedot tähän..."></textarea>
                     <button id="globalAddFromPgcBtn">Lisää ja paikanna</button>
                 </div>
+
+
                 <div id="tripListView">
                     <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
                     <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
@@ -80,6 +82,64 @@
             <option value="Muu">Muu</option>
         </select>
     </template>
+    
+    <div id="editCacheModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h2>Muokkaa kätkön tietoja</h2>
+            <form id="editCacheForm">
+                <input type="hidden" id="editMunIndex">
+                <input type="hidden" id="editCacheIndex">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editGcCode">GC-koodi:</label>
+                        <input type="text" id="editGcCode" placeholder="GCXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="editFp">FP-tiedot:</label>
+                        <input type="text" id="editFp" placeholder="esim. 15 FP (7%)">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editName">Nimi:</label>
+                    <input type="text" id="editName" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editType">Tyyppi:</label>
+                        <input type="text" id="editType">
+                    </div>
+                    <div class="form-group">
+                        <label for="editSize">Koko:</label>
+                        <input type="text" id="editSize">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editDifficulty">Vaikeus (D):</label>
+                        <input type="text" id="editDifficulty" placeholder="1.0 - 5.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTerrain">Maasto (T):</label>
+                        <input type="text" id="editTerrain" placeholder="1.0 - 5.0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCoords">Koordinaatit:</label>
+                    <input type="text" id="editCoords" placeholder="N 62° 16.006 E 021° 25.444">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="submit" class="modal-save-btn">Tallenna</button>
+                    <button type="button" class="modal-cancel-btn">Peruuta</button>
+                </div>
+            </form>
+        </div>
+    </div>
     
     <script type="module" src="script.js"></script>
 </body>
