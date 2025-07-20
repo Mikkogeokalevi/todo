@@ -403,6 +403,22 @@ ul {
   100% { opacity: 0; top: -50px; }
 }
 
+/* KUNTIEN MERKKIEN TYYLIT */
+.municipality-marker {
+    background: rgba(42, 56, 28, 0.8);
+    color: #FFD700;
+    border: 1px solid #FFD700;
+    border-radius: 5px;
+    padding: 2px 5px;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    pointer-events: none; /* Estää merkin klikkaamisen, antaa kartan hoitaa klikkaukset */
+}
+
+
 /* MOBIILIOPTIMOINTI */
 @media (max-width: 600px) {
     body {
