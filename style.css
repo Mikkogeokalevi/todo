@@ -351,3 +351,73 @@ ul {
       width: 100%;
     }
 }
+
+/* UUDET TYYLIT */
+
+/* KARTAN TYYLIT */
+#map {
+    height: 300px;
+    width: 100%;
+    margin: 20px 0;
+    border-radius: 12px;
+    border: 2px solid #2A381C;
+    z-index: 1; /* Varmistaa, että kartta on muiden elementtien alla */
+}
+
+/* KÄYTTÄJÄN SIJAINNIN MERKKI */
+.user-marker {
+    background-color: #3498db;
+    border: 3px solid #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    width: 18px;
+    height: 18px;
+}
+
+/* KUNTALISTAN KOROSTUS */
+.municipality-item.highlight {
+    background-color: #FFD700; /* Keltainen korostusväri */
+    border-color: #fff;
+    transform: scale(1.03);
+    transition: all 0.4s ease;
+}
+.municipality-item.highlight .municipality-name-link {
+    color: #1a2015; /* Tumma teksti korostuksella */
+    font-weight: bold;
+}
+
+/* SEURANTAPAINIKKEEN TYYLIT */
+#toggleTrackingBtn {
+    background-color: #3498db;
+    color: white;
+    border-color: #3498db;
+}
+
+#toggleTrackingBtn.tracking-active {
+    background-color: #e74c3c; /* Punainen, kun aktiivinen */
+    border-color: #e74c3c;
+}
+
+/* ILMOITUS TYYLI */
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #2ecc71;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 8px;
+    z-index: 1001; /* Varmistaa, että näkyy kartan päällä */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-size: 1.1em;
+    font-weight: bold;
+    animation: fadeInOut 5s ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; top: 0; }
+  20% { opacity: 1; top: 20px; }
+  80% { opacity: 1; top: 20px; }
+  100% { opacity: 0; top: -50px; }
+}
