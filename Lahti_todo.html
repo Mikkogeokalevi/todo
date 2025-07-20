@@ -13,6 +13,74 @@
 <body>
 
     <div class="sisalto-laatikko">
+        <div id="speed-display">-- km/h</div>
+
+        <div class="teksti-alue">
+            <div class="logo-container">
+                <img src="https://img.geocaching.com:443/84454fa6-e23a-4aad-a8a4-612b77f23abe.png" alt="Oma logo" class="logo" />
+                <h1 class="paaotsikko">— Reissuapurisi —</h1>
+            </div>
+
+            <div class="container">
+                <div class="profile-controls">
+                    <label for="pgcProfileName">Project-GC nimi:</label>
+                    <input type="text" id="pgcProfileName" placeholder="Oma kätköilynimesi...">
+                    <button id="toggleTrackingBtn">🛰️ Aloita seuranta</button>
+                </div>
+
+                <div id="location-status-display">
+                    <p>Aloita seuranta nähdäksesi sijaintisi...</p>
+                </div>
+
+                <div id="map"></div>
+                
+                <hr class="custom-hr">
+
+                <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
+
+                <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
+
+                <div id="bulkAddContainer" class="bulk-add hidden">
+                    <h3>Lisää kunnat listana</h3>
+                    <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
+                    <button id="bulkAddBtn">Lisää listasta</button>
+                </div>
+
+                <ul id="municipalityList">
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <template id="cacheTypeSelector">
+        <select class="cache-type-selector">
+            <option value="Tradi">Tradi</option>
+            <option value="Multi">Multi</option>
+            <option value="Mysti">Mysti</option>
+            <option value="Letter">Letter</option>
+            <option value="Wherigo">Wherigo</option>
+            <option value="Event">Event</option>
+            <option value="Muu">Muu</option>
+        </select>
+    </template>
+    
+    <script type="module" src="script_lahti.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geokätköreissun Suunnittelija (Lahti)</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="sisalto-laatikko">
         <div class="teksti-alue">
             <div class="logo-container">
                 <img src="https://img.geocaching.com:443/84454fa6-e23a-4aad-a8a4-612b77f23abe.png" alt="Oma logo" class="logo" />
