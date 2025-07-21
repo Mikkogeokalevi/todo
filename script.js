@@ -471,25 +471,41 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleBulkAdd = async () => {
-        const text = bulkAddInput.value.trim(); if (!text) return;
-        
+        const text = bulkAddInput.value.trim();
+        if (!text) return;
+
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
-        const uniqueNewNames = newNames.filter(name => !municipalities.some(m => m.name.toLowerCase() === name.toLowerCase()));
-        
-        if (uniqueNewNames.length === 0) return;
+        // Suodatetaan pois kunnat, jotka ovat jo olemassa listalla (kirjainkoosta riippumatta)
+        const uniqueNewNames = newNames.filter(name => 
+            !municipalities.some(m => m.name.toLowerCase() === name.toLowerCase())
+        );
+
+        if (uniqueNewNames.length === 0) {
+            alert("Kaikki syötetyt kunnat ovat jo listalla.");
+            return;
+        }
 
         bulkAddBtn.disabled = true;
         let notFound = [];
-        let addedMunicipalities = [];
+        let addedCount = 0; // Laskuri lisätyille kunnille
 
         for (let i = 0; i < uniqueNewNames.length; i++) {
             const name = uniqueNewNames[i];
             bulkAddBtn.textContent = `Haetaan ${i + 1} / ${uniqueNewNames.length}...`;
             try {
+                // Haetaan kunnan koordinaatit Nominatim-palvelusta
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name + ', Finland')}&format=json&limit=1`);
                 const data = await response.json();
+                
                 if (data && data.length > 0) {
-                    addedMunicipalities.push({ name: name, caches: [], lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
+                    // LISÄTÄÄN KUNTA SUORAAN PÄÄLISTAAN
+                    municipalities.push({
+                        name: name,
+                        caches: [],
+                        lat: parseFloat(data[0].lat),
+                        lon: parseFloat(data[0].lon)
+                    });
+                    addedCount++;
                 } else {
                     notFound.push(name);
                 }
@@ -497,19 +513,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Virhe haettaessa kuntaa:", name, error);
                 notFound.push(name);
             }
-            await delay(1000);
+            // Pieni viive API-kutsujen välillä
+            await delay(1000); 
         }
 
-        if (addedMunicipalities.length > 0) {
-            municipalities = municipalities.concat(addedMunicipalities);
+        // Näytetään ilmoitus, jos joitain kuntia ei löytynyt
+        if (notFound.length > 0) {
+            alert(`Seuraavia kuntia ei löytynyt: ${notFound.join(', ')}`);
         }
-
-        if (notFound.length > 0) alert(`Seuraavia kuntia ei löytynyt: ${notFound.join(', ')}`);
         
+        // Tyhjennetään syöttökenttä ja palautetaan napin toiminnallisuus
         bulkAddInput.value = '';
         bulkAddBtn.disabled = false;
         bulkAddBtn.textContent = 'Lisää listasta';
-        saveState();
+
+        // TALLENNETAAN TILA VAIN, JOS UUSIA KUNTIA LISÄTTIIN
+        // Tämä on tärkeää, sillä se käynnistää käyttöliittymän päivityksen onValue-kuuntelijan kautta.
+        if (addedCount > 0) {
+            saveState();
+        }
     };
 
     toggleBulkAddBtn.addEventListener('click', () => {
