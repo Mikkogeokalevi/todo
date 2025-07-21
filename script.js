@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkAddBtn = document.getElementById('bulkAddBtn');
     const municipalityList = document.getElementById('municipalityList');
     const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
+    const togglePgcAddBtn = document.getElementById('togglePgcAddBtn');
     const bulkAddContainer = document.getElementById('bulkAddContainer');
     const toggleTrackingBtn = document.getElementById('toggleTrackingBtn');
     const locationStatusDisplay = document.getElementById('location-status-display');
@@ -288,11 +289,11 @@ document.addEventListener('DOMContentLoaded', () => {
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude, speed } = position.coords;
-                    const speedKmh = speed ? Math.round(speed * 3.6) : 0;
+                    const speedKmh = speed ? (speed * 3.6).toFixed(1) : '0.0';
                     speedDisplay.textContent = `${speedKmh} km/h`;
                     if (map && userMarker) {
                         userMarker.setLatLng([latitude, longitude]);
-                        const newZoom = getZoomLevelForSpeed(speedKmh);
+                        const newZoom = getZoomLevelForSpeed(parseFloat(speedKmh));
                         if(map.getZoom() !== newZoom) map.setZoom(newZoom);
                         if (!map.getBounds().pad(-0.2).contains(userMarker.getLatLng())) map.panTo([latitude, longitude]);
                         checkCacheProximity(latitude, longitude);
@@ -466,6 +467,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const isHidden = bulkAddContainer.classList.toggle('hidden');
         toggleBulkAddBtn.textContent = isHidden ? 'Lisää kunnat listana' : 'Piilota lisäysalue';
     });
+
+    togglePgcAddBtn.addEventListener('click', () => {
+        const isHidden = globalPgcAddContainer.classList.toggle('hidden');
+        togglePgcAddBtn.textContent = isHidden ? 'Lisää PGC-datalla' : 'Piilota PGC-lisäys';
+    });
+
     bulkAddBtn.addEventListener('click', handleBulkAdd);
     
     globalAddFromPgcBtn.addEventListener('click', async () => {
@@ -545,7 +552,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const loggers = {};
             LOGGERS.forEach(name => { loggers[name] = false; });
             
-            // Kopioi kaikki tiedot ja lisää/ylikirjoita tarvittavat
             const newFoundCache = {
                 ...cacheToMove,
                 timestamp: new Date().toISOString(),
@@ -574,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
                     municipalities[munIndex].name = newName.trim();
                     delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
-                    ensureAllCoordsAreFetched(municipalities); // Tämä hoitaa tallennuksen
+                    ensureAllCoordsAreFetched(municipalities);
                 }
             } else if (button.classList.contains('delete-municipality-btn')) {
                 if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
@@ -657,8 +663,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const cache = foundCaches[cacheIndex];
         
         if (target.type === 'checkbox') {
-            const loggerName = target.dataset.logger;
             if (!cache.loggers) cache.loggers = {};
+            const loggerName = target.dataset.logger;
             cache.loggers[loggerName] = target.checked;
             saveState();
         } else if (target.classList.contains('edit-found-btn')) {
@@ -680,14 +686,12 @@ document.addEventListener('DOMContentLoaded', () => {
     showTripListBtn.addEventListener('click', () => {
         tripListView.classList.remove('hidden');
         foundLogView.classList.add('hidden');
-        globalPgcAddContainer.classList.remove('hidden');
         showTripListBtn.classList.add('active');
         showFoundLogBtn.classList.remove('active');
     });
     showFoundLogBtn.addEventListener('click', () => {
         tripListView.classList.add('hidden');
         foundLogView.classList.remove('hidden');
-        globalPgcAddContainer.classList.add('hidden');
         showTripListBtn.classList.remove('active');
         showFoundLogBtn.classList.add('active');
     });
