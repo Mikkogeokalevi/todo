@@ -61,8 +61,15 @@
 
                 <div id="foundLogView" class="hidden">
                     <h2 class="alaotsikko">Löydetyt kätköt</h2>
+                    
+                    <div id="logPgcAddContainer" class="bulk-add">
+                        <h3>Lisää löydetyt PGC-datalla</h3>
+                        <textarea id="logPgcPasteArea" rows="4" placeholder="Liitä löydettyjen kätköjen PGC-tiedot tähän..."></textarea>
+                        <button id="logAddFromPgcBtn">Lisää löydetyt lokiin</button>
+                    </div>
+
                     <div class="direct-add-cache">
-                        <input type="text" id="directAddInput" placeholder="Liitä kätkön URL (coord.info/GC...)">
+                        <input type="text" id="directAddInput" placeholder="Yksittäinen lisäys: liitä kätkön URL (coord.info/GC...)">
                         <button id="directAddBtn">Lisää lokiin</button>
                     </div>
                     <ul id="foundCachesList"></ul>
