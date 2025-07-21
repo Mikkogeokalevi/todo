@@ -5,8 +5,6 @@ import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/
 const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
-
-const LOGGERS = ["Toni", "Jukka", "Riikka", "Vesa"];
 // --- ASETUKSET PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
     const logPgcPasteArea = document.getElementById('logPgcPasteArea');
     const logAddFromPgcBtn = document.getElementById('logAddFromPgcBtn');
+    const loggerList = document.getElementById('loggerList');
+    const newLoggerInput = document.getElementById('newLoggerInput');
+    const addLoggerBtn = document.getElementById('addLoggerBtn');
     const editCacheModal = document.getElementById('editCacheModal');
     const editCacheForm = document.getElementById('editCacheForm');
     const modalCancelBtn = document.querySelector('.modal-cancel-btn');
@@ -55,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let municipalities = [];
     let foundCaches = [];
+    let loggers = [];
     let map;
     let userMarker;
     let trackingWatcher = null;
@@ -67,6 +69,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const ALERT_APPROACH_DISTANCE = 1500;
     const ALERT_TARGET_DISTANCE = 200;
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
 
     const getDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
@@ -373,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.className = 'found-cache-item';
             const date = new Date(cache.timestamp);
             const formattedDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} klo ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-            const loggersHtml = LOGGERS.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers && cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
+            const loggersHtml = loggers.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers && cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
 
             const detailsHtml = `
                 <span class="cache-detail-tag type">${cache.type || 'Muu'}</span>
@@ -398,68 +402,102 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const renderLoggers = () => {
+        loggerList.innerHTML = '';
+        loggers.forEach(name => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${name}</span>
+                <button class="delete-logger-btn" data-logger-name="${name}">×</button>
+            `;
+            loggerList.appendChild(li);
+        });
+    };
+
     const ensureAllCoordsAreFetched = async (munis) => {
         let didChange = false;
-        for (const mun of munis) {
-            if (!mun.lat || !mun.lon) {
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(mun.name + ', Finland')}&format=json&limit=1`);
-                    const data = await response.json();
-                    if (data && data.length > 0) {
-                        mun.lat = parseFloat(data[0].lat); mun.lon = parseFloat(data[0].lon); didChange = true;
-                    }
-                } catch (error) { console.error("Koordinaattien haku epäonnistui kunnalle:", mun.name, error); }
-            }
+        const munisToFetch = munis.filter(mun => !mun.lat || !mun.lon);
+
+        for (const mun of munisToFetch) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(mun.name + ', Finland')}&format=json&limit=1`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    mun.lat = parseFloat(data[0].lat); mun.lon = parseFloat(data[0].lon); didChange = true;
+                }
+                await delay(1000); // Viive API-kutsujen välillä
+            } catch (error) { console.error("Koordinaattien haku epäonnistui kunnalle:", mun.name, error); }
         }
+
         if (didChange) {
             console.log("Paikannettiin puuttuvia koordinaatteja, tallennetaan...");
-            saveState(); 
-            return true;
+            saveState();
         }
-        return false;
+        return didChange;
     };
     
     initMap();
 
     onValue(ref(database, FIREBASE_PATH), async (snapshot) => {
-        const data = snapshot.val();
-        municipalities = (data && data.municipalities) ? data.municipalities : [];
-        foundCaches = (data && data.foundCaches) ? data.foundCaches : [];
-        pgcProfileNameInput.value = data ? data.pgcProfileName || '' : '';
+        const data = snapshot.val() || {};
+        municipalities = data.municipalities || [];
+        foundCaches = data.foundCaches || [];
+        loggers = data.loggers || ["Oletus Kirjaaja"];
+        pgcProfileNameInput.value = data.pgcProfileName || '';
+
         render();
         renderFoundList();
-        const changed = await ensureAllCoordsAreFetched(municipalities);
-        if (changed) { /* onValue hoitaa renderöinnin uudelleen */ }
-        updateAllMarkers();
+        renderLoggers();
+        
+        const coordsFetched = await ensureAllCoordsAreFetched(municipalities);
+        if (!coordsFetched) {
+             updateAllMarkers();
+        }
     });
 
     const saveState = () => {
         const updates = {};
         updates[`${FIREBASE_PATH}/municipalities`] = municipalities;
         updates[`${FIREBASE_PATH}/foundCaches`] = foundCaches;
+        updates[`${FIREBASE_PATH}/loggers`] = loggers;
+        updates[`${FIREBASE_PATH}/pgcProfileName`] = pgcProfileNameInput.value;
         return update(ref(database), updates);
     };
-    
-    const savePgcProfileName = () => set(ref(database, `${FIREBASE_PATH}/pgcProfileName`), pgcProfileNameInput.value);
 
     const handleBulkAdd = async () => {
         const text = bulkAddInput.value.trim(); if (!text) return;
-        bulkAddBtn.disabled = true; bulkAddBtn.textContent = 'Haetaan...';
+        
         const newNames = text.split(/[\n,]/).map(name => name.trim()).filter(Boolean);
+        const uniqueNewNames = newNames.filter(name => !municipalities.some(m => m.name.toLowerCase() === name.toLowerCase()));
+        
+        if (uniqueNewNames.length === 0) return;
+
+        bulkAddBtn.disabled = true;
         let notFound = [];
-        for (const name of newNames) {
-            if (!municipalities.some(m => m.name.toLowerCase() === name.toLowerCase())) {
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name + ', Finland')}&format=json&limit=1`);
-                    const data = await response.json();
-                    if (data && data.length > 0) {
-                        municipalities.push({ name: name, caches: [], lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
-                    } else { notFound.push(name); }
-                } catch (error) { console.error("Virhe haettaessa kuntaa:", name, error); notFound.push(name); }
+
+        for (let i = 0; i < uniqueNewNames.length; i++) {
+            const name = uniqueNewNames[i];
+            bulkAddBtn.textContent = `Haetaan ${i + 1} / ${uniqueNewNames.length}...`;
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name + ', Finland')}&format=json&limit=1`);
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    municipalities.push({ name: name, caches: [], lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
+                } else {
+                    notFound.push(name);
+                }
+            } catch (error) {
+                console.error("Virhe haettaessa kuntaa:", name, error);
+                notFound.push(name);
             }
+            await delay(1000); // 1 sekunnin viive
         }
+
         if (notFound.length > 0) alert(`Seuraavia kuntia ei löytynyt: ${notFound.join(', ')}`);
-        bulkAddInput.value = ''; bulkAddBtn.disabled = false; bulkAddBtn.textContent = 'Lisää listasta';
+        
+        bulkAddInput.value = '';
+        bulkAddBtn.disabled = false;
+        bulkAddBtn.textContent = 'Lisää listasta';
         saveState();
     };
 
@@ -524,10 +562,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const coords = parseCoordinates(line3);
                 if (!gcCode || !cacheName || !cacheType || !coords) continue;
                 
-                const loggers = {};
-                LOGGERS.forEach(name => { loggers[name] = false; });
+                const loggerCheckboxes = {};
+                loggers.forEach(name => { loggerCheckboxes[name] = false; });
 
-                const newFoundCache = { id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize, difficulty, terrain, lat: coords.lat, lon: coords.lon, timestamp: new Date().toISOString(), loggers };
+                const newFoundCache = { id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize, difficulty, terrain, lat: coords.lat, lon: coords.lon, timestamp: new Date().toISOString(), loggers: loggerCheckboxes };
                 foundCaches.push(newFoundCache);
                 cachesAddedCount++;
             } catch (e) { console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e); }
@@ -549,18 +587,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             const [cacheToMove] = municipalities[munIndex].caches.splice(cacheIndex, 1);
             
-            const loggers = {};
-            LOGGERS.forEach(name => { loggers[name] = false; });
+            const loggerCheckboxes = {};
+            loggers.forEach(name => { loggerCheckboxes[name] = false; });
             
-            const newFoundCache = {
-                ...cacheToMove,
-                timestamp: new Date().toISOString(),
-                loggers: loggers
-            };
-            
+            const newFoundCache = { ...cacheToMove, timestamp: new Date().toISOString(), loggers: loggerCheckboxes };
             foundCaches.push(newFoundCache);
             needsSave = true;
-
         } else {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             if (button.classList.contains('set-coords-btn')) {
@@ -645,9 +677,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const gcCodeMatch = input.match(/(GC[A-Z0-9]+)/i);
         if (!gcCodeMatch) return alert("Syötteestä ei löytynyt GC-koodia.");
         const gcCode = gcCodeMatch[0].toUpperCase();
-        const loggers = {};
-        LOGGERS.forEach(name => { loggers[name] = false; });
-        foundCaches.push({ id: Date.now(), name: gcCode, gcCode: gcCode, timestamp: new Date().toISOString(), loggers: loggers, type: 'Muu' });
+        const loggerCheckboxes = {};
+        loggers.forEach(name => { loggerCheckboxes[name] = false; });
+        foundCaches.push({ id: Date.now(), name: gcCode, gcCode: gcCode, timestamp: new Date().toISOString(), loggers: loggerCheckboxes, type: 'Muu' });
         saveState();
         directAddInput.value = '';
     });
@@ -683,6 +715,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    addLoggerBtn.addEventListener('click', () => {
+        const newName = newLoggerInput.value.trim();
+        if (newName && !loggers.find(l => l.toLowerCase() === newName.toLowerCase())) {
+            loggers.push(newName);
+            newLoggerInput.value = '';
+            saveState();
+        }
+    });
+
+    loggerList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-logger-btn')) {
+            const nameToDelete = e.target.dataset.loggerName;
+            loggers = loggers.filter(l => l !== nameToDelete);
+            saveState();
+        }
+    });
+
     showTripListBtn.addEventListener('click', () => {
         tripListView.classList.remove('hidden');
         foundLogView.classList.add('hidden');
@@ -696,7 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showFoundLogBtn.classList.add('active');
     });
 
-    pgcProfileNameInput.addEventListener('change', savePgcProfileName);
+    pgcProfileNameInput.addEventListener('change', saveState);
     toggleTrackingBtn.addEventListener('click', toggleTracking);
     
     let draggedIndex = null;
