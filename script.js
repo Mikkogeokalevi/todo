@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 // --- ASETUKSET ---
 const urlParams = new URLSearchParams(window.location.search);
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-        if (needsSave) saveMunicipalities();
+        if (needsSave) saveState();
     };
     const checkCurrentMunicipality = async (lat, lon) => {
         try {
@@ -402,7 +402,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (didChange) {
             console.log("Paikannettiin puuttuvia koordinaatteja, tallennetaan...");
-            saveMunicipalities(); return true;
+            saveState(); 
+            return true;
         }
         return false;
     };
@@ -417,12 +418,18 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
         renderFoundList();
         const changed = await ensureAllCoordsAreFetched(municipalities);
-        if (changed) render();
+        if (changed) render(); // ensureAllCoordsAreFetched calls save, onValue will re-trigger, but this is ok
         updateAllMarkers();
     });
 
-    const saveMunicipalities = () => set(ref(database, `${FIREBASE_PATH}/municipalities`), municipalities);
-    const saveFoundCaches = () => set(ref(database, `${FIREBASE_PATH}/foundCaches`), foundCaches);
+    // Uusi, yhdistetty tallennusfunktio
+    const saveState = () => {
+        const updates = {};
+        updates[`${FIREBASE_PATH}/municipalities`] = municipalities;
+        updates[`${FIREBASE_PATH}/foundCaches`] = foundCaches;
+        return update(ref(database), updates);
+    };
+    
     const savePgcProfileName = () => set(ref(database, `${FIREBASE_PATH}/pgcProfileName`), pgcProfileNameInput.value);
 
     const handleBulkAdd = async () => {
@@ -443,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (notFound.length > 0) alert(`Seuraavia kuntia ei löytynyt: ${notFound.join(', ')}`);
         bulkAddInput.value = ''; bulkAddBtn.disabled = false; bulkAddBtn.textContent = 'Lisää listasta';
-        saveMunicipalities();
+        saveState();
     };
 
     toggleBulkAddBtn.addEventListener('click', () => {
@@ -517,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (cachesAddedCount > 0) {
             await ensureAllCoordsAreFetched(municipalities);
-            saveMunicipalities();
+            saveState();
             globalPgcPasteArea.value = '';
         } else {
             alert("Ei voitu jäsentää kelvollisia kätkötietoja syötetystä tekstistä.");
@@ -553,7 +560,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             foundCaches.push(newFoundCache);
             needsSave = true;
-            needsRender = true;
+            needsRender = false; // Estetään paikallinen renderöinti, annetaan onValue hoitaa se tallennuksen jälkeen
 
         } else {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
@@ -570,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
                     }
-                    needsSave = true; needsRender = true;
+                    needsSave = true;
                 }
             } else if (button.classList.contains('edit-municipality-btn')) {
                 const oldName = municipalities[munIndex].name;
@@ -578,13 +585,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
                     municipalities[munIndex].name = newName.trim();
                     delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
-                    needsSave = true; needsRender = true;
+                    needsSave = true;
                     ensureAllCoordsAreFetched(municipalities);
                 }
             } else if (button.classList.contains('delete-municipality-btn')) {
                 if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
                     municipalities.splice(munIndex, 1);
-                    needsSave = true; needsRender = true;
+                    needsSave = true;
                 }
             } else if (button.classList.contains('add-cache-btn')) {
                 const container = button.closest('.add-cache');
@@ -600,12 +607,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         type: 'Muu'
                     });
                     nameInput.value = '';
-                    needsSave = true; needsRender = true;
+                    needsSave = true;
                 }
             } else if (button.classList.contains('delete-cache-btn')) {
                 if (confirm(`Poistetaanko kätkö "${municipalities[munIndex].caches[cacheIndex].name}"?`)) {
                     municipalities[munIndex].caches.splice(cacheIndex, 1);
-                    needsSave = true; needsRender = true;
+                    needsSave = true;
                 }
             } else if (button.classList.contains('edit-cache-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
@@ -623,17 +630,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
                 
                 editCacheModal.classList.remove('hidden');
+                return; // Estä tallennus ja renderöinti modaalin avaamisen yhteydessä
             }
         }
         
         if (needsSave) {
-            saveMunicipalities();
-            saveFoundCaches();
+            saveState();
         }
         if (needsRender) {
-            render();
-            renderFoundList();
-            updateAllMarkers();
+            // Annetaan onValue-kuuntelijan hoitaa renderöinti tallennuksen jälkeen
         }
     });
 
@@ -664,7 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
             delete cache.lon;
         }
 
-        saveMunicipalities();
+        saveState();
         editCacheModal.classList.add('hidden');
     });
 
@@ -689,7 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
             id: Date.now(), name: gcCode, gcCode: gcCode,
             timestamp: new Date().toISOString(), loggers: loggers
         });
-        saveFoundCaches();
+        saveState();
         directAddInput.value = '';
     });
 
@@ -707,19 +712,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.type === 'checkbox') {
             const loggerName = target.dataset.logger;
             cache.loggers[loggerName] = target.checked;
-            saveFoundCaches();
+            saveState();
         } else if (target.classList.contains('edit-found-btn')) {
             const newName = prompt("Muokkaa nimeä/GC-koodia:", cache.name);
             if (newName && newName.trim()) {
                 cache.name = newName.trim();
                 const gcCodeMatch = newName.match(/(GC[A-Z0-9]+)/i);
                 cache.gcCode = gcCodeMatch ? gcCodeMatch[0].toUpperCase() : newName;
-                saveFoundCaches();
+                saveState();
             }
         } else if (target.classList.contains('delete-found-btn')) {
             if (confirm(`Haluatko varmasti poistaa lokista kätkön "${cache.name}"?`)) {
                 foundCaches.splice(cacheIndex, 1);
-                saveFoundCaches();
+                saveState();
             }
         }
     });
@@ -769,7 +774,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newIndex > -1 && draggedIndex !== null) {
                 const [removed] = municipalities.splice(draggedIndex, 1);
                 municipalities.splice(newIndex, 0, removed);
-                saveMunicipalities();
+                saveState();
             }
         }
     });
