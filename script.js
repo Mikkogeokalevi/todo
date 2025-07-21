@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
     const bulkAddBtn = document.getElementById('bulkAddBtn');
     const municipalityList = document.getElementById('municipalityList');
-    const cacheTypeSelectorTemplate = document.getElementById('cacheTypeSelector');
     const toggleBulkAddBtn = document.getElementById('toggleBulkAddBtn');
     const bulkAddContainer = document.getElementById('bulkAddContainer');
     const toggleTrackingBtn = document.getElementById('toggleTrackingBtn');
@@ -37,6 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalPgcAddContainer = document.getElementById('globalPgcAddContainer');
     const globalPgcPasteArea = document.getElementById('globalPgcPasteArea');
     const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
+    const logPgcPasteArea = document.getElementById('logPgcPasteArea');
+    const logAddFromPgcBtn = document.getElementById('logAddFromPgcBtn');
     const editCacheModal = document.getElementById('editCacheModal');
     const editCacheForm = document.getElementById('editCacheForm');
     const modalCancelBtn = document.querySelector('.modal-cancel-btn');
@@ -371,15 +372,24 @@ document.addEventListener('DOMContentLoaded', () => {
             li.className = 'found-cache-item';
             const date = new Date(cache.timestamp);
             const formattedDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} klo ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-            const loggersHtml = LOGGERS.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
+            const loggersHtml = LOGGERS.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers && cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
+
+            const detailsHtml = `
+                <span class="cache-detail-tag type">${cache.type || 'Muu'}</span>
+                <span class="cache-detail-tag size">${cache.size || ''}</span>
+                <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
+                ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
+            `;
+
             li.innerHTML = `
                 <div class="found-cache-header">
-                    <a href="https://coord.info/${cache.gcCode}" target="_blank" class="found-cache-name">${cache.name}</a>
+                    <a href="https://coord.info/${cache.gcCode}" target="_blank" class="found-cache-name">${cache.gcCode ? cache.gcCode + ' - ' : ''}${cache.name}</a>
                     <div class="found-cache-actions">
                         <button class="edit-found-btn" data-cache-id="${cache.id}" title="Muokkaa">✏️</button>
                         <button class="delete-found-btn" data-cache-id="${cache.id}" title="Poista">🗑️</button>
                     </div>
                 </div>
+                <div class="cache-details">${detailsHtml}</div>
                 <div class="timestamp">${formattedDate}</div>
                 <div class="loggers">${loggersHtml}</div>
             `;
@@ -418,11 +428,10 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
         renderFoundList();
         const changed = await ensureAllCoordsAreFetched(municipalities);
-        if (changed) render(); // ensureAllCoordsAreFetched calls save, onValue will re-trigger, but this is ok
+        if (changed) { /* onValue hoitaa renderöinnin uudelleen */ }
         updateAllMarkers();
     });
 
-    // Uusi, yhdistetty tallennusfunktio
     const saveState = () => {
         const updates = {};
         updates[`${FIREBASE_PATH}/municipalities`] = municipalities;
@@ -460,107 +469,91 @@ document.addEventListener('DOMContentLoaded', () => {
     bulkAddBtn.addEventListener('click', handleBulkAdd);
     
     globalAddFromPgcBtn.addEventListener('click', async () => {
-        const text = globalPgcPasteArea.value.trim();
-        if (!text) return;
-        
-        globalAddFromPgcBtn.disabled = true;
-        globalAddFromPgcBtn.textContent = "Käsitellään...";
-
+        const text = globalPgcPasteArea.value.trim(); if (!text) return;
+        globalAddFromPgcBtn.disabled = true; globalAddFromPgcBtn.textContent = "Käsitellään...";
         const lines = text.split('\n').filter(Boolean);
         let cachesAddedCount = 0;
-
         for (let i = 0; i < lines.length; i += 3) {
-            const line1 = lines[i];
-            const line2 = lines[i + 1];
-            const line3 = lines[i + 2];
-
+            const line1 = lines[i], line2 = lines[i + 1], line3 = lines[i + 2];
             if (!line1 || !line2 || !line3) continue;
-
             try {
                 const frontParts = line1.split(/\s*-\s*/);
                 const gcCode = frontParts[0]?.trim();
                 const cacheName = frontParts[1]?.trim();
                 const fpInfo = frontParts.length > 2 ? frontParts.slice(2).join(' - ').trim() : '';
-
                 const detailsParts = line2.split('/');
-                const cacheType = detailsParts[0]?.trim();
-                const cacheSize = detailsParts[1]?.trim();
-                const difficulty = detailsParts[2]?.trim();
-                const terrain = detailsParts[3]?.trim();
-
+                const cacheType = detailsParts[0]?.trim(), cacheSize = detailsParts[1]?.trim(), difficulty = detailsParts[2]?.trim(), terrain = detailsParts[3]?.trim();
                 const coords = parseCoordinates(line3);
-
-                if (!gcCode || !cacheName || !cacheType || !coords) {
-                    continue;
-                }
-
+                if (!gcCode || !cacheName || !cacheType || !coords) continue;
                 const munName = await getMunicipalityForCoordinates(coords.lat, coords.lon);
-                if (!munName) {
-                    console.warn(`Ei löytynyt kuntaa koordinaateille: ${coords.lat}, ${coords.lon}`);
-                    continue;
-                }
-                
-                const cacheData = {
-                    id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize,
-                    difficulty, terrain, lat: coords.lat, lon: coords.lon, alert_approach_given: false, alert_target_given: false
-                };
-
+                if (!munName) { console.warn(`Ei löytynyt kuntaa koordinaateille: ${coords.lat}, ${coords.lon}`); continue; }
+                const cacheData = { id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize, difficulty, terrain, lat: coords.lat, lon: coords.lon, alert_approach_given: false, alert_target_given: false };
                 let munIndex = municipalities.findIndex(m => m.name.toLowerCase() === munName.toLowerCase());
-
-                if (munIndex === -1) {
-                    municipalities.push({ name: munName, caches: [cacheData] });
-                } else {
-                    if (!municipalities[munIndex].caches) {
-                        municipalities[munIndex].caches = [];
-                    }
-                    municipalities[munIndex].caches.push(cacheData);
-                }
+                if (munIndex === -1) { municipalities.push({ name: munName, caches: [cacheData] }); } 
+                else { if (!municipalities[munIndex].caches) municipalities[munIndex].caches = []; municipalities[munIndex].caches.push(cacheData); }
                 cachesAddedCount++;
+            } catch (e) { console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e); }
+        }
+        if (cachesAddedCount > 0) { await ensureAllCoordsAreFetched(municipalities); saveState(); globalPgcPasteArea.value = ''; } 
+        else { alert("Ei voitu jäsentää kelvollisia kätkötietoja syötetystä tekstistä."); }
+        globalAddFromPgcBtn.disabled = false; globalAddFromPgcBtn.textContent = "Lisää ja paikanna";
+    });
 
-            } catch (e) {
-                console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e);
-            }
+    logAddFromPgcBtn.addEventListener('click', () => {
+        const text = logPgcPasteArea.value.trim(); if (!text) return;
+        logAddFromPgcBtn.disabled = true; logAddFromPgcBtn.textContent = "Käsitellään...";
+        const lines = text.split('\n').filter(Boolean);
+        let cachesAddedCount = 0;
+        for (let i = 0; i < lines.length; i += 3) {
+            const line1 = lines[i], line2 = lines[i + 1], line3 = lines[i + 2];
+            if (!line1 || !line2 || !line3) continue;
+            try {
+                const frontParts = line1.split(/\s*-\s*/);
+                const gcCode = frontParts[0]?.trim();
+                const cacheName = frontParts[1]?.trim();
+                const fpInfo = frontParts.length > 2 ? frontParts.slice(2).join(' - ').trim() : '';
+                const detailsParts = line2.split('/');
+                const cacheType = detailsParts[0]?.trim(), cacheSize = detailsParts[1]?.trim(), difficulty = detailsParts[2]?.trim(), terrain = detailsParts[3]?.trim();
+                const coords = parseCoordinates(line3);
+                if (!gcCode || !cacheName || !cacheType || !coords) continue;
+                
+                const loggers = {};
+                LOGGERS.forEach(name => { loggers[name] = false; });
+
+                const newFoundCache = { id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize, difficulty, terrain, lat: coords.lat, lon: coords.lon, timestamp: new Date().toISOString(), loggers };
+                foundCaches.push(newFoundCache);
+                cachesAddedCount++;
+            } catch (e) { console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e); }
         }
-        
-        if (cachesAddedCount > 0) {
-            await ensureAllCoordsAreFetched(municipalities);
-            saveState();
-            globalPgcPasteArea.value = '';
-        } else {
-            alert("Ei voitu jäsentää kelvollisia kätkötietoja syötetystä tekstistä.");
-        }
-        
-        globalAddFromPgcBtn.disabled = false;
-        globalAddFromPgcBtn.textContent = "Lisää ja paikanna";
+        if (cachesAddedCount > 0) { saveState(); logPgcPasteArea.value = ''; } 
+        else { alert("Ei voitu jäsentää kelvollisia kätkötietoja syötetystä tekstistä."); }
+        logAddFromPgcBtn.disabled = false; logAddFromPgcBtn.textContent = "Lisää löydetyt lokiin";
     });
 
     municipalityList.addEventListener('click', (e) => {
         const button = e.target.closest('button, input[type="checkbox"]');
         if (!button) return;
-
-        let needsSave = false;
-        let needsRender = false;
         const munIndex = parseInt(button.dataset.munIndex, 10);
         if (isNaN(munIndex)) return;
+        
+        let needsSave = false;
         
         if (button.type === 'checkbox') {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             const [cacheToMove] = municipalities[munIndex].caches.splice(cacheIndex, 1);
-
+            
             const loggers = {};
             LOGGERS.forEach(name => { loggers[name] = false; });
             
+            // Kopioi kaikki tiedot ja lisää/ylikirjoita tarvittavat
             const newFoundCache = {
-                id: cacheToMove.id || Date.now(),
-                name: cacheToMove.name,
-                gcCode: cacheToMove.gcCode || '',
+                ...cacheToMove,
                 timestamp: new Date().toISOString(),
                 loggers: loggers
             };
-
+            
             foundCaches.push(newFoundCache);
             needsSave = true;
-            needsRender = false; // Estetään paikallinen renderöinti, annetaan onValue hoitaa se tallennuksen jälkeen
 
         } else {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
@@ -570,13 +563,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
                 if(input !== null) {
                     const coords = parseCoordinates(input);
-                    if(coords) {
-                        cache.lat = coords.lat; cache.lon = coords.lon;
-                    } else if (input.trim() === '') {
-                        delete cache.lat; delete cache.lon;
-                    } else {
-                        alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341");
-                    }
+                    if(coords) { cache.lat = coords.lat; cache.lon = coords.lon; } 
+                    else if (input.trim() === '') { delete cache.lat; delete cache.lon; } 
+                    else { alert("Virheellinen koordinaattimuoto.\nEsimerkki: N 60 58.794 E 26 11.341"); }
                     needsSave = true;
                 }
             } else if (button.classList.contains('edit-municipality-btn')) {
@@ -585,8 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (newName && newName.trim() && newName.trim().toLowerCase() !== oldName.toLowerCase()) {
                     municipalities[munIndex].name = newName.trim();
                     delete municipalities[munIndex].lat; delete municipalities[munIndex].lon;
-                    needsSave = true;
-                    ensureAllCoordsAreFetched(municipalities);
+                    ensureAllCoordsAreFetched(municipalities); // Tämä hoitaa tallennuksen
                 }
             } else if (button.classList.contains('delete-municipality-btn')) {
                 if (confirm(`Haluatko poistaa kunnan "${municipalities[munIndex].name}"?`)) {
@@ -600,12 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
                     const name = nameInput.value.trim();
                     const gcCodeMatch = name.match(/(GC[A-Z0-9]+)/i);
-                    municipalities[munIndex].caches.push({ 
-                        id: Date.now(), 
-                        name: gcCodeMatch ? name.replace(gcCodeMatch[0], '').trim() : name,
-                        gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '',
-                        type: 'Muu'
-                    });
+                    municipalities[munIndex].caches.push({ id: Date.now(), name: gcCodeMatch ? name.replace(gcCodeMatch[0], '').trim() : name, gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '', type: 'Muu' });
                     nameInput.value = '';
                     needsSave = true;
                 }
@@ -616,42 +599,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else if (button.classList.contains('edit-cache-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
-                
-                editMunIndexInput.value = munIndex;
-                editCacheIndexInput.value = cacheIndex;
-
-                editGcCodeInput.value = cache.gcCode || '';
-                editNameInput.value = cache.name || '';
-                editTypeInput.value = cache.type || '';
-                editSizeInput.value = cache.size || '';
-                editDifficultyInput.value = cache.difficulty || '';
-                editTerrainInput.value = cache.terrain || '';
-                editFpInput.value = cache.fp || '';
-                editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
-                
+                editMunIndexInput.value = munIndex; editCacheIndexInput.value = cacheIndex;
+                editGcCodeInput.value = cache.gcCode || ''; editNameInput.value = cache.name || '';
+                editTypeInput.value = cache.type || ''; editSizeInput.value = cache.size || '';
+                editDifficultyInput.value = cache.difficulty || ''; editTerrainInput.value = cache.terrain || '';
+                editFpInput.value = cache.fp || ''; editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
                 editCacheModal.classList.remove('hidden');
-                return; // Estä tallennus ja renderöinti modaalin avaamisen yhteydessä
             }
         }
         
-        if (needsSave) {
-            saveState();
-        }
-        if (needsRender) {
-            // Annetaan onValue-kuuntelijan hoitaa renderöinti tallennuksen jälkeen
-        }
+        if (needsSave) saveState();
     });
 
     editCacheForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        
         const munIndex = parseInt(editMunIndexInput.value, 10);
         const cacheIndex = parseInt(editCacheIndexInput.value, 10);
-
         if (isNaN(munIndex) || isNaN(cacheIndex)) return;
-
         const cache = municipalities[munIndex].caches[cacheIndex];
-
         cache.gcCode = editGcCodeInput.value.trim().toUpperCase();
         cache.name = editNameInput.value.trim();
         cache.type = editTypeInput.value.trim();
@@ -659,29 +624,15 @@ document.addEventListener('DOMContentLoaded', () => {
         cache.difficulty = editDifficultyInput.value.trim();
         cache.terrain = editTerrainInput.value.trim();
         cache.fp = editFpInput.value.trim();
-        
         const coords = parseCoordinates(editCoordsInput.value);
-        if (coords) {
-            cache.lat = coords.lat;
-            cache.lon = coords.lon;
-        } else if(editCoordsInput.value.trim() === '') {
-            delete cache.lat;
-            delete cache.lon;
-        }
-
+        if (coords) { cache.lat = coords.lat; cache.lon = coords.lon; } 
+        else if(editCoordsInput.value.trim() === '') { delete cache.lat; delete cache.lon; }
         saveState();
         editCacheModal.classList.add('hidden');
     });
 
-    modalCancelBtn.addEventListener('click', () => {
-        editCacheModal.classList.add('hidden');
-    });
-    
-    editCacheModal.addEventListener('click', (e) => {
-        if (e.target === editCacheModal) {
-            editCacheModal.classList.add('hidden');
-        }
-    });
+    modalCancelBtn.addEventListener('click', () => editCacheModal.classList.add('hidden'));
+    editCacheModal.addEventListener('click', (e) => { if (e.target === editCacheModal) editCacheModal.classList.add('hidden'); });
 
     directAddBtn.addEventListener('click', () => {
         const input = directAddInput.value.trim(); if (!input) return;
@@ -690,10 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gcCode = gcCodeMatch[0].toUpperCase();
         const loggers = {};
         LOGGERS.forEach(name => { loggers[name] = false; });
-        foundCaches.push({
-            id: Date.now(), name: gcCode, gcCode: gcCode,
-            timestamp: new Date().toISOString(), loggers: loggers
-        });
+        foundCaches.push({ id: Date.now(), name: gcCode, gcCode: gcCode, timestamp: new Date().toISOString(), loggers: loggers, type: 'Muu' });
         saveState();
         directAddInput.value = '';
     });
@@ -704,13 +652,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cacheItem) return;
         const cacheId = parseInt(target.closest('button, label > input')?.dataset.cacheId, 10);
         if (isNaN(cacheId)) return;
-        
         const cacheIndex = foundCaches.findIndex(c => c.id === cacheId);
         if (cacheIndex === -1) return;
         const cache = foundCaches[cacheIndex];
         
         if (target.type === 'checkbox') {
             const loggerName = target.dataset.logger;
+            if (!cache.loggers) cache.loggers = {};
             cache.loggers[loggerName] = target.checked;
             saveState();
         } else if (target.classList.contains('edit-found-btn')) {
