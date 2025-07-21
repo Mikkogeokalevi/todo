@@ -22,7 +22,7 @@ body {
     top: 10px;
     right: 10px;
     background-color: rgba(0, 0, 0, 0.7);
-    color: #fff;
+    color: #FFD700;
     padding: 5px 15px;
     border-radius: 8px;
     font-family: monospace, sans-serif;
@@ -147,15 +147,6 @@ ul { list-style: none; padding: 0; }
 .loggers label { display: flex; align-items: center; gap: 5px; color: #dddddd; }
 .found-cache-actions { display: flex; gap: 5px; }
 .found-cache-actions button { color: #cccccc; font-size: 1.1em; }
-
-.pgc-add-container {
-    margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #556B2F;
-}
-.pgc-paste-area { width: 100%; min-height: 60px; margin-bottom: 8px; }
-.pgc-add-container button { width: 100%; background-color: #3498db; border-color: #3498db; color: white; }
-.pgc-add-container button:hover { background-color: #2980b9; }
 
 .cache-name { font-weight: bold; margin-bottom: 5px; word-break: break-word; }
 .cache-name a { color: inherit; text-decoration: underline; }
