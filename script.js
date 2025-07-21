@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
             await requestWakeLock();
-            const CHECK_MUNICIPALITY_INTERVAL_METERS = 500;
+            const CHECK_MUNICipality_INTERVAL_METERS = 500;
             trackingWatcher = navigator.geolocation.watchPosition(
                 (position) => {
                     const { latitude, longitude, speed } = position.coords;
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         if(map.getZoom() !== newZoom) map.setZoom(newZoom);
                         if (!map.getBounds().pad(-0.2).contains(userMarker.getLatLng())) map.panTo([latitude, longitude]);
                         checkCacheProximity(latitude, longitude);
-                        if (!lastCheckedCoords || getDistance(lastCheckedCoords.lat, lastCheckedCoords.lon, latitude, longitude) > CHECK_MUNICIPALITY_INTERVAL_METERS) {
+                        if (!lastCheckedCoords || getDistance(lastCheckedCoords.lat, lastCheckedCoords.lon, latitude, longitude) > CHECK_MUNICipality_INTERVAL_METERS) {
                             lastCheckedCoords = { lat: latitude, lon: longitude };
                             checkCurrentMunicipality(latitude, longitude);
                         } else {
@@ -402,7 +402,20 @@ document.addEventListener('DOMContentLoaded', () => {
             foundCachesList.appendChild(li);
         });
     };
-    
+
+    const renderLoggers = () => {
+        loggerList.innerHTML = '';
+        loggers.forEach(name => {
+            const li = document.createElement('li');
+            li.className = 'logger-item';
+            li.innerHTML = `
+                <span>${name}</span>
+                <button class="delete-logger-btn" data-logger-name="${name}">×</button>
+            `;
+            loggerList.appendChild(li);
+        });
+    };
+
     const ensureAllCoordsAreFetched = async (munis) => {
         let didChange = false;
         const munisToFetch = munis.filter(mun => !mun.lat || !mun.lon);
@@ -415,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data && data.length > 0) {
                     mun.lat = parseFloat(data[0].lat); mun.lon = parseFloat(data[0].lon); didChange = true;
                 }
-                await delay(1000); // Viive API-kutsujen välillä
+                await delay(1000);
             } catch (error) { console.error("Koordinaattien haku epäonnistui kunnalle:", mun.name, error); }
         }
 
@@ -426,9 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return didChange;
     };
     
-    // ... Loput koodista (tapahtumankäsittelijät jne.) on täsmälleen sama kuin edellisessä versiossa.
-    // ... Liitän ne tähän kokonaisuuden vuoksi.
-
     initMap();
 
     onValue(ref(database, FIREBASE_PATH), async (snapshot) => {
@@ -445,10 +455,8 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
         renderFoundList();
         
-        const coordsFetched = await ensureAllCoordsAreFetched(municipalities);
-        if (!coordsFetched) {
-             updateAllMarkers();
-        }
+        await ensureAllCoordsAreFetched(municipalities);
+        updateAllMarkers();
     });
 
     const saveState = () => {
@@ -708,6 +716,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 foundCaches.splice(cacheIndex, 1);
                 saveState();
             }
+        }
+    });
+
+    addLoggerBtn.addEventListener('click', () => {
+        const newName = newLoggerInput.value.trim();
+        if (newName && !loggers.find(l => l.toLowerCase() === newName.toLowerCase())) {
+            loggers.push(newName);
+            newLoggerInput.value = '';
+            
+            isUpdatingLoggers = true;
+            renderLoggers();
+            
+            saveState().finally(() => {
+                isUpdatingLoggers = false;
+            });
+        }
+    });
+
+    loggerList.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-logger-btn')) {
+            const nameToDelete = e.target.dataset.loggerName;
+            loggers = loggers.filter(l => l !== nameToDelete);
+            
+            isUpdatingLoggers = true;
+            renderLoggers();
+
+            saveState().finally(() => {
+                isUpdatingLoggers = false;
+            });
         }
     });
 
