@@ -49,13 +49,6 @@
                     <button id="showFoundLogBtn" class="view-toggle-btn">Loki</button>
                 </div>
 
-                <div id="globalPgcAddContainer" class="bulk-add">
-                    <h3>Lisää kätkö PGC-datalla (automaattinen kunnan haku)</h3>
-                    <textarea id="globalPgcPasteArea" rows="4" placeholder="Liitä PGC:n kätkötiedot tähän..."></textarea>
-                    <button id="globalAddFromPgcBtn">Lisää ja paikanna</button>
-                </div>
-
-
                 <div id="tripListView">
                     <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
                     <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
@@ -64,6 +57,14 @@
                         <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
                         <button id="bulkAddBtn">Lisää listasta</button>
                     </div>
+                    
+                    <button id="togglePgcAddBtn" class="toggle-button">Lisää PGC-datalla</button>
+                    <div id="globalPgcAddContainer" class="bulk-add hidden">
+                        <h3>Lisää kätkö PGC-datalla (automaattinen kunnan haku)</h3>
+                        <textarea id="globalPgcPasteArea" rows="4" placeholder="Liitä PGC:n kätkötiedot tähän..."></textarea>
+                        <button id="globalAddFromPgcBtn">Lisää ja paikanna</button>
+                    </div>
+
                     <ul id="municipalityList"></ul>
                 </div>
 
