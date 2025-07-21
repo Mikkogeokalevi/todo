@@ -406,6 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loggerList.innerHTML = '';
         loggers.forEach(name => {
             const li = document.createElement('li');
+            li.className = 'logger-item';
             li.innerHTML = `
                 <span>${name}</span>
                 <button class="delete-logger-btn" data-logger-name="${name}">×</button>
@@ -417,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const ensureAllCoordsAreFetched = async (munis) => {
         let didChange = false;
         const munisToFetch = munis.filter(mun => !mun.lat || !mun.lon);
+        if (munisToFetch.length === 0) return false;
 
         for (const mun of munisToFetch) {
             try {
@@ -442,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = snapshot.val() || {};
         municipalities = data.municipalities || [];
         foundCaches = data.foundCaches || [];
-        loggers = data.loggers || ["Oletus Kirjaaja"];
+        loggers = data.loggers || []; // Ei enää oletusarvoa, alkaa tyhjänä
         pgcProfileNameInput.value = data.pgcProfileName || '';
 
         render();
@@ -720,6 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newName && !loggers.find(l => l.toLowerCase() === newName.toLowerCase())) {
             loggers.push(newName);
             newLoggerInput.value = '';
+            renderLoggers(); // Optimistinen päivitys
             saveState();
         }
     });
@@ -728,6 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('delete-logger-btn')) {
             const nameToDelete = e.target.dataset.loggerName;
             loggers = loggers.filter(l => l !== nameToDelete);
+            renderLoggers(); // Optimistinen päivitys
             saveState();
         }
     });
