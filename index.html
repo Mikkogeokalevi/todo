@@ -34,10 +34,17 @@
                 
                 <div class="pgc-settings-container">
                     <details>
-                        <summary>Project-GC Asetukset</summary>
+                        <summary>Asetukset</summary>
                         <div class="pgc-input-wrapper">
                             <label for="pgcProfileName">Project-GC nimi:</label>
                             <input type="text" id="pgcProfileName" placeholder="Oma kätköilynimesi...">
+                            <hr class="custom-hr" style="margin: 10px 0;">
+                            <label>Lokittajat:</label>
+                            <ul id="loggerList"></ul>
+                            <div class="add-logger-controls">
+                                <input type="text" id="newLoggerInput" placeholder="Uuden lokittajan nimi...">
+                                <button id="addLoggerBtn">+</button>
+                            </div>
                         </div>
                     </details>
                 </div>
