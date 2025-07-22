@@ -48,7 +48,6 @@ body {
 .custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 20px 0; }
 .container { padding: 0 5px; }
 
-/* LISÄTTY OSA */
 .list-name-display {
     text-align: left;
     color: #FFD700;
@@ -203,6 +202,34 @@ ul { list-style: none; padding: 0; }
     margin-top: 8px;
 }
 
+/* --- LISÄTYT TYYLIT --- */
+#activeMunicipalityContainer {
+    border: 2px solid #FFD700;
+    background-color: #4a5c3a;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 15px 0;
+    animation: fadeIn 0.5s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.management-details {
+    border: 1px solid #2A381C;
+    border-radius: 5px;
+    background-color: #2A381C;
+    margin-bottom: 20px;
+}
+.management-details summary {
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #E6E6E6;
+    font-size: 1.1em;
+}
+.management-details .details-content {
+    padding: 0 10px 10px 10px;
+}
+/* --- LISÄTYT TYYLIT PÄÄTTYY --- */
 
 @media (max-width: 600px) {
     body { padding: 5px; font-size: 14px; }
