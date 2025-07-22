@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 234 PÄÄTTYVÄT ---
+// --- ASETUKSET 2 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editCacheModal = document.getElementById('editCacheModal');
     const editCacheForm = document.getElementById('editCacheForm');
     const modalCancelBtn = document.querySelector('.modal-cancel-btn');
-    const editSourceInput = document.getElementById('editSource'); // KORJATTU
+    const editSourceInput = document.getElementById('editSource');
     const editMunIndexInput = document.getElementById('editMunIndex');
     const editCacheIndexInput = document.getElementById('editCacheIndex');
     const editGcCodeInput = document.getElementById('editGcCode');
@@ -560,7 +560,6 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalities = data.municipalities || [];
         foundCaches = data.foundCaches || [];
 
-        // KORJAUS: Varmistetaan, että vanhoilla lokimerkinnöillä on ID
         let needsSaveAfterMigration = false;
         foundCaches.forEach(cache => {
             if (!cache.id) {
@@ -765,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
             needsSave = true;
         } else {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
-            if (button.classList.contains('edit-cache-btn')) { // MUOKATTU
+            if (button.classList.contains('edit-cache-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
                 editSourceInput.value = 'trip';
                 editMunIndexInput.value = munIndex;
@@ -826,7 +825,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (needsSave) saveState();
     });
 
-    // --- KORJATTU FUNKTIO: editCacheForm submit ---
     editCacheForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const source = editSourceInput.value;
@@ -879,7 +877,6 @@ document.addEventListener('DOMContentLoaded', () => {
         directAddInput.value = '';
     });
 
-    // --- KORJATTU FUNKTIO: foundCachesList click ---
     foundCachesList.addEventListener('click', (e) => {
         const target = e.target;
         const cacheId = parseFloat(target.closest('[data-cache-id]')?.dataset.cacheId);
@@ -895,8 +892,8 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
         } else if (target.classList.contains('edit-found-btn')) {
             editSourceInput.value = 'log';
-            editCacheIndexInput.value = cache.id; // Tallennetaan ID
-            editMunIndexInput.value = ''; // Ei tarvita kuntaindeksiä
+            editCacheIndexInput.value = cache.id;
+            editMunIndexInput.value = '';
             
             editGcCodeInput.value = cache.gcCode || '';
             editNameInput.value = cache.name || '';
