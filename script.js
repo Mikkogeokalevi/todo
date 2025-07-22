@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 3562 PÄÄTTYVÄT ---
+// --- ASETUKSET 2 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     
-    // DOM-elementit
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const pgcMapCountiesLink = document.getElementById('pgcMapCountiesLink');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
@@ -580,7 +579,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         localStorage.setItem(OFFLINE_KEY, JSON.stringify(dataToSave));
 
-        return update(ref(database), dataToSave);
+        return update(ref(database, FIREBASE_PATH), dataToSave);
     };
 
     const handleBulkAdd = async () => {
@@ -651,7 +650,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bulkAddBtn.addEventListener('click', handleBulkAdd);
     
-    // --- KORJATTU FUNKTIO: globalAddFromPgcBtn ---
     globalAddFromPgcBtn.addEventListener('click', async () => {
         const text = globalPgcPasteArea.value.trim(); if (!text) return;
         globalAddFromPgcBtn.disabled = true; globalAddFromPgcBtn.textContent = "Käsitellään...";
@@ -675,7 +673,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 let munIndex = municipalities.findIndex(m => m.name.toLowerCase() === munName.toLowerCase());
                 
                 if (munIndex === -1) {
-                    // TÄMÄ KOHTA OLI RIKKI: Luodaan uusi kunta oikein
                     const newMunicipality = {
                         name: munName,
                         caches: [cacheData],
