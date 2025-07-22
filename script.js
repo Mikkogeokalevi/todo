@@ -5,16 +5,16 @@ import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/
 const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
+// --- LISÄTTY: Avain offline-tallennukselle ---
+const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
 // --- ASETUKSET 2 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    // --- LISÄTTY OSA: Päivitetään sivun otsikot listan nimen mukaan ---
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
     const listNameDisplay = document.getElementById('listNameDisplay');
     if (listNameDisplay) {
         listNameDisplay.textContent = FIREBASE_PATH;
     }
-    // --- LISÄTTY OSA PÄÄTTYY ---
 
     const kuntaMaakuntaData = { "Akaa": "Pirkanmaa", "Alajärvi": "Etelä-Pohjanmaa", "Alavieska": "Pohjois-Pohjanmaa", "Alavus": "Etelä-Pohjanmaa", "Asikkala": "Päijät-Häme", "Askola": "Uusimaa", "Aura": "Varsinais-Suomi", "Brändö": "Ahvenanmaa", "Eckerö": "Ahvenanmaa", "Enonkoski": "Etelä-Savo", "Enontekiö": "Lappi", "Espoo": "Uusimaa", "Eura": "Satakunta", "Eurajoki": "Satakunta", "Evijärvi": "Etelä-Pohjanmaa", "Finström": "Ahvenanmaa", "Forssa": "Kanta-Häme", "Föglö": "Ahvenanmaa", "Geta": "Ahvenanmaa", "Haapajärvi": "Pohjois-Pohjanmaa", "Haapavesi": "Pohjois-Pohjanmaa", "Hailuoto": "Pohjois-Pohjanmaa", "Halsua": "Keski-Pohjanmaa", "Hamina": "Kymenlaakso", "Hammarland": "Ahvenanmaa", "Hankasalmi": "Keski-Suomi", "Hanko": "Uusimaa", "Harjavalta": "Satakunta", "Hartola": "Päijät-Häme", "Hattula": "Kanta-Häme", "Hausjärvi": "Kanta-Häme", "Heinola": "Päijät-Häme", "Heinävesi": "Pohjois-Karjala", "Helsinki": "Uusimaa", "Hirvensalmi": "Etelä-Savo", "Hollola": "Päijät-Häme", "Huittinen": "Satakunta", "Humppila": "Kanta-Häme", "Hyrynsalmi": "Kainuu", "Hyvinkää": "Uusimaa", "Hämeenkyrö": "Pirkanmaa", "Hämeenlinna": "Kanta-Häme", "Ii": "Pohjois-Pohjanmaa", "Iisalmi": "Pohjois-Savo", "Iitti": "Päijät-Häme", "Ikaalinen": "Pirkanmaa", "Ilmajoki": "Etelä-Pohjanmaa", "Ilomantsi": "Pohjois-Karjala", "Imatra": "Etelä-Karjala", "Inari": "Lappi", "Inkoo": "Uusimaa", "Isojoki": "Etelä-Pohjanmaa", "Isokyrö": "Etelä-Pohjanmaa", "Janakkala": "Kanta-Häme", "Joensuu": "Pohjois-Karjala", "Jokioinen": "Kanta-Häme", "Jomala": "Ahvenanmaa", "Joroinen": "Pohjois-Savo", "Joutsa": "Keski-Suomi", "Juuka": "Pohjois-Karjala", "Juupajoki": "Pirkanmaa", "Juva": "Etelä-Savo", "Jyväskylä": "Keski-Suomi", "Jämijärvi": "Satakunta", "Jämsä": "Keski-Suomi", "Järvenpää": "Uusimaa", "Kaarina": "Varsinais-Suomi", "Kaavi": "Pohjois-Savo", "Kajaani": "Kainuu", "Kalajoki": "Pohjois-Pohjanmaa", "Kangasala": "Pirkanmaa", "Kangasniemi": "Etelä-Savo", "Kankaanpää": "Satakunta", "Kannonkoski": "Keski-Suomi", "Kannus": "Keski-Pohjanmaa", "Karijoki": "Etelä-Pohjanmaa", "Karkkila": "Uusimaa", "Karstula": "Keski-Suomi", "Karvia": "Satakunta", "Kaskinen": "Pohjanmaa", "Kauhajoki": "Etelä-Pohjanmaa", "Kauhava": "Etelä-Pohjanmaa", "Kauniainen": "Uusimaa", "Kaustinen": "Keski-Pohjanmaa", "Keitele": "Pohjois-Savo", "Kemi": "Lappi", "Kemijärvi": "Lappi", "Keminmaa": "Lappi", "Kemiönsaari": "Varsinais-Suomi", "Kempele": "Pohjois-Pohjanmaa", "Kerava": "Uusimaa", "Keuruu": "Keski-Suomi", "Kihniö": "Pirkanmaa", "Kinnula": "Keski-Suomi", "Kirkkonummi": "Uusimaa", "Kitee": "Pohjois-Karjala", "Kittilä": "Lappi", "Kiuruvesi": "Pohjois-Savo", "Kivijärvi": "Keski-Suomi", "Kokemäki": "Satakunta", "Kokkola": "Keski-Pohjanmaa", "Kolar": "Lappi", "Konnevesi": "Keski-Suomi", "Kontiolahti": "Pohjois-Karjala", "Korsnäs": "Pohjanmaa", "Koski Tl": "Varsinais-Suomi", "Kotka": "Kymenlaakso", "Kouvola": "Kymenlaakso", "Kristiinankaupunki": "Pohjanmaa", "Kruunupyy": "Pohjanmaa", "Kuhmo": "Kainuu", "Kuhmoinen": "Pirkanmaa", "Kumlinge": "Ahvenanmaa", "Kuopio": "Pohjois-Savo", "Kuortane": "Etelä-Pohjanmaa", "Kurikka": "Etelä-Pohjanmaa", "Kustavi": "Varsinais-Suomi", "Kuusamo": "Pohjois-Pohjanmaa", "Kyyjärvi": "Keski-Suomi", "Kärkölä": "Päijät-Häme", "Kärsämäki": "Pohjois-Pohjanmaa", "Kökar": "Ahvenanmaa", "Lahti": "Päijät-Häme", "Laihia": "Pohjanmaa", "Laitila": "Varsinais-Suomi", "Lapinjärvi": "Uusimaa", "Lapinlahti": "Pohjois-Savo", "Lappajärvi": "Etelä-Pohjanmaa", "Lappeenranta": "Etelä-Karjala", "Lapua": "Etelä-Pohjanmaa", "Laukaa": "Keski-Suomi", "Lemi": "Etelä-Karjala", "Lemland": "Ahvenanmaa", "Lempäälä": "Pirkanmaa", "Leppävirta": "Pohjois-Savo", "Lestijärvi": "Keski-Pohjanmaa", "Lieksa": "Pohjois-Karjala", "Lieto": "Varsinais-Suomi", "Liminka": "Pohjois-Pohjanmaa", "Liperi": "Pohjois-Karjala", "Lohja": "Uusimaa", "Loimaa": "Varsinais-Suomi", "Loppi": "Kanta-Häme", "Loviisa": "Uusimaa", "Luhanka": "Keski-Suomi", "Lumijoki": "Pohjois-Pohjanmaa", "Lumparland": "Ahvenanmaa", "Luoto": "Pohjanmaa", "Luumäki": "Etelä-Karjala", "Maalahti": "Pohjanmaa", "Maarianhamina": "Ahvenanmaa", "Marttila": "Varsinais-Suomi", "Masku": "Varsinais-Suomi", "Merijärvi": "Pohjois-Pohjanmaa", "Merikarvia": "Satakunta", "Miehikkälä": "Kymenlaakso", "Mikkeli": "Etelä-Savo", "Muhos": "Pohjois-Pohjanmaa", "Multia": "Keski-Suomi", "Muonio": "Lappi", "Mustasaari": "Pohjanmaa", "Muurame": "Keski-Suomi", "Mynämäki": "Varsinais-Suomi", "Myrskylä": "Uusimaa", "Mäntsälä": "Uusimaa", "Mänttä-Vilppula": "Pirkanmaa", "Mäntyharju": "Etelä-Savo", "Naantali": "Varsinais-Suomi", "Nakkila": "Satakunta", "Nivala": "Pohjois-Pohjanmaa", "Nokia": "Pirkanmaa", "Nousiainen": "Varsinais-Suomi", "Nurmes": "Pohjois-Karjala", "Nurmijärvi": "Uusimaa", "Närpiö": "Pohjanmaa", "Orimattila": "Päijät-Häme", "Oripää": "Varsinais-Suomi", "Orivesi": "Pirkanmaa", "Oulainen": "Pohjois-Pohjanmaa", "Oulu": "Pohjois-Pohjanmaa", "Outokumpu": "Pohjois-Karjala", "Padasjoki": "Päijät-Häme", "Paimio": "Varsinais-Suomi", "Paltamo": "Kainuu", "Parainen": "Varsinais-Suomi", "Parikkala": "Etelä-Karjala", "Parkano": "Pirkanmaa", "Pedersören kunta": "Pohjanmaa", "Pelkosenniemi": "Lappi", "Pello": "Lappi", "Perho": "Keski-Pohjanmaa", "Pertunmaa": "Etelä-Savo", "Petäjävesi": "Keski-Suomi", "Pieksämäki": "Etelä-Savo", "Pielavesi": "Pohjois-Savo", "Pietarsaari": "Pohjanmaa", "Pihtipudas": "Keski-Suomi", "Pirkkala": "Pirkanmaa", "Polvijärvi": "Pohjois-Karjala", "Pomarkku": "Satakunta", "Pori": "Satakunta", "Pornainen": "Uusimaa", "Porvoo": "Uusimaa", "Posio": "Lappi", "Pudasjärvi": "Pohjois-Pohjanmaa", "Pukkila": "Uusimaa", "Punkalaidun": "Pirkanmaa", "Puolanka": "Kainuu", "Puumala": "Etelä-Savo", "Pyhtää": "Kymenlaakso", "Pyhäjoki": "Pohjois-Pohjanmaa", "Pyhäjärvi": "Pohjois-Pohjanmaa", "Pyhäntä": "Pohjois-Pohjanmaa", "Pyhäranta": "Varsinais-Suomi", "Pälkäne": "Pirkanmaa", "Pöytyä": "Varsinais-Suomi", "Raahe": "Pohjois-Pohjanmaa", "Raasepori": "Uusimaa", "Raisio": "Varsinais-Suomi", "Rantasalmi": "Etelä-Savo", "Ranua": "Lappi", "Rauma": "Satakunta", "Rautalampi": "Pohjois-Savo", "Rautavaara": "Pohjois-Savo", "Rautjärvi": "Etelä-Karjala", "Reisjärvi": "Pohjois-Pohjanmaa", "Riihimäki": "Kanta-Häme", "Ristijärvi": "Kainuu", "Rovaniemi": "Lappi", "Ruokolahti": "Etelä-Karjala", "Ruovesi": "Pirkanmaa", "Rusko": "Varsinais-Suomi", "Rääkkylä": "Pohjois-Karjala", "Saarijärvi": "Keski-Suomi", "Salla": "Lappi", "Salo": "Varsinais-Suomi", "Saltvik": "Ahvenanmaa", "Sastamala": "Pirkanmaa", "Sauvo": "Varsinais-Suomi", "Savitaipale": "Etelä-Karjala", "Savonlinna": "Etelä-Savo", "Savukoski": "Lappi", "Seinäjoki": "Etelä-Pohjanmaa", "Sievi": "Pohjois-Pohjanmaa", "Siikainen": "Satakunta", "Siikajoki": "Pohjois-Pohjanmaa", "Siilinjärvi": "Pohjois-Savo", "Simo": "Lappi", "Sipoo": "Uusimaa", "Siuntio": "Uusimaa", "Sodankylä": "Lappi", "Soini": "Etelä-Pohjanmaa", "Somero": "Varsinais-Suomi", "Sonkajärvi": "Pohjois-Savo", "Sotkamo": "Kainuu", "Sottunga": "Ahvenanmaa", "Sulkava": "Etelä-Savo", "Sund": "Ahvenanmaa", "Suomussalmi": "Kainuu", "Suonenjoki": "Pohjois-Savo", "Sysmä": "Päijät-Häme", "Säkylä": "Satakunta", "Taipalsaari": "Etelä-Karjala", "Taivalkoski": "Pohjois-Pohjanmaa", "Taivassalo": "Varsinais-Suomi", "Tammela": "Kanta-Häme", "Tampere": "Pirkanmaa", "Tervo": "Pohjois-Savo", "Tervola": "Lappi", "Teuva": "Etelä-Pohjanmaa", "Tohmajärvi": "Pohjois-Karjala", "Toholampi": "Keski-Pohjanmaa", "Toivakka": "Keski-Suomi", "Tornio": "Lappi", "Turku": "Varsinais-Suomi", "Tuusniemi": "Pohjois-Savo", "Tuusula": "Uusimaa", "Tyrnävä": "Pohjois-Pohjanmaa", "Ulvila": "Satakunta", "Urjala": "Pirkanmaa", "Utajärvi": "Pohjois-Pohjanmaa", "Utsjoki": "Lappi", "Uurainen": "Keski-Suomi", "Uusikaarlepyy": "Pohjanmaa", "Uusikaupunki": "Varsinais-Suomi", "Vaala": "Pohjois-Pohjanmaa", "Vaasa": "Pohjanmaa", "Valkeakoski": "Pirkanmaa", "Vantaa": "Uusimaa", "Varkaus": "Pohjois-Savo", "Vehmaa": "Varsinais-Suomi", "Vesanto": "Pohjois-Savo", "Vesilahti": "Pirkanmaa", "Veteli": "Keski-Pohjanmaa", "Vieremä": "Pohjois-Savo", "Vihti": "Uusimaa", "Viitasaari": "Keski-Suomi", "Vimpeli": "Etelä-Pohjanmaa", "Virolahti": "Kymenlaakso", "Virrat": "Pirkanmaa", "Vårdö": "Ahvenanmaa", "Vöyri": "Pohjanmaa", "Ylitornio": "Lappi", "Ylivieska": "Pohjois-Pohjanmaa", "Ylöjärvi": "Pirkanmaa", "Ypäjä": "Kanta-Häme", "Ähtäri": "Etelä-Pohjanmaa", "Äänekoski": "Keski-Suomi" };
     
@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    // DOM-elementit
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
     const bulkAddBtn = document.getElementById('bulkAddBtn');
@@ -64,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const editCoordsInput = document.getElementById('editCoords');
     const activeMunicipalityContainer = document.getElementById('activeMunicipalityContainer');
 
-    // Sovelluksen tila
     let municipalities = [];
     let foundCaches = [];
     let loggers = [];
@@ -82,6 +80,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const ALERT_TARGET_DISTANCE = 200;
 
     const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    // --- UUSI FUNKTIO: Ladataan tila selaimen muistista ---
+    const loadStateFromOffline = () => {
+        const offlineData = localStorage.getItem(OFFLINE_KEY);
+        if (offlineData) {
+            console.log("Ladataan data offline-muistista...");
+            const data = JSON.parse(offlineData);
+            municipalities = data.municipalities || [];
+            foundCaches = data.foundCaches || [];
+            loggers = data.loggers || [];
+            pgcProfileNameInput.value = data.pgcProfileName || '';
+            
+            // Renderöidään heti offline-datalla, jotta näkymä ei ole tyhjä
+            render();
+            renderLoggers();
+            renderFoundList();
+        }
+    };
 
     const getDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
@@ -270,7 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (foundMunIndex !== -1) {
                     showNotification(`Saavuit kuntaan: ${currentMunicipality}!`, 'info');
-                    // --- TÄMÄ ON AINOA MUUTOS TÄSSÄ FUNKTIOSSA ---
                     try { new Audio('new_municipality.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä new_municipality.mp3"); }
                     
                     const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
@@ -353,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- MUOKATTU FUNKTIO: render (värikoodaus) ---
     const render = () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
@@ -362,6 +378,15 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.draggable = true;
             munItem.dataset.munIndex = munIndex;
             munItem.id = `mun-item-${munIndex}`;
+
+            // --- LISÄTTY: Värikoodauslogiikka ---
+            const hasCaches = municipality.caches && municipality.caches.length > 0;
+            if (!hasCaches && municipality.hadCaches) {
+                munItem.classList.add('status-completed');
+            } else if (!hasCaches) {
+                munItem.classList.add('status-empty');
+            }
+            // --- LISÄTTY OSA PÄÄTTYY ---
             
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
                 const gcCodeLink = cache.gcCode ? `<a href="https://coord.info/${cache.gcCode}" target="_blank" rel="noopener noreferrer">${cache.gcCode}</a>` : '';
@@ -474,9 +499,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return didChange;
     };
     
+    loadStateFromOffline(); // Ladataan offline-data heti alussa
     initMap();
 
     onValue(ref(database, FIREBASE_PATH), async (snapshot) => {
+        console.log("Haetaan data Firebasesta...");
         const data = snapshot.val() || {};
         municipalities = data.municipalities || [];
         foundCaches = data.foundCaches || [];
@@ -491,13 +518,19 @@ document.addEventListener('DOMContentLoaded', () => {
         updateAllMarkers();
     });
 
+    // --- MUOKATTU FUNKTIO: saveState (lisätty offline-tallennus) ---
     const saveState = () => {
-        const updates = {};
-        updates[`${FIREBASE_PATH}/municipalities`] = municipalities;
-        updates[`${FIREBASE_PATH}/foundCaches`] = foundCaches;
-        updates[`${FIREBASE_PATH}/loggers`] = loggers;
-        updates[`${FIREBASE_PATH}/pgcProfileName`] = pgcProfileNameInput.value;
-        return update(ref(database), updates);
+        const dataToSave = {
+            municipalities,
+            foundCaches,
+            loggers,
+            pgcProfileName: pgcProfileNameInput.value
+        };
+        
+        // Tallennetaan aina myös selaimen muistiin
+        localStorage.setItem(OFFLINE_KEY, JSON.stringify(dataToSave));
+
+        return update(ref(database), dataToSave);
     };
 
     const handleBulkAdd = async () => {
@@ -590,10 +623,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const cacheData = { id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize, difficulty, terrain, lat: coords.lat, lon: coords.lon, alert_approach_given: false, alert_target_given: false };
                 let munIndex = municipalities.findIndex(m => m.name.toLowerCase() === munName.toLowerCase());
                 if (munIndex === -1) { 
-                    municipalities.push({ name: munName, caches: [cacheData], lat: coords.lat, lon: coords.lon });
+                    municipalities.push({ name: munName, caches: [cacheData], lat: coords.lat, lon: coords.lon, hadCaches: true }); // LISÄTTY hadCaches
                 } else { 
                     if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
                     municipalities[munIndex].caches.push(cacheData);
+                    municipalities[munIndex].hadCaches = true; // LISÄTTY hadCaches
                 }
                 cachesAddedCount++;
             } catch (e) { console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e); }
@@ -690,6 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const name = nameInput.value.trim();
                     const gcCodeMatch = name.match(/(GC[A-Z0-9]+)/i);
                     municipalities[munIndex].caches.push({ id: Date.now(), name: gcCodeMatch ? name.replace(gcCodeMatch[0], '').trim() : name, gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '', type: 'Muu' });
+                    municipalities[munIndex].hadCaches = true; // LISÄTTY hadCaches
                     nameInput.value = '';
                     needsSave = true;
                 }
