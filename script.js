@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     
+    // DOM-elementit
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const pgcMapCountiesLink = document.getElementById('pgcMapCountiesLink');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
@@ -225,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const municipalityName = await getMunicipalityForCoordinates(lat, lng);
             clickMarker.getPopup().setContent(`<b>${municipalityName || 'Tuntematon sijainti'}</b>`);
 
-            // --- MUUTETTU OSA: Piirretään raja aina, jos kunta löytyy ---
             if (municipalityName) {
                 fetchAndDrawBoundary(municipalityName);
             } else {
@@ -422,14 +422,6 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleTrackingBtn.classList.add('tracking-active');
         }
     };
-    
-    // Loput tiedostosta on identtinen edellisen version kanssa.
-    // Voit kopioida tämän tiedoston kokonaisuudessaan.
-    // ...
-    // Kaikki render-, saveState-, add- ja event listener -funktiot
-    // ...
-    // (Jätetty pois tästä näkymästä, mutta ovat koodilohkossa)
-    // ...
     
     const render = () => {
         municipalityList.innerHTML = '';
