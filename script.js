@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editCacheModal = document.getElementById('editCacheModal');
     const editCacheForm = document.getElementById('editCacheForm');
     const modalCancelBtn = document.querySelector('.modal-cancel-btn');
+    const editSourceInput = document.getElementById('editSource'); // KORJATTU
     const editMunIndexInput = document.getElementById('editMunIndex');
     const editCacheIndexInput = document.getElementById('editCacheIndex');
     const editGcCodeInput = document.getElementById('editGcCode');
@@ -558,6 +559,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = snapshot.val() || {};
         municipalities = data.municipalities || [];
         foundCaches = data.foundCaches || [];
+
+        // KORJAUS: Varmistetaan, että vanhoilla lokimerkinnöillä on ID
+        let needsSaveAfterMigration = false;
+        foundCaches.forEach(cache => {
+            if (!cache.id) {
+                cache.id = Date.now() + Math.random();
+                needsSaveAfterMigration = true;
+            }
+        });
+        if (needsSaveAfterMigration) {
+            console.log("Vanhoja lokitietoja päivitetty ID-tunnisteilla. Tallennetaan...");
+            saveState(); 
+        }
+
         pgcProfileNameInput.value = data.pgcProfileName || '';
         loggers = data.loggers || [];
 
@@ -578,7 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         localStorage.setItem(OFFLINE_KEY, JSON.stringify(dataToSave));
-
         return update(ref(database, FIREBASE_PATH), dataToSave);
     };
 
@@ -751,7 +765,21 @@ document.addEventListener('DOMContentLoaded', () => {
             needsSave = true;
         } else {
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
-            if (button.classList.contains('set-coords-btn')) {
+            if (button.classList.contains('edit-cache-btn')) { // MUOKATTU
+                const cache = municipalities[munIndex].caches[cacheIndex];
+                editSourceInput.value = 'trip';
+                editMunIndexInput.value = munIndex;
+                editCacheIndexInput.value = cacheIndex;
+                editGcCodeInput.value = cache.gcCode || '';
+                editNameInput.value = cache.name || '';
+                editTypeInput.value = cache.type || '';
+                editSizeInput.value = cache.size || '';
+                editDifficultyInput.value = cache.difficulty || '';
+                editTerrainInput.value = cache.terrain || '';
+                editFpInput.value = cache.fp || '';
+                editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
+                editCacheModal.classList.remove('hidden');
+            } else if (button.classList.contains('set-coords-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
                 const currentCoords = cache.lat ? `${cache.lat.toFixed(6)} ${cache.lon.toFixed(6)}` : '';
                 const input = prompt(`Syötä kätkön "${cache.name}" koordinaatit:`, currentCoords);
@@ -782,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!municipalities[munIndex].caches) municipalities[munIndex].caches = [];
                     const name = nameInput.value.trim();
                     const gcCodeMatch = name.match(/(GC[A-Z0-9]+)/i);
-                    municipalities[munIndex].caches.push({ id: Date.now(), name: gcCodeMatch ? name.replace(gcCodeMatch[0], '').trim() : name, gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '', type: 'Muu' });
+                    municipalities[munIndex].caches.push({ id: Date.now() + Math.random(), name: gcCodeMatch ? name.replace(gcCodeMatch[0], '').trim() : name, gcCode: gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '', type: 'Muu' });
                     municipalities[munIndex].hadCaches = true;
                     nameInput.value = '';
                     needsSave = true;
@@ -792,38 +820,48 @@ document.addEventListener('DOMContentLoaded', () => {
                     municipalities[munIndex].caches.splice(cacheIndex, 1);
                     needsSave = true;
                 }
-            } else if (button.classList.contains('edit-cache-btn')) {
-                const cache = municipalities[munIndex].caches[cacheIndex];
-                editMunIndexInput.value = munIndex; editCacheIndexInput.value = cacheIndex;
-                editGcCodeInput.value = cache.gcCode || ''; editNameInput.value = cache.name || '';
-                editTypeInput.value = cache.type || ''; editSizeInput.value = cache.size || '';
-                editDifficultyInput.value = cache.difficulty || ''; editTerrainInput.value = cache.terrain || '';
-                editFpInput.value = cache.fp || ''; editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
-                editCacheModal.classList.remove('hidden');
             }
         }
         
         if (needsSave) saveState();
     });
 
+    // --- KORJATTU FUNKTIO: editCacheForm submit ---
     editCacheForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const munIndex = parseInt(editMunIndexInput.value, 10);
-        const cacheIndex = parseInt(editCacheIndexInput.value, 10);
-        if (isNaN(munIndex) || isNaN(cacheIndex)) return;
-        const cache = municipalities[munIndex].caches[cacheIndex];
-        cache.gcCode = editGcCodeInput.value.trim().toUpperCase();
-        cache.name = editNameInput.value.trim();
-        cache.type = editTypeInput.value.trim();
-        cache.size = editSizeInput.value.trim();
-        cache.difficulty = editDifficultyInput.value.trim();
-        cache.terrain = editTerrainInput.value.trim();
-        cache.fp = editFpInput.value.trim();
-        const coords = parseCoordinates(editCoordsInput.value);
-        if (coords) { cache.lat = coords.lat; cache.lon = coords.lon; } 
-        else if(editCoordsInput.value.trim() === '') { delete cache.lat; delete cache.lon; }
-        saveState();
-        editCacheModal.classList.add('hidden');
+        const source = editSourceInput.value;
+        let cache;
+
+        if (source === 'trip') {
+            const munIndex = parseInt(editMunIndexInput.value, 10);
+            const cacheIndex = parseInt(editCacheIndexInput.value, 10);
+            if (isNaN(munIndex) || isNaN(cacheIndex)) return;
+            cache = municipalities[munIndex].caches[cacheIndex];
+        } else if (source === 'log') {
+            const cacheId = parseFloat(editCacheIndexInput.value);
+            if (isNaN(cacheId)) return;
+            cache = foundCaches.find(c => c.id === cacheId);
+        }
+
+        if (cache) {
+            cache.gcCode = editGcCodeInput.value.trim().toUpperCase();
+            cache.name = editNameInput.value.trim();
+            cache.type = editTypeInput.value.trim();
+            cache.size = editSizeInput.value.trim();
+            cache.difficulty = editDifficultyInput.value.trim();
+            cache.terrain = editTerrainInput.value.trim();
+            cache.fp = editFpInput.value.trim();
+            const coords = parseCoordinates(editCoordsInput.value);
+            if (coords) { 
+                cache.lat = coords.lat; 
+                cache.lon = coords.lon; 
+            } else if (editCoordsInput.value.trim() === '') { 
+                delete cache.lat; 
+                delete cache.lon; 
+            }
+            saveState();
+            editCacheModal.classList.add('hidden');
+        }
     });
 
     modalCancelBtn.addEventListener('click', () => editCacheModal.classList.add('hidden'));
@@ -836,20 +874,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const gcCode = gcCodeMatch[0].toUpperCase();
         const loggerCheckboxes = {};
         loggers.forEach(name => { loggerCheckboxes[name] = false; });
-        foundCaches.push({ id: Date.now(), name: gcCode, gcCode: gcCode, timestamp: new Date().toISOString(), loggers: loggerCheckboxes, type: 'Muu' });
+        foundCaches.push({ id: Date.now() + Math.random(), name: gcCode, gcCode: gcCode, timestamp: new Date().toISOString(), loggers: loggerCheckboxes, type: 'Muu' });
         saveState();
         directAddInput.value = '';
     });
 
+    // --- KORJATTU FUNKTIO: foundCachesList click ---
     foundCachesList.addEventListener('click', (e) => {
         const target = e.target;
-        const cacheItem = target.closest('.found-cache-item');
-        if (!cacheItem) return;
-        const cacheId = parseInt(target.closest('button, label > input')?.dataset.cacheId, 10);
+        const cacheId = parseFloat(target.closest('[data-cache-id]')?.dataset.cacheId);
         if (isNaN(cacheId)) return;
-        const cacheIndex = foundCaches.findIndex(c => c.id === cacheId);
-        if (cacheIndex === -1) return;
-        const cache = foundCaches[cacheIndex];
+        
+        const cache = foundCaches.find(c => c.id === cacheId);
+        if (!cache) return;
         
         if (target.type === 'checkbox') {
             if (!cache.loggers) cache.loggers = {};
@@ -857,17 +894,27 @@ document.addEventListener('DOMContentLoaded', () => {
             cache.loggers[loggerName] = target.checked;
             saveState();
         } else if (target.classList.contains('edit-found-btn')) {
-            const newName = prompt("Muokkaa nimeä/GC-koodia:", cache.name);
-            if (newName && newName.trim()) {
-                cache.name = newName.trim();
-                const gcCodeMatch = newName.match(/(GC[A-Z0-9]+)/i);
-                cache.gcCode = gcCodeMatch ? gcCodeMatch[0].toUpperCase() : newName;
-                saveState();
-            }
+            editSourceInput.value = 'log';
+            editCacheIndexInput.value = cache.id; // Tallennetaan ID
+            editMunIndexInput.value = ''; // Ei tarvita kuntaindeksiä
+            
+            editGcCodeInput.value = cache.gcCode || '';
+            editNameInput.value = cache.name || '';
+            editTypeInput.value = cache.type || '';
+            editSizeInput.value = cache.size || '';
+            editDifficultyInput.value = cache.difficulty || '';
+            editTerrainInput.value = cache.terrain || '';
+            editFpInput.value = cache.fp || '';
+            editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
+            
+            editCacheModal.classList.remove('hidden');
         } else if (target.classList.contains('delete-found-btn')) {
             if (confirm(`Haluatko varmasti poistaa lokista kätkön "${cache.name}"?`)) {
-                foundCaches.splice(cacheIndex, 1);
-                saveState();
+                const cacheIndex = foundCaches.findIndex(c => c.id === cacheId);
+                if(cacheIndex > -1) {
+                    foundCaches.splice(cacheIndex, 1);
+                    saveState();
+                }
             }
         }
     });
