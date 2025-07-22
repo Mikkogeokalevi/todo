@@ -34,6 +34,9 @@
                 </div>
 
                 <div id="map"></div>
+
+                <div id="activeMunicipalityContainer" class="hidden">
+                    </div>
                 
                 <div class="pgc-settings-container">
                     <details>
@@ -60,37 +63,47 @@
                 </div>
 
                 <div id="tripListView">
-                    <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
-                    <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
-                    <div id="bulkAddContainer" class="bulk-add hidden">
-                        <h3>Lisää kunnat listana</h3>
-                        <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
-                        <button id="bulkAddBtn">Lisää listasta</button>
-                    </div>
+                    <details class="management-details">
+                        <summary>Lisää & Hallinnoi</summary>
+                        <div class="details-content">
+                            <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
+                            <div id="bulkAddContainer" class="bulk-add hidden">
+                                <h3>Lisää kunnat listana</h3>
+                                <textarea id="bulkAddMunicipalities" rows="4" placeholder="Liitä tähän kunnat pilkulla tai rivinvaihdolla eroteltuna..."></textarea>
+                                <button id="bulkAddBtn">Lisää listasta</button>
+                            </div>
+                            
+                            <button id="togglePgcAddBtn" class="toggle-button">Lisää PGC-datalla</button>
+                            <div id="globalPgcAddContainer" class="bulk-add hidden">
+                                <h3>Lisää kätkö PGC-datalla (automaattinen kunnan haku)</h3>
+                                <textarea id="globalPgcPasteArea" rows="4" placeholder="Liitä PGC:n kätkötiedot tähän..."></textarea>
+                                <button id="globalAddFromPgcBtn">Lisää ja paikanna</button>
+                            </div>
+                        </div>
+                    </details>
                     
-                    <button id="togglePgcAddBtn" class="toggle-button">Lisää PGC-datalla</button>
-                    <div id="globalPgcAddContainer" class="bulk-add hidden">
-                        <h3>Lisää kätkö PGC-datalla (automaattinen kunnan haku)</h3>
-                        <textarea id="globalPgcPasteArea" rows="4" placeholder="Liitä PGC:n kätkötiedot tähän..."></textarea>
-                        <button id="globalAddFromPgcBtn">Lisää ja paikanna</button>
-                    </div>
-
+                    <h2 class="alaotsikko">Löydettävät kunnat ja kätköt</h2>
                     <ul id="municipalityList"></ul>
                 </div>
 
                 <div id="foundLogView" class="hidden">
-                    <h2 class="alaotsikko">Löydetyt kätköt</h2>
-                    
-                    <div id="logPgcAddContainer" class="bulk-add">
-                        <h3>Lisää löydetyt PGC-datalla</h3>
-                        <textarea id="logPgcPasteArea" rows="4" placeholder="Liitä löydettyjen kätköjen PGC-tiedot tähän..."></textarea>
-                        <button id="logAddFromPgcBtn">Lisää löydetyt lokiin</button>
-                    </div>
+                    <details class="management-details">
+                        <summary>Lisää lokiin</summary>
+                        <div class="details-content">
+                            <div id="logPgcAddContainer" class="bulk-add">
+                                <h3>Lisää löydetyt PGC-datalla</h3>
+                                <textarea id="logPgcPasteArea" rows="4" placeholder="Liitä löydettyjen kätköjen PGC-tiedot tähän..."></textarea>
+                                <button id="logAddFromPgcBtn">Lisää löydetyt lokiin</button>
+                            </div>
 
-                    <div class="direct-add-cache">
-                        <input type="text" id="directAddInput" placeholder="Yksittäinen lisäys: liitä kätkön URL (coord.info/GC...)">
-                        <button id="directAddBtn">Lisää lokiin</button>
-                    </div>
+                            <div class="direct-add-cache">
+                                <input type="text" id="directAddInput" placeholder="Yksittäinen lisäys: liitä kätkön URL (coord.info/GC...)">
+                                <button id="directAddBtn">Lisää lokiin</button>
+                            </div>
+                        </div>
+                    </details>
+
+                    <h2 class="alaotsikko">Löydetyt kätköt</h2>
                     <ul id="foundCachesList"></ul>
                 </div>
             </div>
