@@ -62,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editTerrainInput = document.getElementById('editTerrain');
     const editFpInput = document.getElementById('editFp');
     const editCoordsInput = document.getElementById('editCoords');
-    const activeMunicipalityContainer = document.getElementById('activeMunicipalityContainer'); // UUSI
+    const activeMunicipalityContainer = document.getElementById('activeMunicipalityContainer');
 
     // Sovelluksen tila
     let municipalities = [];
@@ -254,13 +254,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (needsSave) saveState();
     };
 
-    // --- MUOKATTU FUNKTIO: checkCurrentMunicipality ---
     const checkCurrentMunicipality = async (lat, lon) => {
         try {
             const currentMunicipality = await getMunicipalityForCoordinates(lat, lon);
             updateStatusDisplay({ municipality: currentMunicipality || 'Tuntematon sijainti', lat, lon });
             
-            // Piilotetaan ja tyhjennetään aktiivisen kunnan laatikko oletuksena
             activeMunicipalityContainer.classList.add('hidden');
             activeMunicipalityContainer.innerHTML = '';
 
@@ -272,17 +270,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (foundMunIndex !== -1) {
                     showNotification(`Saavuit kuntaan: ${currentMunicipality}!`, 'info');
+                    // --- TÄMÄ ON AINOA MUUTOS TÄSSÄ FUNKTIOSSA ---
+                    try { new Audio('new_municipality.mp3').play(); } catch (e) { console.warn("Ei voitu soittaa ääntä new_municipality.mp3"); }
+                    
                     const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
                     if (munElement) munElement.classList.add('highlight');
                     
-                    // --- LISÄTTY: Aktiivisen kunnan näyttäminen ---
                     const activeMunData = municipalities[foundMunIndex];
-                    // Kopioidaan kunnan sisältö päälistasta ja näytetään se
                     activeMunicipalityContainer.innerHTML = munElement.innerHTML;
                     activeMunicipalityContainer.classList.remove('hidden');
                 }
             } else if (currentMunicipality) {
-                 // Jos olemme edelleen samassa tunnetussa kunnassa, tarkistetaan pitäisikö laatikko näyttää
                  const foundMunIndex = municipalities.findIndex(m => m.name.toLowerCase() === currentMunicipality.toLowerCase());
                  if (foundMunIndex !== -1) {
                     const munElement = document.getElementById(`mun-item-${foundMunIndex}`);
@@ -308,7 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- MUOKATTU FUNKTIO: toggleTracking ---
     const toggleTracking = async () => {
         if (clickMarker) { clickMarker.removeFrom(map); clickMarker = null; }
         if (trackingWatcher) {
@@ -323,8 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
             lastCheckedMunicipality = null;
             updateStatusDisplay(null);
             updateAllMarkers();
-            activeMunicipalityContainer.classList.add('hidden'); // LISÄTTY
-            activeMunicipalityContainer.innerHTML = ''; // LISÄTTY
+            activeMunicipalityContainer.classList.add('hidden');
+            activeMunicipalityContainer.innerHTML = '';
         } else {
             if (!("geolocation" in navigator)) return alert("Selaimesi ei tue paikannusta.");
             await requestWakeLock();
