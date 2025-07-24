@@ -68,20 +68,30 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 .profile-controls { display: flex; margin-bottom: 15px; }
 .profile-controls button { width: 100%; }
 
-.pgc-settings-container {
+/* --- UUDET JA MUOKATUT TYYLIT --- */
+.settings-and-help-wrapper {
+    display: flex;
+    gap: 10px;
     margin: 15px 0;
 }
-.pgc-settings-container details {
+.pgc-settings-container, .help-container {
+    flex: 1;
+    min-width: 0;
+}
+.pgc-settings-container details, .help-container details {
     border: 1px solid #2A381C;
     border-radius: 5px;
     background-color: #2A381C;
+    height: 100%;
 }
-.pgc-settings-container summary {
+.pgc-settings-container summary, .help-container summary {
     padding: 10px;
     cursor: pointer;
     font-weight: bold;
     color: #E6E6E6;
 }
+/* --- LOPPU --- */
+
 .pgc-input-wrapper {
     padding: 0 10px 10px 10px;
     display: flex;
@@ -346,7 +356,6 @@ ul { list-style: none; padding: 0; }
     font-weight: bold;
 }
 
-/* UUSI OSA: OHJEET */
 .help-container {
     margin: 15px 0;
 }
