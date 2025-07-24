@@ -38,75 +38,73 @@
                 <div id="activeMunicipalityContainer" class="hidden">
                 </div>
                 
-                <div id="settingsAndHelpContainer" class="settings-and-help-wrapper">
-                    <div class="pgc-settings-container">
-                        <details>
-                            <summary>Asetukset</summary>
-                            <div class="pgc-input-wrapper">
-                                <label for="pgcProfileName">Project-GC nimi:</label>
-                                <input type="text" id="pgcProfileName" placeholder="Oma kätköilynimesi...">
-                                <div class="pgc-link-container">
-                                    <a id="pgcMapCountiesLink" href="#" target="_blank" rel="noopener noreferrer">Avaa kuntakartta Project-GC:ssä</a>
-                                </div>
-                                <hr class="custom-hr" style="margin: 10px 0;">
-                                <label>Lokittajat:</label>
-                                <ul id="loggerList"></ul>
-                                <div class="add-logger-controls">
-                                    <input type="text" id="newLoggerInput" placeholder="Uuden lokittajan nimi...">
-                                    <button id="addLoggerBtn">+</button>
-                                </div>
+                <div class="pgc-settings-container">
+                    <details>
+                        <summary>Asetukset</summary>
+                        <div class="pgc-input-wrapper">
+                            <label for="pgcProfileName">Project-GC nimi:</label>
+                            <input type="text" id="pgcProfileName" placeholder="Oma kätköilynimesi...">
+                            <div class="pgc-link-container">
+                                <a id="pgcMapCountiesLink" href="#" target="_blank" rel="noopener noreferrer">Avaa kuntakartta Project-GC:ssä</a>
                             </div>
-                        </details>
-                    </div>
+                            <hr class="custom-hr" style="margin: 10px 0;">
+                            <label>Lokittajat:</label>
+                            <ul id="loggerList"></ul>
+                            <div class="add-logger-controls">
+                                <input type="text" id="newLoggerInput" placeholder="Uuden lokittajan nimi...">
+                                <button id="addLoggerBtn">+</button>
+                            </div>
+                        </div>
+                    </details>
+                </div>
 
-                    <div class="help-container">
-                        <details>
-                            <summary>Ohjeet</summary>
-                            <div class="help-content">
-                                <h4>1. Reissulistan rakentaminen</h4>
-                                <p>Voit lisätä kuntia ja kätköjä reissulistallesi usealla eri tavalla. Nämä toiminnot löytyvät <strong>Reissulista</strong>-välilehden "Lisää & Hallinnoi" -osiosta.</p>
-                                <ul>
-                                    <li><strong>Lisää kunta listana:</strong> Kirjoita tai liitä kuntien nimiä pilkulla tai rivinvaihdolla eroteltuna. Sovellus hakee kuntien sijainnit ja lisää ne listaan.</li>
-                                    <li><strong>Lisää kätkö PGC-datalla:</strong> Kopioi Project-GC.com-sivustolta kätkötietoja (kolmen rivin lohkoja) ja liitä ne tekstikenttään. Sovellus selvittää automaattisesti kätköjen kunnat ja lisää ne reissulistallesi.<br>
-                                        <em>Esimerkki kopioitavasta datasta:</em>
-                                        <pre><code>GC9P3EP - Machomies heiluttaa - 4 FP (4%)
+                <div class="help-container">
+                    <details>
+                        <summary>Ohjeet</summary>
+                        <div class="help-content">
+                            <h4>1. Reissulistan rakentaminen</h4>
+                            <p>Voit lisätä kuntia ja kätköjä reissulistallesi usealla eri tavalla. Nämä toiminnot löytyvät <strong>Reissulista</strong>-välilehden "Lisää & Hallinnoi" -osiosta.</p>
+                            <ul>
+                                <li><strong>Lisää kunta listana:</strong> Kirjoita tai liitä kuntien nimiä pilkulla tai rivinvaihdolla eroteltuna. Sovellus hakee kuntien sijainnit ja lisää ne listaan.</li>
+                                <li><strong>Lisää kätkö PGC-datalla:</strong> Kopioi Project-GC.com-sivustolta kätkötietoja (kolmen rivin lohkoja) ja liitä ne tekstikenttään. Sovellus selvittää automaattisesti kätköjen kunnat ja lisää ne reissulistallesi.<br>
+                                    <em>Esimerkki kopioitavasta datasta:</em>
+                                    <pre><code>GC9P3EP - Machomies heiluttaa - 4 FP (4%)
 Multi-cache / Micro / 2.0 / 2.0
 N 63° 00.033 E 022° 10.393</code></pre>
-                                    </li>
-                                    <li><strong>Lisää kätkö manuaalisesti:</strong> Voit lisätä yksittäisen kätkön suoraan haluamasi kunnan alle syöttämällä kätkön nimen tai GC-koodin.</li>
-                                </ul>
+                                </li>
+                                <li><strong>Lisää kätkö manuaalisesti:</strong> Voit lisätä yksittäisen kätkön suoraan haluamasi kunnan alle syöttämällä kätkön nimen tai GC-koodin.</li>
+                            </ul>
 
-                                <h4>2. Reissun aikana: Seuranta ja kartta</h4>
-                                <ul>
-                                    <li><strong>Paikannus:</strong> Paina "🛰️ Aloita seuranta" -nappia. Sijaintisi näkyy kartalla sinisenä pisteenä, ja nopeutesi päivittyy oikeaan yläkulmaan.</li>
-                                    <li><strong>Hälytykset:</strong> Sovellus antaa ilmoituksen ja äänimerkin, kun lähestyt reissulistallasi olevaa kätköä (1,5 km ja 200 m etäisyydellä).</li>
-                                    <li><strong>Aktiivinen kunta:</strong> Kun saavut kunnan alueelle, joka on listallasi, kunta korostuu reissulistalla keltaisella ja sen tiedot ilmestyvät kartan alle. Lisäksi kuulet äänimerkin.</li>
-                                    <li><strong>Kuntien rajat:</strong> Kun paikannus on päällä, nykyisen kuntasi rajat piirretään kartalle. Kun paikannus ei ole päällä, voit klikata mitä tahansa kuntaa kartalla nähdäksesi sen rajat.</li>
-                                </ul>
+                            <h4>2. Reissun aikana: Seuranta ja kartta</h4>
+                            <ul>
+                                <li><strong>Paikannus:</strong> Paina "🛰️ Aloita seuranta" -nappia. Sijaintisi näkyy kartalla sinisenä pisteenä, ja nopeutesi päivittyy oikeaan yläkulmaan.</li>
+                                <li><strong>Hälytykset:</strong> Sovellus antaa ilmoituksen ja äänimerkin, kun lähestyt reissulistallasi olevaa kätköä (1,5 km ja 200 m etäisyydellä).</li>
+                                <li><strong>Aktiivinen kunta:</strong> Kun saavut kunnan alueelle, joka on listallasi, kunta korostuu reissulistalla keltaisella ja sen tiedot ilmestyvät kartan alle. Lisäksi kuulet äänimerkin.</li>
+                                <li><strong>Kuntien rajat:</strong> Kun paikannus on päällä, nykyisen kuntasi rajat piirretään kartalle. Kun paikannus ei ole päällä, voit klikata mitä tahansa kuntaa kartalla nähdäksesi sen rajat.</li>
+                            </ul>
 
-                                <h4>3. Kätköjen ja kuntien hallinta</h4>
-                                <ul>
-                                    <li><strong>Kuntien järjestys:</strong> Voit muuttaa kuntien järjestystä raahaamalla niitä listalla.</li>
-                                    <li><strong>Kätkön kuittaus:</strong> Kun löydät kätkön, rastita sen edessä oleva ruutu <code>[x]</code>. Kätkö siirtyy <strong>Loki</strong>-välilehdelle ja saa löytöhetken aikaleiman.</li>
-                                    <li><strong>Kunnan kuittaus:</strong> Voit merkitä koko kunnan "tehdyksi" rastittamalla sen nimen vieressä olevan ruudun <code>[x]</code>. Tämä muuttaa kunnan taustan vihreäksi.</li>
-                                    <li><strong>Muokkaus ja poisto:</strong> Sekä kuntien että kätköjen tietoja voi muokata kynän kuvakkeesta (✏️) ja ne voi poistaa roskakorin kuvakkeesta (🗑️).</li>
-                                </ul>
+                            <h4>3. Kätköjen ja kuntien hallinta</h4>
+                            <ul>
+                                <li><strong>Kuntien järjestys:</strong> Voit muuttaa kuntien järjestystä raahaamalla niitä listalla.</li>
+                                <li><strong>Kätkön kuittaus:</strong> Kun löydät kätkön, rastita sen edessä oleva ruutu <code>[x]</code>. Kätkö siirtyy <strong>Loki</strong>-välilehdelle ja saa löytöhetken aikaleiman.</li>
+                                <li><strong>Kunnan kuittaus:</strong> Voit merkitä koko kunnan "tehdyksi" rastittamalla sen nimen vieressä olevan ruudun <code>[x]</code>. Tämä muuttaa kunnan taustan vihreäksi.</li>
+                                <li><strong>Muokkaus ja poisto:</strong> Sekä kuntien että kätköjen tietoja voi muokata kynän kuvakkeesta (✏️) ja ne voi poistaa roskakorin kuvakkeesta (🗑️).</li>
+                            </ul>
 
-                                <h4>4. Loki-välilehti</h4>
-                                <ul>
-                                    <li><strong>Löydetyt kätköt:</strong> Täällä näet kaikki reissulistalta kuitatut sekä suoraan lokiin lisätyt kätköt.</li>
-                                    <li><strong>Järjestys:</strong> Voit järjestää lokinäkymän joko aikaleiman tai kunnan nimen mukaan.</li>
-                                    <li><strong>Lokittajat:</strong> Voit merkitä, ketkä olivat mukana löydöllä. Muokkaa lokittajien nimiä <strong>Asetukset</strong>-valikosta.</li>
-                                </ul>
+                            <h4>4. Loki-välilehti</h4>
+                            <ul>
+                                <li><strong>Löydetyt kätköt:</strong> Täällä näet kaikki reissulistalta kuitatut sekä suoraan lokiin lisätyt kätköt.</li>
+                                <li><strong>Järjestys:</strong> Voit järjestää lokinäkymän joko aikaleiman tai kunnan nimen mukaan.</li>
+                                <li><strong>Lokittajat:</strong> Voit merkitä, ketkä olivat mukana löydöllä. Muokkaa lokittajien nimiä <strong>Asetukset</strong>-valikosta.</li>
+                            </ul>
 
-                                <h4>5. Asetukset</h4>
-                                <ul>
-                                    <li><strong>Project-GC nimi:</strong> Syöttämällä tähän oman kätköilynimesi aktivoit kätevät linkit (🗺️) jokaisen kunnan ja karttaklikkauksen yhteyteen. Linkit avaavat kyseisen kunnan kartan suoraan sinun profiilillasi Project-GC-sivustolla.</li>
-                                    <li><strong>Lokittajat:</strong> Täällä voit lisätä ja poistaa reissussa mukana olevien henkilöiden nimiä. Nämä nimet ilmestyvät valintaruutuina jokaisen kätkön kohdalle <strong>Loki</strong>-välilehdellä, jolloin voit helposti merkitä, ketkä kirjasivat löydön.</li>
-                                </ul>
-                            </div>
-                        </details>
-                    </div>
+                            <h4>5. Asetukset</h4>
+                            <ul>
+                                <li><strong>Project-GC nimi:</strong> Syöttämällä tähän oman kätköilynimesi aktivoit kätevät linkit (🗺️) jokaisen kunnan ja karttaklikkauksen yhteyteen. Linkit avaavat kyseisen kunnan kartan suoraan sinun profiilillasi Project-GC-sivustolla.</li>
+                                <li><strong>Lokittajat:</strong> Täällä voit lisätä ja poistaa reissussa mukana olevien henkilöiden nimiä. Nämä nimet ilmestyvät valintaruutuina jokaisen kätkön kohdalle <strong>Loki</strong>-välilehdellä, jolloin voit helposti merkitä, ketkä kirjasivat löydön.</li>
+                            </ul>
+                        </div>
+                    </details>
                 </div>
                 
                 <hr class="custom-hr">
@@ -120,6 +118,12 @@ N 63° 00.033 E 022° 10.393</code></pre>
                     <details class="management-details">
                         <summary>Lisää & Hallinnoi</summary>
                         <div class="details-content">
+                            <div class="gpx-import-container">
+                                <label for="gpxFileInput">Tuo kätköt GPX-tiedostosta:</label>
+                                <input type="file" id="gpxFileInput" accept=".gpx">
+                                <button id="importGpxBtn">Tuo GPX</button>
+                            </div>
+                            <hr class="custom-hr">
                             <button id="toggleBulkAddBtn" class="toggle-button">Lisää kunnat listana</button>
                             <div id="bulkAddContainer" class="bulk-add hidden">
                                 <h3>Lisää kunnat listana</h3>
