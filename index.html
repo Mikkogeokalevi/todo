@@ -100,13 +100,20 @@
                             </div>
 
                             <div class="direct-add-cache">
-                                <input type="text" id="directAddInput" placeholder="Yksittäinen lisäys: liitä kätkön URL (coord.info/GC...)">
+                                <input type="text" id="directAddInput" placeholder="GC-koodi tai koordinaatit...">
                                 <button id="directAddBtn">Lisää lokiin</button>
                             </div>
                         </div>
                     </details>
 
                     <h2 class="alaotsikko">Löydetyt kätköt</h2>
+
+                    <div id="logSortControls" class="sort-controls">
+                        <span>Järjestä:</span>
+                        <button data-sort="timestamp" class="sort-btn active">Ajan mukaan</button>
+                        <button data-sort="municipality" class="sort-btn">Kunnan mukaan</button>
+                    </div>
+
                     <ul id="foundCachesList"></ul>
                 </div>
             </div>
