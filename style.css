@@ -68,17 +68,19 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 .profile-controls { display: flex; margin-bottom: 15px; }
 .profile-controls button { width: 100%; }
 
+/* --- MUOKATUT TYYLIT --- */
 .settings-and-help-wrapper {
     display: flex;
     gap: 10px;
     margin: 15px 0;
-    flex-wrap: wrap; 
+    flex-wrap: wrap; /* Sallitaan elementtien rivittyminen */
 }
 .pgc-settings-container, .help-container {
     flex: 1;
-    min-width: 150px; 
+    min-width: 150px; /* Varmistetaan, että napit eivät mene liian kapeaksi */
     transition: flex-basis 0.3s ease-in-out;
 }
+/* Tämä on se taika: kun details-elementti on auki, sen vanhempi kasvaa koko leveyteen */
 .settings-and-help-wrapper > div:has(details[open]) {
     flex-basis: 100%;
 }
@@ -95,6 +97,7 @@ button:hover { background-color: #90EE90; color: #1a2015; }
     font-weight: bold;
     color: #E6E6E6;
 }
+/* --- LOPPU --- */
 
 .pgc-input-wrapper {
     padding: 0 10px 10px 10px;
@@ -361,7 +364,7 @@ ul { list-style: none; padding: 0; }
 }
 
 .help-container {
-    margin: 0;
+    margin: 0; /* Nollataan marginaali, koska wrapper hoitaa sen */
 }
 .help-content {
     padding: 0 15px 15px 15px;
@@ -393,24 +396,6 @@ ul { list-style: none; padding: 0; }
     word-break: break-all;
 }
 
-.gpx-import-container {
-    padding: 10px;
-    margin-bottom: 15px;
-    background-color: #3D4F2B;
-    border: 1px solid #4a5c3a;
-    border-radius: 5px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.gpx-import-container label {
-    font-size: 0.9em;
-    color: #E6E6E6;
-}
-input[type="file"] {
-    color: #cccccc;
-    font-size: 0.9em;
-}
 
 @media (max-width: 600px) {
     body { padding: 5px; font-size: 14px; }
@@ -427,4 +412,8 @@ input[type="file"] {
     .found-cache-header a { font-size: 1em; }
     .loggers { gap: 8px; }
     .loggers label { font-size: 0.9em; gap: 4px; }
+
+    .settings-and-help-wrapper {
+        flex-direction: column; /* Asetetaan napit allekkain pienillä näytöillä */
+    }
 }
