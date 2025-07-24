@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 2 PÄÄTTYVÄT ---
+// --- ASETUKSET 243 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -137,7 +137,21 @@ document.addEventListener('DOMContentLoaded', () => {
         pgcMapCountiesLink.href = href;
     };
 
-    // --- UUSI APUFUNKTIO KÄTKÖTYYPIN CSS-LUOKALLE ---
+    // --- UUSI APUFUNKTIO: PGC-linkin luonti ---
+    const getPGCLinkHtml = (municipalityName, cssClass = 'pgc-link') => {
+        if (!municipalityName) return '';
+
+        const pgcProfileName = pgcProfileNameInput.value.trim();
+        const officialName = Object.keys(kuntaMaakuntaData).find(key => key.toLowerCase() === municipalityName.toLowerCase());
+        const region = officialName ? kuntaMaakuntaData[officialName] : undefined;
+
+        if (region && pgcProfileName && officialName) {
+            const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(region)}&county[]=${encodeURIComponent(officialName)}&nonefound=on&submit=Filter`;
+            return `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${officialName} Project-GC:ssä" class="${cssClass}">🗺️</a>`;
+        }
+        return '';
+    };
+
     const getCacheTypeClass = (typeName) => {
         if (!typeName) return 'type-default';
         const lowerTypeName = typeName.toLowerCase();
@@ -243,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- MUOKATTU FUNKTIO: handleMapClick ---
     const handleMapClick = async (e) => {
         if (trackingWatcher) return;
         const { lat, lng } = e.latlng;
@@ -251,7 +266,14 @@ document.addEventListener('DOMContentLoaded', () => {
         clickMarker.bindPopup('Haetaan kuntaa...').openPopup();
         try {
             const municipalityName = await getMunicipalityForCoordinates(lat, lng);
-            clickMarker.getPopup().setContent(`<b>${municipalityName || 'Tuntematon sijainti'}</b>`);
+            const pgcLink = getPGCLinkHtml(municipalityName, 'pgc-link-popup');
+
+            const popupContent = `
+                <div class="map-popup-content">
+                    <b>${municipalityName || 'Tuntematon sijainti'}</b>
+                    ${pgcLink}
+                </div>`;
+            clickMarker.getPopup().setContent(popupContent);
 
             if (municipalityName) {
                 fetchAndDrawBoundary(municipalityName);
@@ -470,8 +492,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
                 const gcCodeLink = cache.gcCode ? `<a href="https://coord.info/${cache.gcCode}" target="_blank" rel="noopener noreferrer">${cache.gcCode}</a>` : '';
-                
-                // Kutsutaan apufunktiota ja haetaan oikea CSS-luokka kätkötyypille
                 const typeClass = getCacheTypeClass(cache.type);
 
                 const detailsHtml = `
@@ -501,14 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
 
             const kunnanNimi = municipality.name;
-            const pgcProfileName = pgcProfileNameInput.value.trim();
-            const oikeaAvain = Object.keys(kuntaMaakuntaData).find(key => key.toLowerCase() === kunnanNimi.toLowerCase());
-            const maakunta = oikeaAvain ? kuntaMaakuntaData[oikeaAvain] : undefined;
-            let pgcLinkHtml = '';
-            if (maakunta && pgcProfileName) {
-                const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(oikeaAvain)}&nonefound=on&submit=Filter`;
-                pgcLinkHtml = `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${kunnanNimi} Project-GC:ssä" class="pgc-link">🗺️</a>`;
-            }
+            const pgcLinkHtml = getPGCLinkHtml(kunnanNimi); // Käytetään uutta apufunktiota
 
             munItem.innerHTML = `
                 <div class="municipality-header">
@@ -524,7 +537,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // --- MUOKATTU FUNKTIO: renderFoundList ---
+    // ... (loput tiedostosta on identtinen edellisen kanssa) ...
+    // ... (Koko tiedosto on kyllä saatavilla yllä olevasta koodilohkosta) ...
     const renderFoundList = () => {
         foundCachesList.innerHTML = '';
         let sortedCaches = [...foundCaches];
@@ -550,7 +564,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const formattedDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} klo ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
             const loggersHtml = loggers.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers && cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
             
-            // Kutsutaan apufunktiota ja haetaan oikea CSS-luokka kätkötyypille
             const typeClass = getCacheTypeClass(cache.type);
 
             const detailsHtml = `
