@@ -125,9 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updatePgcLink = () => {
         const profileName = pgcProfileNameInput.value.trim();
+        let href = "#"; // Oletuslinkki, jos nimeä ei ole
         if (profileName && pgcMapCountiesLink) {
-            pgcMapCountiesLink.href = `https://project-gc.com/Tools/MapCounties?profile_name=${encodeURIComponent(profileName)}&country=Finland&submit=Filter`;
+            href = `https://project-gc.com/Tools/MapCounties?profile_name=${encodeURIComponent(profileName)}&country=Finland&submit=Filter`;
         }
+        pgcMapCountiesLink.href = href;
     };
 
     const getDistance = (lat1, lon1, lat2, lon2) => {
@@ -434,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
             munItem.id = `mun-item-${munIndex}`;
 
             const hasCaches = municipality.caches && municipality.caches.length > 0;
-            if (!hasCaches && municipality.hadCaches) {
+            if (municipality.isDone) { // MUOKATTU: Tarkistetaan isDone-lippu ensin
                 munItem.classList.add('status-completed');
             } else if (!hasCaches) {
                 munItem.classList.add('status-empty');
@@ -477,7 +479,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(maakunta)}&county[]=${encodeURIComponent(oikeaAvain)}&nonefound=on&submit=Filter`;
                 pgcLinkHtml = `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${kunnanNimi} Project-GC:ssä" class="pgc-link">🗺️</a>`;
             }
-            munItem.innerHTML = `<div class="municipality-header"><a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a><div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div></div><ul class="cache-list">${cacheHtml}</ul><div class="add-cache"><input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi..."><button class="add-cache-btn" data-mun-index="${munIndex}">+</button></div>`;
+
+            // MUOKATTU: Lisätty checkbox kunnan nimen eteen
+            munItem.innerHTML = `
+                <div class="municipality-header">
+                    <div class="municipality-header-main">
+                        <input type="checkbox" class="municipality-done-checkbox" data-mun-index="${munIndex}" ${municipality.isDone ? 'checked' : ''}>
+                        <a class="municipality-name-link" href="https://www.geocache.fi/stat/other/jakauma.php?kuntalista=${encodeURIComponent(kunnanNimi)}" target="_blank" rel="noopener noreferrer">${kunnanNimi}</a>
+                    </div>
+                    <div class="actions">${pgcLinkHtml}<button class="edit-municipality-btn" title="Muokkaa kunnan nimeä" data-mun-index="${munIndex}">✏️</button><button class="delete-municipality-btn" title="Poista kunta" data-mun-index="${munIndex}">🗑️</button></div>
+                </div>
+                <ul class="cache-list">${cacheHtml}</ul>
+                <div class="add-cache"><input type="text" class="new-cache-name" placeholder="Kätkön nimi tai GC-koodi..."><button class="add-cache-btn" data-mun-index="${munIndex}">+</button></div>`;
             municipalityList.appendChild(munItem);
         });
     };
@@ -499,6 +512,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
             `;
 
+            // MUOKATTU: Lisätty kuntatieto näkyviin
+            const municipalityInfoHtml = cache.municipalityName ? `<div class="municipality-info">Kunnasta: ${cache.municipalityName}</div>` : '';
+
             li.innerHTML = `
                 <div class="found-cache-header">
                     <a href="https://coord.info/${cache.gcCode}" target="_blank" class="found-cache-name">${cache.gcCode ? cache.gcCode + ' - ' : ''}${cache.name}</a>
@@ -508,6 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
                 <div class="cache-details">${detailsHtml}</div>
+                ${municipalityInfoHtml}
                 <div class="timestamp">${formattedDate}</div>
                 <div class="loggers">${loggersHtml}</div>
             `;
@@ -625,7 +642,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         name: name,
                         caches: [],
                         lat: parseFloat(data[0].lat),
-                        lon: parseFloat(data[0].lon)
+                        lon: parseFloat(data[0].lon),
+                        isDone: false // UUSI OMINAISUUS
                     });
                     addedCount++;
                 } else {
@@ -691,6 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         caches: [cacheData],
                         lat: coords.lat,
                         lon: coords.lon,
+                        isDone: false, // UUSI OMINAISUUS
                         hadCaches: true
                     };
                     municipalities.push(newMunicipality);
@@ -713,7 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         globalAddFromPgcBtn.disabled = false; globalAddFromPgcBtn.textContent = "Lisää ja paikanna";
     });
 
-    logAddFromPgcBtn.addEventListener('click', () => {
+    logAddFromPgcBtn.addEventListener('click', async () => {
         const text = logPgcPasteArea.value.trim(); if (!text) return;
         logAddFromPgcBtn.disabled = true; logAddFromPgcBtn.textContent = "Käsitellään...";
         const lines = text.split('\n').filter(Boolean);
@@ -731,10 +750,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const coords = parseCoordinates(line3);
                 if (!gcCode || !cacheName || !cacheType || !coords) continue;
                 
+                // LISÄTTY: Kuntatiedon haku
+                const munName = await getMunicipalityForCoordinates(coords.lat, coords.lon);
+
                 const loggerCheckboxes = {};
                 loggers.forEach(name => { loggerCheckboxes[name] = false; });
 
-                const newFoundCache = { id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize, difficulty, terrain, lat: coords.lat, lon: coords.lon, timestamp: new Date().toISOString(), loggers: loggerCheckboxes };
+                const newFoundCache = { id: Date.now() + Math.random(), name: cacheName, gcCode, fp: fpInfo, type: cacheType, size: cacheSize, difficulty, terrain, lat: coords.lat, lon: coords.lon, timestamp: new Date().toISOString(), loggers: loggerCheckboxes, municipalityName: munName || 'Tuntematon' };
                 foundCaches.push(newFoundCache);
                 cachesAddedCount++;
             } catch (e) { console.error("Lohkon jäsentäminen epäonnistui:", [line1, line2, line3], e); }
@@ -747,22 +769,29 @@ document.addEventListener('DOMContentLoaded', () => {
     municipalityList.addEventListener('click', (e) => {
         const button = e.target.closest('button, input[type="checkbox"]');
         if (!button) return;
+        
         const munIndex = parseInt(button.dataset.munIndex, 10);
         if (isNaN(munIndex)) return;
         
         let needsSave = false;
-        
-        if (button.type === 'checkbox') {
+
+        // Käsittelee kunnan kuittauksen
+        if (button.classList.contains('municipality-done-checkbox')) {
+            municipalities[munIndex].isDone = button.checked;
+            needsSave = true;
+        } else if (button.type === 'checkbox') { // Käsittelee kätkön siirron
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
+            const munName = municipalities[munIndex].name; // Otetaan kunnan nimi talteen
             const [cacheToMove] = municipalities[munIndex].caches.splice(cacheIndex, 1);
             
             const loggerCheckboxes = {};
             loggers.forEach(name => { loggerCheckboxes[name] = false; });
             
-            const newFoundCache = { ...cacheToMove, timestamp: new Date().toISOString(), loggers: loggerCheckboxes };
+            // Lisätään kuntatieto siirrettävään kätköön
+            const newFoundCache = { ...cacheToMove, municipalityName: munName, timestamp: new Date().toISOString(), loggers: loggerCheckboxes };
             foundCaches.push(newFoundCache);
             needsSave = true;
-        } else {
+        } else { // Käsittelee muut napit
             const cacheIndex = parseInt(button.dataset.cacheIndex, 10);
             if (button.classList.contains('edit-cache-btn')) {
                 const cache = municipalities[munIndex].caches[cacheIndex];
@@ -865,14 +894,23 @@ document.addEventListener('DOMContentLoaded', () => {
     modalCancelBtn.addEventListener('click', () => editCacheModal.classList.add('hidden'));
     editCacheModal.addEventListener('click', (e) => { if (e.target === editCacheModal) editCacheModal.classList.add('hidden'); });
 
-    directAddBtn.addEventListener('click', () => {
+    directAddBtn.addEventListener('click', async () => {
         const input = directAddInput.value.trim(); if (!input) return;
         const gcCodeMatch = input.match(/(GC[A-Z0-9]+)/i);
-        if (!gcCodeMatch) return alert("Syötteestä ei löytynyt GC-koodia.");
-        const gcCode = gcCodeMatch[0].toUpperCase();
+        let munName = 'Tuntematon';
+
+        const coords = parseCoordinates(input);
+        if (coords) {
+            munName = await getMunicipalityForCoordinates(coords.lat, coords.lon) || 'Tuntematon';
+        }
+
+        const name = gcCodeMatch ? input.replace(gcCodeMatch[0], '').trim() : input;
+        const gcCode = gcCodeMatch ? gcCodeMatch[0].toUpperCase() : '';
+        
         const loggerCheckboxes = {};
-        loggers.forEach(name => { loggerCheckboxes[name] = false; });
-        foundCaches.push({ id: Date.now() + Math.random(), name: gcCode, gcCode: gcCode, timestamp: new Date().toISOString(), loggers: loggerCheckboxes, type: 'Muu' });
+        loggers.forEach(l => { loggerCheckboxes[l] = false; });
+        
+        foundCaches.push({ id: Date.now() + Math.random(), name, gcCode, timestamp: new Date().toISOString(), loggers: loggerCheckboxes, type: 'Muu', municipalityName: munName });
         saveState();
         directAddInput.value = '';
     });
