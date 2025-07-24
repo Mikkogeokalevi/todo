@@ -218,7 +218,14 @@ ul { list-style: none; padding: 0; }
 .cache-name a:hover { color: #FFD700; }
 .cache-details { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
 .cache-detail-tag { font-size: 0.8em; background-color: #3D4F2B; color: #dddddd; padding: 2px 8px; border-radius: 10px; white-space: nowrap; border: 1px solid #4a5c3a; }
-.cache-detail-tag.fp { background-color: #FFD700; color: #1a2015; font-weight: bold; }
+
+/* --- TÄMÄ ON MUUTOS --- */
+/* Korostetaan kätkötyyppi FP-pisteiden sijaan */
+.cache-detail-tag.type {
+    background-color: #FFD700;
+    color: #1a2015;
+    font-weight: bold;
+}
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; display: flex; justify-content: center; align-items: center; }
 .modal-content { background-color: #3D4F2B; padding: 20px; border-radius: 12px; border: 2px solid #90EE90; width: 90%; max-width: 500px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
@@ -284,7 +291,6 @@ ul { list-style: none; padding: 0; }
     padding: 0 10px 10px 10px;
 }
 
-/* UUSI OSA: JÄRJESTYSNAPIT */
 .sort-controls {
     margin-bottom: 15px;
     display: flex;
