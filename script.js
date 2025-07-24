@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
     
+    // ... (DOM-elementtien määritykset pysyvät samoina) ...
     const pgcProfileNameInput = document.getElementById('pgcProfileName');
     const pgcMapCountiesLink = document.getElementById('pgcMapCountiesLink');
     const bulkAddInput = document.getElementById('bulkAddMunicipalities');
@@ -64,12 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const editFpInput = document.getElementById('editFp');
     const editCoordsInput = document.getElementById('editCoords');
     const activeMunicipalityContainer = document.getElementById('activeMunicipalityContainer');
-    const logSortControls = document.getElementById('logSortControls'); // UUSI
+    const logSortControls = document.getElementById('logSortControls');
     
+    // ... (tilamuuttujien määritykset pysyvät samoina) ...
     let municipalities = [];
     let foundCaches = [];
     let loggers = [];
-    let currentLogSort = 'timestamp'; // UUSI
+    let currentLogSort = 'timestamp';
     let map;
     let userMarker;
     let trackingWatcher = null;
@@ -135,6 +137,26 @@ document.addEventListener('DOMContentLoaded', () => {
         pgcMapCountiesLink.href = href;
     };
 
+    // --- UUSI APUFUNKTIO KÄTKÖTYYPIN CSS-LUOKALLE ---
+    const getCacheTypeClass = (typeName) => {
+        if (!typeName) return 'type-default';
+        const lowerTypeName = typeName.toLowerCase();
+
+        if (lowerTypeName.includes('traditional')) return 'type-traditional';
+        if (lowerTypeName.includes('multi-cache')) return 'type-multi';
+        if (lowerTypeName.includes('mystery') || lowerTypeName.includes('unknown')) return 'type-mystery';
+        if (lowerTypeName.includes('earthcache')) return 'type-earthcache';
+        if (lowerTypeName.includes('letterbox')) return 'type-letterbox';
+        if (lowerTypeName.includes('wherigo')) return 'type-wherigo';
+        if (lowerTypeName.includes('cito')) return 'type-cito';
+        if (lowerTypeName.includes('event') || lowerTypeName.includes('mega') || lowerTypeName.includes('giga')) return 'type-event';
+        if (lowerTypeName.includes('virtual')) return 'type-virtual';
+        if (lowerTypeName.includes('webcam')) return 'type-webcam';
+        if (lowerTypeName.includes('adventure lab')) return 'type-lab';
+        
+        return 'type-default';
+    };
+    
     const getDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
         const Δφ = (lat2 - lat1) * Math.PI / 180; const Δλ = (lon2 - lon1) * Math.PI / 180;
@@ -428,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
+    // --- MUOKATTU FUNKTIO: render ---
     const render = () => {
         municipalityList.innerHTML = '';
         if (!municipalities) municipalities = [];
@@ -447,8 +470,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let cacheHtml = (municipality.caches || []).map((cache, cacheIndex) => {
                 const gcCodeLink = cache.gcCode ? `<a href="https://coord.info/${cache.gcCode}" target="_blank" rel="noopener noreferrer">${cache.gcCode}</a>` : '';
+                
+                // Kutsutaan apufunktiota ja haetaan oikea CSS-luokka kätkötyypille
+                const typeClass = getCacheTypeClass(cache.type);
+
                 const detailsHtml = `
-                    <span class="cache-detail-tag type">${cache.type || 'Muu'}</span>
+                    <span class="cache-detail-tag type ${typeClass}">${cache.type || 'Muu'}</span>
                     <span class="cache-detail-tag size">${cache.size || ''}</span>
                     <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
                     ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
@@ -502,7 +529,6 @@ document.addEventListener('DOMContentLoaded', () => {
         foundCachesList.innerHTML = '';
         let sortedCaches = [...foundCaches];
 
-        // Järjestellään data `currentLogSort`-muuttujan perusteella
         if (currentLogSort === 'timestamp') {
             sortedCaches.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         } else if (currentLogSort === 'municipality') {
@@ -523,9 +549,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const date = new Date(cache.timestamp);
             const formattedDate = `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()} klo ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
             const loggersHtml = loggers.map(logger => `<label><input type="checkbox" data-cache-id="${cache.id}" data-logger="${logger}" ${cache.loggers && cache.loggers[logger] ? 'checked' : ''}>${logger}</label>`).join('');
+            
+            // Kutsutaan apufunktiota ja haetaan oikea CSS-luokka kätkötyypille
+            const typeClass = getCacheTypeClass(cache.type);
 
             const detailsHtml = `
-                <span class="cache-detail-tag type">${cache.type || 'Muu'}</span>
+                <span class="cache-detail-tag type ${typeClass}">${cache.type || 'Muu'}</span>
                 <span class="cache-detail-tag size">${cache.size || ''}</span>
                 <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
                 ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
@@ -1024,7 +1053,6 @@ document.addEventListener('DOMContentLoaded', () => {
     pgcProfileNameInput.addEventListener('change', saveState);
     toggleTrackingBtn.addEventListener('click', toggleTracking);
     
-    // --- UUSI OSA: Järjestysnappien kuuntelija ---
     logSortControls.addEventListener('click', (e) => {
         const target = e.target.closest('.sort-btn');
         if (!target) return;
@@ -1034,13 +1062,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentLogSort = sortBy;
 
-        // Päivitetään nappien ulkoasu
         logSortControls.querySelectorAll('.sort-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         target.classList.add('active');
 
-        // Renderöidään lokilista uudelleen uudella järjestyksellä
         renderFoundList();
     });
 
