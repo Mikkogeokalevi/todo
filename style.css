@@ -346,6 +346,51 @@ ul { list-style: none; padding: 0; }
     font-weight: bold;
 }
 
+/* UUSI OSA: OHJEET */
+.help-container {
+    margin: 15px 0;
+}
+.help-container details {
+    border: 1px solid #2A381C;
+    border-radius: 5px;
+    background-color: #2A381C;
+}
+.help-container summary {
+    padding: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #E6E6E6;
+}
+.help-content {
+    padding: 0 15px 15px 15px;
+    color: #dddddd;
+    line-height: 1.6;
+}
+.help-content h4 {
+    color: #90EE90;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #4a5c3a;
+    padding-bottom: 5px;
+}
+.help-content ul {
+    list-style: disc;
+    padding-left: 20px;
+}
+.help-content code, .help-content pre {
+    background-color: #1a2015;
+    border-radius: 3px;
+    font-family: monospace;
+}
+.help-content code {
+    padding: 2px 5px;
+}
+.help-content pre {
+    padding: 10px;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
 
 @media (max-width: 600px) {
     body { padding: 5px; font-size: 14px; }
