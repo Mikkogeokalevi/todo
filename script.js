@@ -65,8 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeMunicipalityContainer = document.getElementById('activeMunicipalityContainer');
     const logSortControls = document.getElementById('logSortControls');
     const settingsAndHelpContainer = document.getElementById('settingsAndHelpContainer');
-    const gpxFileInput = document.getElementById('gpxFileInput');
-    const importGpxBtn = document.getElementById('importGpxBtn');
     
     let municipalities = [];
     let foundCaches = [];
@@ -1080,8 +1078,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderFoundList();
     });
 
-    importGpxBtn.addEventListener('click', handleGpxImport);
-
     let draggedIndex = null;
     municipalityList.addEventListener('dragstart', (e) => {
         const munItem = e.target.closest('.municipality-item');
@@ -1122,17 +1118,4 @@ document.addEventListener('DOMContentLoaded', () => {
             else return closest;
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
-
-    const detailsInWrapper = document.querySelectorAll('.settings-and-help-wrapper details');
-    detailsInWrapper.forEach(detailsEl => {
-        detailsEl.addEventListener('toggle', (event) => {
-            if (detailsEl.open) {
-                detailsInWrapper.forEach(otherDetailsEl => {
-                    if (otherDetailsEl !== detailsEl) {
-                        otherDetailsEl.open = false;
-                    }
-                });
-            }
-        });
-    });
 });
