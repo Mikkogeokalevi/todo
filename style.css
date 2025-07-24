@@ -191,6 +191,24 @@ ul { list-style: none; padding: 0; }
     weight: 2;
 }
 
+.map-popup-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.1em;
+}
+
+.pgc-link-popup {
+    font-size: 1.5em;
+    text-decoration: none;
+    transition: transform 0.2s;
+    display: inline-block;
+}
+
+.pgc-link-popup:hover {
+    transform: scale(1.2);
+}
+
 .view-toggles { display: flex; margin-bottom: 20px; border: 1px solid #4a5c3a; border-radius: 8px; overflow: hidden; }
 .view-toggle-btn { flex: 1; padding: 12px; border: none; background-color: transparent; color: #cccccc; cursor: pointer; font-size: 1.1em; transition: all 0.3s; border-radius: 0; }
 .view-toggle-btn.active { background-color: #FFD700; color: #1a2015; font-weight: bold; }
@@ -219,24 +237,23 @@ ul { list-style: none; padding: 0; }
 .cache-details { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
 .cache-detail-tag { font-size: 0.8em; background-color: #3D4F2B; color: #dddddd; padding: 2px 8px; border-radius: 10px; white-space: nowrap; border: 1px solid #4a5c3a; }
 
-/* --- UUSI OSA: KÄTKÖTYYPPIEN VÄRIKKOODAUS --- */
 .cache-detail-tag.type {
     font-weight: bold;
-    color: #1a2015; /* Tumma teksti kaikille väritaustoille */
+    color: #1a2015;
 }
 
-.type-traditional { background-color: #4CAF50; } /* Vihreä */
-.type-multi { background-color: #FFC107; } /* Keltainen/Oranssi */
-.type-mystery { background-color: #2196F3; } /* Sininen */
-.type-earthcache { background-color: #A52A2A; } /* Ruskea */
-.type-letterbox { background-color: #E91E63; } /* Pinkki */
-.type-event { background-color: #F44336; } /* Punainen */
-.type-cito { background-color: #009688; } /* Turkoosi */
-.type-wherigo { background-color: #673AB7; } /* Violetti */
-.type-virtual { background-color: #795548; } /* Tummanruskea */
-.type-webcam { background-color: #607D8B; } /* Harmaa */
-.type-lab { background-color: #ff5722; } /* Oranssi */
-.type-default { background-color: #9E9E9E; } /* Harmaa oletus */
+.type-traditional { background-color: #4CAF50; }
+.type-multi { background-color: #FFC107; }
+.type-mystery { background-color: #2196F3; }
+.type-earthcache { background-color: #A52A2A; }
+.type-letterbox { background-color: #E91E63; }
+.type-event { background-color: #F44336; }
+.type-cito { background-color: #009688; }
+.type-wherigo { background-color: #673AB7; }
+.type-virtual { background-color: #795548; }
+.type-webcam { background-color: #607D8B; }
+.type-lab { background-color: #ff5722; }
+.type-default { background-color: #9E9E9E; }
 
 
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; display: flex; justify-content: center; align-items: center; }
