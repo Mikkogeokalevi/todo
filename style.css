@@ -427,8 +427,4 @@ input[type="file"] {
     .found-cache-header a { font-size: 1em; }
     .loggers { gap: 8px; }
     .loggers label { font-size: 0.9em; gap: 4px; }
-
-    .settings-and-help-wrapper {
-        flex-direction: column;
-    }
 }
