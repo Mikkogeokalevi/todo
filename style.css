@@ -68,16 +68,23 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 .profile-controls { display: flex; margin-bottom: 15px; }
 .profile-controls button { width: 100%; }
 
-/* --- UUDET JA MUOKATUT TYYLIT --- */
+/* --- MUOKATUT TYYLIT --- */
 .settings-and-help-wrapper {
     display: flex;
     gap: 10px;
     margin: 15px 0;
+    flex-wrap: wrap; /* Sallitaan elementtien rivittyminen */
 }
 .pgc-settings-container, .help-container {
     flex: 1;
-    min-width: 0;
+    min-width: 150px; /* Varmistetaan, että napit eivät mene liian kapeaksi */
+    transition: flex-basis 0.3s ease-in-out;
 }
+/* Tämä on se taika: kun details-elementti on auki, sen vanhempi kasvaa koko leveyteen */
+.settings-and-help-wrapper > div:has(details[open]) {
+    flex-basis: 100%;
+}
+
 .pgc-settings-container details, .help-container details {
     border: 1px solid #2A381C;
     border-radius: 5px;
@@ -357,18 +364,7 @@ ul { list-style: none; padding: 0; }
 }
 
 .help-container {
-    margin: 15px 0;
-}
-.help-container details {
-    border: 1px solid #2A381C;
-    border-radius: 5px;
-    background-color: #2A381C;
-}
-.help-container summary {
-    padding: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #E6E6E6;
+    margin: 0; /* Nollataan marginaali, koska wrapper hoitaa sen */
 }
 .help-content {
     padding: 0 15px 15px 15px;
@@ -416,4 +412,8 @@ ul { list-style: none; padding: 0; }
     .found-cache-header a { font-size: 1em; }
     .loggers { gap: 8px; }
     .loggers label { font-size: 0.9em; gap: 4px; }
+
+    .settings-and-help-wrapper {
+        flex-direction: column; /* Asetetaan napit allekkain pienillä näytöillä */
+    }
 }
