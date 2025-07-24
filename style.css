@@ -108,6 +108,7 @@ button:hover { background-color: #90EE90; color: #1a2015; }
     text-decoration: underline;
 }
 
+
 .bulk-add { background-color: #2A381C; border: 1px solid #556B2F; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
 .bulk-add h3 { margin: 0 0 10px 0; text-align: center; color: #E6E6E6; font-size: 1.1em; }
 .bulk-add button { margin-top: 10px; width: 100%; }
@@ -120,7 +121,6 @@ ul { list-style: none; padding: 0; }
     background: #3d4f2b; 
     opacity: 0.7;
 }
-/* MUOKATTU: Nyt myös kunnan kuittaus muuttaa värin */
 .municipality-item.status-completed {
     background: #27ae60; 
     border-color: #2ecc71;
@@ -130,8 +130,8 @@ ul { list-style: none; padding: 0; }
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
+
 .municipality-header { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; font-weight: bold; color: #FFFFFF; margin-bottom: 5px; }
-/* UUSI: Kunnan kuittaus-checkboxin tyyli */
 .municipality-done-checkbox {
     width: 20px;
     height: 20px;
@@ -206,7 +206,6 @@ ul { list-style: none; padding: 0; }
 .found-cache-actions { display: flex; gap: 5px; }
 .found-cache-actions button { color: #cccccc; font-size: 1.1em; }
 
-/* UUSI: Lokinäkymän kuntatieto */
 .municipality-info {
     font-size: 0.8em;
     color: #cccccc;
@@ -284,6 +283,34 @@ ul { list-style: none; padding: 0; }
 .management-details .details-content {
     padding: 0 10px 10px 10px;
 }
+
+/* UUSI OSA: JÄRJESTYSNAPIT */
+.sort-controls {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background-color: #2A381C;
+    border-radius: 5px;
+}
+.sort-controls span {
+    color: #cccccc;
+    font-size: 0.9em;
+}
+.sort-btn {
+    padding: 5px 10px;
+    font-size: 0.9em;
+    background-color: #4a5c3a;
+    border-color: #556B2F;
+}
+.sort-btn.active {
+    background-color: #FFD700;
+    color: #1a2015;
+    border-color: #FFD700;
+    font-weight: bold;
+}
+
 
 @media (max-width: 600px) {
     body { padding: 5px; font-size: 14px; }
