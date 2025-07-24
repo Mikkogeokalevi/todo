@@ -108,7 +108,6 @@ button:hover { background-color: #90EE90; color: #1a2015; }
     text-decoration: underline;
 }
 
-
 .bulk-add { background-color: #2A381C; border: 1px solid #556B2F; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
 .bulk-add h3 { margin: 0 0 10px 0; text-align: center; color: #E6E6E6; font-size: 1.1em; }
 .bulk-add button { margin-top: 10px; width: 100%; }
@@ -121,6 +120,7 @@ ul { list-style: none; padding: 0; }
     background: #3d4f2b; 
     opacity: 0.7;
 }
+/* MUOKATTU: Nyt myös kunnan kuittaus muuttaa värin */
 .municipality-item.status-completed {
     background: #27ae60; 
     border-color: #2ecc71;
@@ -130,8 +130,21 @@ ul { list-style: none; padding: 0; }
     text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
 }
 
-
 .municipality-header { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; font-weight: bold; color: #FFFFFF; margin-bottom: 5px; }
+/* UUSI: Kunnan kuittaus-checkboxin tyyli */
+.municipality-done-checkbox {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    flex-shrink: 0;
+}
+.municipality-header-main {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+
 .cache-list { padding-left: 0; margin-top: 10px; }
 .cache-item { display: flex; align-items: center; padding: 5px; border-top: 1px solid #556B2F; }
 .cache-info { flex-grow: 1; word-break: break-word; }
@@ -171,7 +184,6 @@ ul { list-style: none; padding: 0; }
 .municipality-marker { background: rgba(42, 56, 28, 0.8); color: #FFD700; border: 1px solid #FFD700; border-radius: 5px; padding: 2px 5px; font-size: 12px; font-weight: bold; text-align: center; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.4); pointer-events: none; }
 .cache-marker { background-color: #FFD700; border: 2px solid #ffffff; border-radius: 50%; width: 12px; height: 12px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
 
-/* UUSI: Kuntarajojen tyyli kartalla */
 .municipality-boundary {
     fillColor: "#FFD700";
     fillOpacity: 0.2;
@@ -193,6 +205,14 @@ ul { list-style: none; padding: 0; }
 .loggers label { display: flex; align-items: center; gap: 5px; color: #dddddd; }
 .found-cache-actions { display: flex; gap: 5px; }
 .found-cache-actions button { color: #cccccc; font-size: 1.1em; }
+
+/* UUSI: Lokinäkymän kuntatieto */
+.municipality-info {
+    font-size: 0.8em;
+    color: #cccccc;
+    font-style: italic;
+    margin-bottom: 8px;
+}
 
 .cache-name { font-weight: bold; margin-bottom: 5px; word-break: break-word; }
 .cache-name a { color: inherit; text-decoration: underline; }
