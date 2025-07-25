@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Työaikalaskuri</title>
+    <link rel="stylesheet" href="tyoaikalaskuri.css">
+</head>
+<body>
+
+    <div class="sisalto-laatikko">
+        <h1>Työaikalaskuri</h1>
+
+        <div class="projekti-valitsin">
+            <label for="projektinNimi">Projektin nimi:</label>
+            <input type="text" id="projektinNimi" placeholder="Esim. asiakas-x-sivut">
+        </div>
+        
+        <hr class="custom-hr">
+
+        <div id="laskuri-osio" class="hidden">
+            <h2 id="aktiivinenProjektiNimi"></h2>
+
+            <div class="aktiivinen-kirjaus">
+                <h3>Aktiivinen Tehtävä</h3>
+                <input type="text" id="aktiivinenTehtava" placeholder="Mitä teet nyt?">
+                <div class="aikaleima">Aloitusaika: <span id="alkuAikaNaytto">--:--</span></div>
+                <button id="aloitaLopetaBtn">Aloita Ajanotto</button>
+            </div>
+
+            <hr class="custom-hr">
+
+            <details class="management-details">
+                <summary>Lisää kirjaus käsin</summary>
+                <div class="details-content">
+                    <div class="manuaalinen-kirjaus">
+                        <input type="text" id="manuaalinenTehtava" placeholder="Tehtävän kuvaus">
+                        <div class="form-rivi">
+                            <div class="form-ryhma">
+                                <label for="manuaalinenAlku">Alkoi:</label>
+                                <input type="datetime-local" id="manuaalinenAlku">
+                            </div>
+                            <div class="form-ryhma">
+                                <label for="manuaalinenLoppu">Loppui:</label>
+                                <input type="datetime-local" id="manuaalinenLoppu">
+                            </div>
+                        </div>
+                        <button id="lisaaManuaalisestiBtn">Lisää Kirjaus</button>
+                    </div>
+                </div>
+            </details>
+
+            <hr class="custom-hr">
+
+            <div id="yhteenveto">
+                <h3>Yhteenveto</h3>
+                <div id="paivittaisetSummat"></div>
+                <div class="kokonaisaika">Kokonaisaika: <strong id="kokonaisAikaSumma">0h 0min</strong></div>
+            </div>
+
+            <h2>Kirjaukset</h2>
+            <ul id="kirjauksetLista"></ul>
+        </div>
+    </div>
+
+    <template id="kirjaus-template">
+        <li class="kirjaus-item">
+            <div class="kirjaus-tiedot">
+                <input type="text" class="tehtava-input" disabled>
+                <div class="aika-tiedot">
+                    <input type="datetime-local" class="alku-input" disabled>
+                    <span>→</span>
+                    <input type="datetime-local" class="loppu-input" disabled>
+                </div>
+                <div class="kesto">Kesto: <strong></strong></div>
+            </div>
+            <div class="kirjaus-toiminnot">
+                <button class="muokkaa-btn">✏️</button>
+                <button class="tallenna-btn hidden">💾</button>
+                <button class="poista-btn">🗑️</button>
+            </div>
+        </li>
+    </template>
+    
+    <script type="module" src="tyoaikalaskuri.js"></script>
+</body>
+</html>
