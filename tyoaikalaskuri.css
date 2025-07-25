@@ -4,6 +4,7 @@ body {
     margin: 0;
     padding: 10px;
     color: #F8F8F8;
+    -webkit-tap-highlight-color: transparent; /* Estää mobiililaitteiden napautuskorostuksen */
 }
 .sisalto-laatikko {
     max-width: 800px;
@@ -13,46 +14,95 @@ body {
     border: 3px solid #11150C;
     border-radius: 12px;
 }
-h1, h2 { color: #90EE90; text-align: center; }
+h1, h2, h3 { color: #90EE90; text-align: center; margin-top: 0; margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-size: 0.9em; }
 .hidden { display: none !important; }
-.custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 20px 0; }
-input[type="text"], input[type="datetime-local"] {
+.custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 25px 0; }
+
+/* --- Syöttökentät ja napit --- */
+.projekti-input, input[type="text"], input[type="datetime-local"], select {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin-bottom: 10px;
     box-sizing: border-box;
     background-color: #2A381C;
     color: #F8F8F8;
     border: 1px solid #556B2F;
     border-radius: 4px;
+    font-family: 'Georgia', serif;
+    font-size: 16px; /* Mobiililaitteet eivät zoomaa tällä fonttikoolla */
 }
 input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; }
 button {
-    padding: 10px 15px;
+    padding: 12px 18px;
     border: 1px solid #90EE90;
     background-color: transparent;
     color: #90EE90;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
 button:hover { background-color: #90EE90; color: #1a2015; }
+
+/* --- Eri osioiden tyylit --- */
 .projekti-valitsin { margin-bottom: 20px; }
+.projekti-valitsin label:not(:first-child) { margin-top: 15px; }
+
 .aktiivinen-kirjaus { text-align: center; }
-#aloitaLopetaBtn { width: 100%; padding: 15px; font-weight: bold; }
+#aloitaLopetaBtn { padding: 15px; font-weight: bold; margin-top: 10px; }
 #aloitaLopetaBtn.aktiivinen { background-color: #e74c3c; border-color: #e74c3c; color: white; }
 .aikaleima { margin: 10px 0; }
+
 .form-rivi { display: flex; gap: 10px; }
 .form-ryhma { flex: 1; }
+
 .management-details { border: 1px solid #2A381C; border-radius: 5px; background-color: #2A381C; }
-.management-details summary { padding: 10px; cursor: pointer; font-weight: bold; }
-.management-details .details-content { padding: 10px; }
+.management-details summary { padding: 12px; cursor: pointer; font-weight: bold; }
+.management-details .details-content { padding: 15px; }
+
 #yhteenveto { background-color: #2A381C; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-#yhteenveto h3 { margin-top: 0; }
-.kokonaisaika { font-size: 1.2em; text-align: right; }
+.kokonaisaika { font-size: 1.2em; text-align: right; margin-top: 10px; font-weight: bold; }
+#paivittaisetSummat p { margin: 5px 0; }
+
 ul { list-style: none; padding: 0; }
-.kirjaus-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
-.kirjaus-tiedot { flex-grow: 1; }
+.kirjaus-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
+.kirjaus-tiedot { flex-grow: 1; flex-basis: 300px; }
+.kirjaus-tiedot input { font-size: 1em; }
 .aika-tiedot { display: flex; align-items: center; gap: 5px; }
-.kesto { font-size: 0.9em; color: #FFD700; margin-top: 5px; }
-.kirjaus-toiminnot button { background: none; border: none; font-size: 1.2em; padding: 5px; }
+.aika-tiedot span { font-size: 1.2em; }
+.kesto { font-size: 1em; color: #FFD700; margin-top: 5px; font-weight: bold; }
+.kirjaus-toiminnot { display: flex; gap: 5px; flex-shrink: 0; }
+.kirjaus-toiminnot button { width: auto; background: none; border: none; font-size: 1.5em; padding: 5px; }
+
+/* ======================================= */
+/* --- MOBIILIOPTIMOINNIT --- */
+/* ======================================= */
+@media (max-width: 600px) {
+    body { padding: 5px; }
+    .sisalto-laatikko { padding: 15px; margin: 5px; }
+    
+    .form-rivi {
+        flex-direction: column; /* Asetetaan alku- ja loppuaika päällekkäin */
+        gap: 0;
+    }
+    
+    .kirjaus-item {
+        flex-direction: column; /* Koko kirjaus pystysuuntaan */
+        align-items: stretch; /* Venytetään elementit koko leveydelle */
+        gap: 15px;
+    }
+    .aika-tiedot {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .aika-tiedot span {
+        text-align: center;
+        transform: rotate(90deg); /* Nuoli näyttää alaspäin */
+        margin: 5px 0;
+    }
+    .kirjaus-toiminnot {
+        justify-content: flex-end; /* Napit oikeaan reunaan */
+    }
+}
