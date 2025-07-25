@@ -9,9 +9,10 @@
 <body>
 
     <div class="sisalto-laatikko">
-        <h1>Työaikalaskuri</h1>
+        <h1 class="print-header">Työaikalaskuri</h1>
 
         <div class="projekti-valitsin">
+            <h2>Valitse tai luo projekti</h2>
             <label for="projektiValikko">Valitse olemassa oleva projekti:</label>
             <select id="projektiValikko" class="projekti-input">
                 <option value="">Ladataan projekteja...</option>
@@ -20,21 +21,29 @@
             <input type="text" id="projektinNimi" class="projekti-input" placeholder="Esim. asiakas-x-sivut">
         </div>
         
-        <hr class="custom-hr">
-
         <div id="laskuri-osio" class="hidden">
             <h2 id="aktiivinenProjektiNimi"></h2>
 
-            <div class="aktiivinen-kirjaus">
+            <div id="suoraLinkki" class="hidden">
+                <label>Projektin suora linkki:</label>
+                <div class="linkki-container">
+                    <input type="text" readonly>
+                    <button id="kopioiLinkkiBtn">Kopioi</button>
+                </div>
+            </div>
+
+            <hr class="custom-hr no-print">
+
+            <div class="aktiivinen-kirjaus no-print">
                 <h3>Aktiivinen Tehtävä</h3>
                 <input type="text" id="aktiivinenTehtava" placeholder="Tehtävän kuvaus (vapaaehtoinen)">
                 <div class="aikaleima">Aloitusaika: <span id="alkuAikaNaytto">--:--</span></div>
                 <button id="aloitaLopetaBtn">Aloita Ajanotto</button>
             </div>
 
-            <hr class="custom-hr">
+            <hr class="custom-hr no-print">
 
-            <details class="management-details">
+            <details class="management-details no-print">
                 <summary>Lisää kirjaus käsin</summary>
                 <div class="details-content">
                     <div class="manuaalinen-kirjaus">
@@ -60,9 +69,10 @@
                 <h3>Yhteenveto</h3>
                 <div id="paivittaisetSummat"></div>
                 <div class="kokonaisaika">Kokonaisaika: <strong id="kokonaisAikaSumma">0h 0min</strong></div>
+                <button id="tulostaBtn" class="no-print">Tulosta yhteenveto</button>
             </div>
 
-            <h2>Kirjaukset</h2>
+            <h2 class="kirjaukset-otsikko">Kirjaukset</h2>
             <ul id="kirjauksetLista"></ul>
         </div>
     </div>
@@ -73,12 +83,12 @@
                 <input type="text" class="tehtava-input" disabled>
                 <div class="aika-tiedot">
                     <input type="datetime-local" class="alku-input" disabled>
-                    <span>→</span>
+                    <span class="aika-nuoli">→</span>
                     <input type="datetime-local" class="loppu-input" disabled>
                 </div>
                 <div class="kesto">Kesto: <strong></strong></div>
             </div>
-            <div class="kirjaus-toiminnot">
+            <div class="kirjaus-toiminnot no-print">
                 <button class="muokkaa-btn" title="Muokkaa">✏️</button>
                 <button class="tallenna-btn hidden" title="Tallenna">💾</button>
                 <button class="poista-btn" title="Poista">🗑️</button>
@@ -88,7 +98,6 @@
     
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-
     <script type="module" src="tyoaikalaskuri.js"></script>
 </body>
 </html>
