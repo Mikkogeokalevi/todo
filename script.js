@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gpxFileInput = document.getElementById('gpxFileInput');
     const gpxFileName = document.getElementById('gpxFileName');
     const importGpxBtn = document.getElementById('importGpxBtn');
+    const optimizeRouteBtn = document.getElementById('optimizeRouteBtn');
     const logPgcPasteArea = document.getElementById('logPgcPasteArea');
     const logAddFromPgcBtn = document.getElementById('logAddFromPgcBtn');
     const loggerList = document.getElementById('loggerList');
@@ -729,6 +730,81 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
         }
     };
+    
+    // --- REITIN OPTIMOINTI ALKAA TÄSTÄ ---
+    const handleRouteOptimization = async () => {
+        const munisToOptimize = municipalities.filter(mun => mun.lat && mun.lon);
+        if (munisToOptimize.length < 2) {
+            alert("Listalla täytyy olla vähintään kaksi kuntaa optimointia varten.");
+            return;
+        }
+
+        optimizeRouteBtn.disabled = true;
+        optimizeRouteBtn.textContent = 'Haetaan etäisyyksiä...';
+
+        try {
+            // 1. Rakenna koordinaattilista OSRM-palvelua varten
+            const coordsString = munisToOptimize.map(mun => `${mun.lon},${mun.lat}`).join(';');
+            const osrmUrl = `https://router.osrm.org/table/v1/driving/${coordsString}`;
+
+            // 2. Hae ajoaikamatriisi OSRM-palvelusta
+            const response = await fetch(osrmUrl);
+            const data = await response.json();
+
+            if (data.code !== 'Ok' || !data.durations) {
+                throw new Error('Reitityspalvelun vastaus oli virheellinen.');
+            }
+            
+            const durations = data.durations;
+
+            // 3. Ratkaise reitti "lähin naapuri" -algoritmilla
+            optimizeRouteBtn.textContent = 'Lasketaan reittiä...';
+            const n = munisToOptimize.length;
+            const unvisited = new Set(Array.from({ length: n }, (_, i) => i));
+            const path = [];
+            
+            let currentIndex = 0; // Aloitetaan listan ensimmäisestä kunnasta
+            path.push(currentIndex);
+            unvisited.delete(currentIndex);
+
+            while (unvisited.size > 0) {
+                let nearestIndex = -1;
+                let minDuration = Infinity;
+
+                unvisited.forEach(nextIndex => {
+                    const duration = durations[currentIndex][nextIndex];
+                    if (duration < minDuration) {
+                        minDuration = duration;
+                        nearestIndex = nextIndex;
+                    }
+                });
+                
+                currentIndex = nearestIndex;
+                path.push(currentIndex);
+                unvisited.delete(currentIndex);
+            }
+
+            // 4. Rakenna uusi, optimoitu kuntalista
+            const optimizedMunicipalities = path.map(index => munisToOptimize[index]);
+            
+            // Korvaa vanha lista optimoidulla, säilyttäen kunnat joilla ei ollut koordinaatteja
+            const otherMunicipalities = municipalities.filter(mun => !mun.lat || !mun.lon);
+            municipalities = [...optimizedMunicipalities, ...otherMunicipalities];
+            
+            // 5. Tallenna ja päivitä näkymä
+            saveState();
+            alert('Reitti on optimoitu!');
+
+        } catch (error) {
+            console.error("Reitin optimointi epäonnistui:", error);
+            alert("Reitin optimointi epäonnistui. Yritä myöhemmin uudelleen.");
+        } finally {
+            optimizeRouteBtn.disabled = false;
+            optimizeRouteBtn.textContent = 'Optimoi reitti';
+        }
+    };
+    // --- REITIN OPTIMOINTI PÄÄTTYY ---
+
 
     toggleBulkAddBtn.addEventListener('click', () => {
         const isHidden = bulkAddContainer.classList.toggle('hidden');
@@ -1216,6 +1292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pgcProfileNameInput.addEventListener('input', updatePgcLink);
     pgcProfileNameInput.addEventListener('change', saveState);
     toggleTrackingBtn.addEventListener('click', toggleTracking);
+    optimizeRouteBtn.addEventListener('click', handleRouteOptimization);
     
     logSortControls.addEventListener('click', (e) => {
         const target = e.target.closest('.sort-btn');
