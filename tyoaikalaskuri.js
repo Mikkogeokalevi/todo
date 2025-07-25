@@ -15,6 +15,7 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // DOM-elementit
+const projektinValintaDiv = document.querySelector('.projekti-valitsin');
 const projektinNimiInput = document.getElementById('projektinNimi');
 const projektiValikko = document.getElementById('projektiValikko');
 const laskuriOsio = document.getElementById('laskuri-osio');
@@ -31,49 +32,52 @@ const manuaalinenAlkuInput = document.getElementById('manuaalinenAlku');
 const manuaalinenLoppuInput = document.getElementById('manuaalinenLoppu');
 const paivittaisetSummatDiv = document.getElementById('paivittaisetSummat');
 const kokonaisAikaSumma = document.getElementById('kokonaisAikaSumma');
+const tulostaBtn = document.getElementById('tulostaBtn');
+const suoraLinkkiDiv = document.getElementById('suoraLinkki');
+const kopioiLinkkiBtn = document.getElementById('kopioiLinkkiBtn');
+
 
 let currentProject = null;
 let entries = [];
 let activeEntry = null;
 
-// KORJAUS: Apufunktio, joka muuntaa Date-objektin paikalliseksi YYYY-MM-DDTHH:mm -merkkijonoksi
 const toLocalISOString = (date) => {
     if (!date) return '';
-    const tzoffset = (new Date()).getTimezoneOffset() * 60000; // Aikavyöhykkeen ero millisekunteina
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000;
     const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, -1);
     return localISOTime.slice(0, 16);
 };
 
-projektinNimiInput.addEventListener('change', () => {
-    const projectName = projektinNimiInput.value.trim().toLowerCase().replace(/\s+/g, '-');
+// UUSI OMINAISUUS: Projektin valinta ja URL-parametrien hallinta
+const handleProjectSelection = (projectName) => {
     if (projectName) {
-        currentProject = projectName;
-        laskuriOsio.classList.remove('hidden');
-        aktiivinenProjektiNimi.textContent = `Projekti: ${projektinNimiInput.value.trim()}`;
-        if (projektiValikko.value !== projectName) {
-            projektiValikko.value = projectName;
-        }
-        loadProjectData();
-    } else {
-        currentProject = null;
-        laskuriOsio.classList.add('hidden');
-    }
-});
+        currentProject = projectName.trim().toLowerCase().replace(/\s+/g, '-');
+        
+        // Päivitetään URL ilman sivun uudelleenlatausta
+        const newUrl = `${window.location.pathname}?projekti=${currentProject}`;
+        history.pushState({ path: newUrl }, '', newUrl);
 
-projektiValikko.addEventListener('change', () => {
-    const selectedProject = projektiValikko.value;
-    if (selectedProject) {
-        projektinNimiInput.value = selectedProject;
-        projektinNimiInput.dispatchEvent(new Event('change'));
+        // Näytetään ja piilotetaan oikeat osiot
+        projektinValintaDiv.classList.add('hidden');
+        laskuriOsio.classList.remove('hidden');
+        
+        aktiivinenProjektiNimi.textContent = `Projekti: ${currentProject.replace(/-/g, ' ')}`;
+        suoraLinkkiDiv.querySelector('input').value = window.location.href;
+        suoraLinkkiDiv.classList.remove('hidden');
+
+        loadProjectData();
     }
-});
+};
+
+projektinNimiInput.addEventListener('change', () => handleProjectSelection(projektinNimiInput.value));
+projektiValikko.addEventListener('change', () => handleProjectSelection(projektiValikko.value));
 
 const loadProjectData = () => {
+    if (!currentProject) return;
     const projectRef = ref(database, `tyoaikaprojektit/${currentProject}/kirjaukset`);
     onValue(projectRef, (snapshot) => {
         const data = snapshot.val();
         entries = data ? Object.values(data) : [];
-        // KORJAUS: Tunnistetaan keskeneräinen kirjaus luotettavammin
         activeEntry = entries.find(e => !e.loppuAika) || null;
         renderAll();
     });
@@ -133,6 +137,25 @@ lisaaManuaalisestiBtn.addEventListener('click', () => {
     manuaalinenLoppuInput.value = '';
 });
 
+// UUSI OMINAISUUS: Tulostus
+tulostaBtn.addEventListener('click', () => {
+    window.print();
+});
+
+// UUSI OMINAISUUS: Linkin kopiointi
+kopioiLinkkiBtn.addEventListener('click', () => {
+    const linkInput = suoraLinkkiDiv.querySelector('input');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // For mobile devices
+    try {
+        document.execCommand('copy');
+        kopioiLinkkiBtn.textContent = 'Kopioitu!';
+        setTimeout(() => { kopioiLinkkiBtn.textContent = 'Kopioi'; }, 2000);
+    } catch (err) {
+        alert('Linkin kopiointi epäonnistui');
+    }
+});
+
 const renderAll = () => {
     renderActiveEntry();
     renderEntriesList();
@@ -143,14 +166,14 @@ const renderActiveEntry = () => {
     if (activeEntry) {
         aloitaLopetaBtn.textContent = 'Lopeta Ajanotto';
         aloitaLopetaBtn.classList.add('aktiivinen');
-        aktiivinenKirjausDiv.classList.add('highlight-active'); // MUUTOS: Lisätään korostusluokka
+        aktiivinenKirjausDiv.classList.add('highlight-active');
         aktiivinenTehtavaInput.value = activeEntry.tehtava;
         aktiivinenTehtavaInput.disabled = true;
         alkuAikaNaytto.textContent = new Date(activeEntry.alkuAika).toLocaleString('fi-FI');
     } else {
         aloitaLopetaBtn.textContent = 'Aloita Ajanotto';
         aloitaLopetaBtn.classList.remove('aktiivinen');
-        aktiivinenKirjausDiv.classList.remove('highlight-active'); // MUUTOS: Poistetaan korostusluokka
+        aktiivinenKirjausDiv.classList.remove('highlight-active');
         aktiivinenTehtavaInput.value = '';
         aktiivinenTehtavaInput.disabled = false;
         alkuAikaNaytto.textContent = '--:--';
@@ -162,7 +185,6 @@ const renderEntriesList = () => {
     const sortedEntries = [...entries].sort((a, b) => new Date(b.alkuAika) - new Date(a.alkuAika));
 
     sortedEntries.forEach(entry => {
-        // KORJAUS: Varmistetaan, että aktiivinen entry ei tule tähän listaan
         if (activeEntry && entry.id === activeEntry.id) return;
 
         const clone = kirjausTemplate.content.cloneNode(true);
@@ -181,7 +203,6 @@ const renderEntriesList = () => {
         tehtavaInput.value = entry.tehtava;
         tehtavaInput.placeholder = "Nimetön tehtävä";
         
-        // KORJAUS: Käytetään apufunktiota aikavyöhykkeen korjaamiseksi
         alkuInput.value = toLocalISOString(new Date(entry.alkuAika));
         loppuInput.value = entry.loppuAika ? toLocalISOString(new Date(entry.loppuAika)) : '';
         kestoDiv.textContent = calculateDuration(entry.alkuAika, entry.loppuAika);
@@ -269,7 +290,6 @@ const loadProjectList = () => {
         projektiValikko.appendChild(placeholder);
 
         if (snapshot.exists()) {
-            console.log("Projektit löytyivät, ladataan valikkoon.");
             const projects = snapshot.val();
             Object.keys(projects).forEach(projectName => {
                 const option = document.createElement('option');
@@ -277,12 +297,22 @@ const loadProjectList = () => {
                 option.textContent = projectName.replace(/-/g, ' ');
                 projektiValikko.appendChild(option);
             });
-        } else {
-             console.log("Yhtään projektia ei löytynyt tietokannasta.");
         }
-    }, (error) => {
-        console.error("Virhe projektilistan haussa:", error);
     });
 };
 
-loadProjectList();
+// UUSI OMINAISUUS: Sivun alustusfunktio
+const initializePage = () => {
+    loadProjectList();
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectFromUrl = urlParams.get('projekti');
+
+    if (projectFromUrl) {
+        handleProjectSelection(projectFromUrl);
+    } else {
+        projektinValintaDiv.classList.remove('hidden');
+        laskuriOsio.classList.add('hidden');
+    }
+};
+
+initializePage();
