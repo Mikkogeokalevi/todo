@@ -31,7 +31,7 @@ label { display: block; margin-bottom: 5px; font-size: 0.9em; }
     font-family: 'Georgia', serif;
     font-size: 16px; 
 }
-input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; }
+input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; padding-left: 0; }
 button {
     padding: 12px 18px;
     border: 1px solid #90EE90;
@@ -45,8 +45,13 @@ button {
 }
 button:hover { background-color: #90EE90; color: #1a2015; }
 
-.projekti-valitsin { margin-bottom: 20px; }
+.projekti-valitsin { margin-bottom: 20px; text-align: center; }
 .projekti-valitsin label:not(:first-child) { margin-top: 15px; }
+
+#suoraLinkki { margin-bottom: 15px; }
+.linkki-container { display: flex; gap: 10px; }
+.linkki-container input { flex-grow: 1; }
+.linkki-container button { width: auto; flex-shrink: 0; }
 
 .aktiivinen-kirjaus { 
     text-align: center;
@@ -55,7 +60,6 @@ button:hover { background-color: #90EE90; color: #1a2015; }
     border-radius: 8px;
     transition: all 0.3s ease;
 }
-/* UUSI KOROSTUSTYYLI */
 .highlight-active {
     border-color: #FFD700;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
@@ -70,7 +74,6 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 #aloitaLopetaBtn { padding: 15px; font-weight: bold; margin-top: 10px; }
 #aloitaLopetaBtn.aktiivinen { background-color: #e74c3c; border-color: #e74c3c; color: white; }
 .aikaleima { margin: 10px 0; font-size: 1.1em; }
-
 .form-rivi { display: flex; gap: 10px; }
 .form-ryhma { flex: 1; }
 
@@ -79,25 +82,65 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 .management-details .details-content { padding: 15px; }
 
 #yhteenveto { background-color: #2A381C; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+#yhteenveto button { margin-top: 15px; }
 .kokonaisaika { font-size: 1.2em; text-align: right; margin-top: 10px; font-weight: bold; }
 #paivittaisetSummat p { margin: 5px 0; }
 
 ul { list-style: none; padding: 0; }
 .kirjaus-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
-.kirjaus-tiedot { flex-grow: 1; flex-basis: 300px; }
-.kirjaus-tiedot input { font-size: 1em; }
-.aika-tiedot { display: flex; align-items: center; gap: 5px; }
-.aika-tiedot span { font-size: 1.2em; }
-.kesto { font-size: 1em; color: #FFD700; margin-top: 5px; font-weight: bold; }
+.kirjaus-tiedot { flex-grow: 1; min-width: 250px; }
+.kirjaus-tiedot .tehtava-input { font-size: 1em; font-weight: bold; margin-bottom: 5px; }
+.aika-tiedot { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.aika-tiedot input { flex: 1; min-width: 180px; padding: 8px; font-size: 14px; }
+.aika-nuoli { font-size: 1.2em; }
+.kesto { font-size: 1em; color: #FFD700; margin-top: 5px; font-weight: bold; width: 100%;}
 .kirjaus-toiminnot { display: flex; gap: 5px; flex-shrink: 0; }
 .kirjaus-toiminnot button { width: auto; background: none; border: none; font-size: 1.5em; padding: 5px; }
 
+/* ======================================= */
+/* --- TULOSTUSTYYLIT --- */
+/* ======================================= */
+@media print {
+    body {
+        background-color: #ffffff;
+        color: #000000;
+    }
+    .sisalto-laatikko {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+    }
+    .no-print, .projekti-valitsin {
+        display: none !important;
+    }
+    h1, h2, h3, #aktiivinenProjektiNimi {
+        color: #000000;
+        text-align: left;
+    }
+    .print-header { display: block !important; }
+    #yhteenveto, .kirjaus-item {
+        background: none;
+        border-bottom: 1px solid #cccccc;
+        padding: 10px 0;
+        page-break-inside: avoid;
+    }
+    input:disabled {
+        border: none;
+        padding: 0;
+        background: none;
+        color: #000;
+        font-family: 'Georgia', serif;
+        font-size: 1em;
+    }
+    .kirjaus-tiedot .tehtava-input { font-size: 1.1em; }
+}
+
+/* ======================================= */
+/* --- MOBIILIOPTIMOINNIT --- */
+/* ======================================= */
 @media (max-width: 600px) {
     body { padding: 5px; }
     .sisalto-laatikko { padding: 15px; margin: 5px; }
     .form-rivi { flex-direction: column; gap: 0; }
-    .kirjaus-item { flex-direction: column; align-items: stretch; gap: 15px; }
-    .aika-tiedot { flex-direction: column; align-items: stretch; }
-    .aika-tiedot span { text-align: center; transform: rotate(90deg); margin: 5px 0; }
-    .kirjaus-toiminnot { justify-content: flex-end; }
 }
