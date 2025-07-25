@@ -12,8 +12,12 @@
         <h1>Työaikalaskuri</h1>
 
         <div class="projekti-valitsin">
-            <label for="projektinNimi">Projektin nimi:</label>
-            <input type="text" id="projektinNimi" placeholder="Esim. asiakas-x-sivut">
+            <label for="projektiValikko">Valitse olemassa oleva projekti:</label>
+            <select id="projektiValikko" class="projekti-input">
+                <option value="">Ladataan projekteja...</option>
+            </select>
+            <label for="projektinNimi">Tai luo uusi kirjoittamalla nimi:</label>
+            <input type="text" id="projektinNimi" class="projekti-input" placeholder="Esim. asiakas-x-sivut">
         </div>
         
         <hr class="custom-hr">
@@ -23,7 +27,7 @@
 
             <div class="aktiivinen-kirjaus">
                 <h3>Aktiivinen Tehtävä</h3>
-                <input type="text" id="aktiivinenTehtava" placeholder="Mitä teet nyt?">
+                <input type="text" id="aktiivinenTehtava" placeholder="Tehtävän kuvaus (vapaaehtoinen)">
                 <div class="aikaleima">Aloitusaika: <span id="alkuAikaNaytto">--:--</span></div>
                 <button id="aloitaLopetaBtn">Aloita Ajanotto</button>
             </div>
@@ -34,7 +38,7 @@
                 <summary>Lisää kirjaus käsin</summary>
                 <div class="details-content">
                     <div class="manuaalinen-kirjaus">
-                        <input type="text" id="manuaalinenTehtava" placeholder="Tehtävän kuvaus">
+                        <input type="text" id="manuaalinenTehtava" placeholder="Tehtävän kuvaus (vapaaehtoinen)">
                         <div class="form-rivi">
                             <div class="form-ryhma">
                                 <label for="manuaalinenAlku">Alkoi:</label>
@@ -75,13 +79,16 @@
                 <div class="kesto">Kesto: <strong></strong></div>
             </div>
             <div class="kirjaus-toiminnot">
-                <button class="muokkaa-btn">✏️</button>
-                <button class="tallenna-btn hidden">💾</button>
-                <button class="poista-btn">🗑️</button>
+                <button class="muokkaa-btn" title="Muokkaa">✏️</button>
+                <button class="tallenna-btn hidden" title="Tallenna">💾</button>
+                <button class="poista-btn" title="Poista">🗑️</button>
             </div>
         </li>
     </template>
     
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+
     <script type="module" src="tyoaikalaskuri.js"></script>
 </body>
 </html>
