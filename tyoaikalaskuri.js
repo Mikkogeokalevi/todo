@@ -36,7 +36,6 @@ const tulostaBtn = document.getElementById('tulostaBtn');
 const suoraLinkkiDiv = document.getElementById('suoraLinkki');
 const kopioiLinkkiBtn = document.getElementById('kopioiLinkkiBtn');
 
-
 let currentProject = null;
 let entries = [];
 let activeEntry = null;
@@ -48,29 +47,35 @@ const toLocalISOString = (date) => {
     return localISOTime.slice(0, 16);
 };
 
-// UUSI OMINAISUUS: Projektin valinta ja URL-parametrien hallinta
-const handleProjectSelection = (projectName) => {
-    if (projectName) {
-        currentProject = projectName.trim().toLowerCase().replace(/\s+/g, '-');
-        
-        // Päivitetään URL ilman sivun uudelleenlatausta
-        const newUrl = `${window.location.pathname}?projekti=${currentProject}`;
-        history.pushState({ path: newUrl }, '', newUrl);
-
-        // Näytetään ja piilotetaan oikeat osiot
-        projektinValintaDiv.classList.add('hidden');
-        laskuriOsio.classList.remove('hidden');
-        
-        aktiivinenProjektiNimi.textContent = `Projekti: ${currentProject.replace(/-/g, ' ')}`;
-        suoraLinkkiDiv.querySelector('input').value = window.location.href;
-        suoraLinkkiDiv.classList.remove('hidden');
-
-        loadProjectData();
+// TÄRKEIN KORJAUS: Yksi keskitetty funktio projektin lataamiseen.
+const loadProject = (projectName) => {
+    if (!projectName || projectName.trim() === '') {
+        return;
     }
+
+    // Varmistetaan, että projektin nimi on aina pienillä kirjaimilla ja ilman välilyöntejä.
+    const normalizedProjectName = projectName.trim().toLowerCase().replace(/\s+/g, '-');
+    currentProject = normalizedProjectName;
+
+    // Päivitetään URL heti, kun projekti on valittu.
+    const newUrl = `${window.location.pathname}?projekti=${currentProject}`;
+    history.pushState({ path: newUrl }, '', newUrl);
+
+    // Piilotetaan valikko ja näytetään laskuri.
+    projektinValintaDiv.classList.add('hidden');
+    laskuriOsio.classList.remove('hidden');
+
+    // Päivitetään näkyvät tiedot.
+    const displayName = currentProject.replace(/-/g, ' ');
+    aktiivinenProjektiNimi.textContent = `Projekti: ${displayName}`;
+    projektiValikko.value = currentProject; // Varmistetaan, että myös dropdown on oikeassa arvossa.
+    suoraLinkkiDiv.querySelector('input').value = window.location.href;
+    suoraLinkkiDiv.classList.remove('hidden');
+
+    // Ladataan projektin tiedot tietokannasta.
+    loadProjectData();
 };
 
-projektinNimiInput.addEventListener('change', () => handleProjectSelection(projektinNimiInput.value));
-projektiValikko.addEventListener('change', () => handleProjectSelection(projektiValikko.value));
 
 const loadProjectData = () => {
     if (!currentProject) return;
@@ -91,6 +96,56 @@ const saveState = () => {
     });
     set(ref(database, `tyoaikaprojektit/${currentProject}/kirjaukset`), dataToSave);
 };
+
+// UUDISTETTU LOGIIKKA: Tapahtumankäsittelijät vain kutsuvat keskitettyä funktiota.
+projektinNimiInput.addEventListener('change', () => loadProject(projektinNimiInput.value));
+projektiValikko.addEventListener('change', () => loadProject(projektiValikko.value));
+
+const loadProjectList = () => {
+    const projectsRef = ref(database, 'tyoaikaprojektit');
+    onValue(projectsRef, (snapshot) => {
+        projektiValikko.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Valitse projekti...';
+        projektiValikko.appendChild(placeholder);
+
+        if (snapshot.exists()) {
+            const projects = snapshot.val();
+            Object.keys(projects).forEach(projectName => {
+                const option = document.createElement('option');
+                option.value = projectName; // Nimi on jo oikeassa muodossa (pienillä kirjaimilla)
+                option.textContent = projectName.replace(/-/g, ' ');
+                projektiValikko.appendChild(option);
+            });
+            // Jos jokin projekti on jo valittuna, varmistetaan, että se näkyy valikossa.
+            if (currentProject) {
+                projektiValikko.value = currentProject;
+            }
+        }
+    });
+};
+
+// UUDISTETTU LOGIIKKA: Sivun alustusfunktio
+const initializePage = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectFromUrl = urlParams.get('projekti');
+    
+    // Lataa aina projektilista taustalle.
+    loadProjectList();
+
+    if (projectFromUrl) {
+        // Jos URL:ssa on projekti, ladataan se suoraan.
+        loadProject(projectFromUrl);
+    } else {
+        // Muuten näytetään valintanäkymä.
+        projektinValintaDiv.classList.remove('hidden');
+        laskuriOsio.classList.add('hidden');
+    }
+};
+
+
+// ----- Muut toiminnot (pysyvät pääosin ennallaan) -----
 
 aloitaLopetaBtn.addEventListener('click', () => {
     if (activeEntry) {
@@ -137,16 +192,14 @@ lisaaManuaalisestiBtn.addEventListener('click', () => {
     manuaalinenLoppuInput.value = '';
 });
 
-// UUSI OMINAISUUS: Tulostus
 tulostaBtn.addEventListener('click', () => {
     window.print();
 });
 
-// UUSI OMINAISUUS: Linkin kopiointi
 kopioiLinkkiBtn.addEventListener('click', () => {
     const linkInput = suoraLinkkiDiv.querySelector('input');
     linkInput.select();
-    linkInput.setSelectionRange(0, 99999); // For mobile devices
+    linkInput.setSelectionRange(0, 99999);
     try {
         document.execCommand('copy');
         kopioiLinkkiBtn.textContent = 'Kopioitu!';
@@ -280,39 +333,5 @@ const formatDuration = (totalMinutes) => {
     return `${hours}h ${minutes}min`;
 };
 
-const loadProjectList = () => {
-    const projectsRef = ref(database, 'tyoaikaprojektit');
-    onValue(projectsRef, (snapshot) => {
-        projektiValikko.innerHTML = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'Valitse projekti...';
-        projektiValikko.appendChild(placeholder);
-
-        if (snapshot.exists()) {
-            const projects = snapshot.val();
-            Object.keys(projects).forEach(projectName => {
-                const option = document.createElement('option');
-                option.value = projectName;
-                option.textContent = projectName.replace(/-/g, ' ');
-                projektiValikko.appendChild(option);
-            });
-        }
-    });
-};
-
-// UUSI OMINAISUUS: Sivun alustusfunktio
-const initializePage = () => {
-    loadProjectList();
-    const urlParams = new URLSearchParams(window.location.search);
-    const projectFromUrl = urlParams.get('projekti');
-
-    if (projectFromUrl) {
-        handleProjectSelection(projectFromUrl);
-    } else {
-        projektinValintaDiv.classList.remove('hidden');
-        laskuriOsio.classList.add('hidden');
-    }
-};
-
+// Käynnistetään sivu.
 initializePage();
