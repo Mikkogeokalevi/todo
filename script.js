@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 2 PÄÄTTYVÄT ---
+// --- ASETUKSET 232 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -634,8 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStateFromOffline();
     initMap();
 
-    // LISÄTTY OSUUS: Hae ja näytä kaikki reissulistat, JOS ollaan pääsivulla
-    if (FIREBASE_PATH === 'paalista') {
+    // LISÄTTY OSUUS: Hae ja näytä kaikki reissulistat, JOS ollaan pääsivulla (`index.html` ilman parametreja)
+    // TÄMÄ ON PARANNETTU VERSIO
+    if (!listNameFromUrl) {
         const allListsRef = ref(database, '/'); // Viittaus tietokannan juureen
         onValue(allListsRef, (snapshot) => {
             const allData = snapshot.val();
@@ -653,7 +654,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         .join('');
                     tripIndexContainer.classList.remove('hidden');
                 } else {
-                    // Jos muita listoja ei ole, pidetään osio piilossa
                     tripIndexContainer.classList.add('hidden');
                 }
             }
