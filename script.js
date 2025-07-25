@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 62 PÄÄTTYVÄT ---
+// --- ASETUKSET 2 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -49,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const gpxFileInput = document.getElementById('gpxFileInput');
     const gpxFileName = document.getElementById('gpxFileName');
     const importGpxBtn = document.getElementById('importGpxBtn');
-    const optimizeRouteBtn = document.getElementById('optimizeRouteBtn');
     const logPgcPasteArea = document.getElementById('logPgcPasteArea');
     const logAddFromPgcBtn = document.getElementById('logAddFromPgcBtn');
     const loggerList = document.getElementById('loggerList');
@@ -730,99 +729,6 @@ document.addEventListener('DOMContentLoaded', () => {
             saveState();
         }
     };
-    
-    // --- REITIN OPTIMOINTI (KORJATTU CORS-VIRHE VÄLITYSPALVELIMELLA) ---
-    const handleRouteOptimization = async () => {
-        const munisToOptimize = municipalities.filter(mun => mun.lat && mun.lon);
-        if (munisToOptimize.length < 2) {
-            alert("Listalla täytyy olla vähintään kaksi kuntaa optimointia varten.");
-            return;
-        }
-
-        optimizeRouteBtn.disabled = true;
-        optimizeRouteBtn.textContent = 'Haetaan etäisyyksiä...';
-        
-        try {
-            // 1. Rakenna koordinaattilista ja kohde-URL OSRM-palveluun
-            const coordsString = munisToOptimize.map(mun => `${mun.lon},${mun.lat}`).join(';');
-            const targetUrl = `https://router.osrm.org/table/v1/driving/${coordsString}`;
-
-            // 2. Käytä CORS-välityspalvelinta selaimen eston kiertämiseksi
-            const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const requestUrl = proxyUrl + encodeURIComponent(targetUrl);
-            
-            console.log("Kysely välityspalvelimelle:", requestUrl);
-
-            // 3. Hae ajoaikamatriisi
-            const response = await fetch(requestUrl);
-            if (!response.ok) {
-                throw new Error(`Verkkopyyntö epäonnistui, status: ${response.status}`);
-            }
-            const data = await response.json();
-
-            if (data.code !== 'Ok' || !data.durations) {
-                throw new Error(`Reitityspalvelu palautti virheen: ${data.message || 'Tuntematon virhe'}`);
-            }
-            
-            const durations = data.durations;
-
-            // 4. Ratkaise reitti "lähin naapuri" -algoritmilla
-            optimizeRouteBtn.textContent = 'Lasketaan reittiä...';
-            const n = munisToOptimize.length;
-            const unvisited = new Set(Array.from({ length: n }, (_, i) => i));
-            const path = [];
-            
-            let currentIndex = 0; // Aloitetaan listan ensimmäisestä kunnasta
-            path.push(currentIndex);
-            unvisited.delete(currentIndex);
-
-            while (unvisited.size > 0) {
-                let nearestIndex = -1;
-                let minDuration = Infinity;
-
-                unvisited.forEach(nextIndex => {
-                    const duration = durations[currentIndex][nextIndex];
-                    if (duration < minDuration) {
-                        minDuration = duration;
-                        nearestIndex = nextIndex;
-                    }
-                });
-                
-                currentIndex = nearestIndex;
-                path.push(currentIndex);
-                unvisited.delete(currentIndex);
-            }
-
-            // 5. Rakenna uusi, optimoitu kuntalista
-            const optimizedMunicipalities = path.map(index => munisToOptimize[index]);
-            
-            // Korvaa vanha lista optimoidulla, säilyttäen kunnat joilla ei ollut koordinaatteja
-            const otherMunicipalities = municipalities.filter(mun => !mun.lat || !mun.lon);
-            municipalities = [...optimizedMunicipalities, ...otherMunicipalities];
-            
-            // 6. Tallenna ja päivitä näkymä
-            saveState();
-            alert('Reitti on optimoitu!');
-
-        } catch (error) {
-            console.error("Reitin optimointi epäonnistui:", error);
-            let userMessage = `Reitin optimointi epäonnistui. Tarkista selaimen konsoli (F12) saadaksesi lisätietoja.`;
-            if (error.message.toLowerCase().includes('failed to fetch')) {
-                 userMessage = "Reitin optimointi epäonnistui: Verkkoyhteys reitityspalveluun ei onnistunut. Palvelu voi olla tilapäisesti poissa käytöstä tai verkkoyhteydessäsi on ongelma.";
-            } else if (error.message.includes('JSON')) {
-                userMessage = "Reitin optimointi epäonnistui: Reitityspalvelusta saatiin odottamaton vastaus. Palvelu on todennäköisesti ylikuormitettu.";
-            } else {
-                userMessage = `Reitin optimointi epäonnistui: ${error.message}`;
-            }
-            alert(userMessage);
-
-        } finally {
-            optimizeRouteBtn.disabled = false;
-            optimizeRouteBtn.textContent = 'Optimoi reitti';
-        }
-    };
-    // --- REITIN OPTIMOINTI PÄÄTTYY ---
-
 
     toggleBulkAddBtn.addEventListener('click', () => {
         const isHidden = bulkAddContainer.classList.toggle('hidden');
@@ -1310,7 +1216,6 @@ document.addEventListener('DOMContentLoaded', () => {
     pgcProfileNameInput.addEventListener('input', updatePgcLink);
     pgcProfileNameInput.addEventListener('change', saveState);
     toggleTrackingBtn.addEventListener('click', toggleTracking);
-    optimizeRouteBtn.addEventListener('click', handleRouteOptimization);
     
     logSortControls.addEventListener('click', (e) => {
         const target = e.target.closest('.sort-btn');
