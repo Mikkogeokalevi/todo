@@ -1,0 +1,58 @@
+body {
+    background-color: #1a2015;
+    font-family: 'Georgia', serif;
+    margin: 0;
+    padding: 10px;
+    color: #F8F8F8;
+}
+.sisalto-laatikko {
+    max-width: 800px;
+    margin: 15px auto;
+    padding: 20px;
+    background-color: #3D4F2B;
+    border: 3px solid #11150C;
+    border-radius: 12px;
+}
+h1, h2 { color: #90EE90; text-align: center; }
+.hidden { display: none !important; }
+.custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 20px 0; }
+input[type="text"], input[type="datetime-local"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    background-color: #2A381C;
+    color: #F8F8F8;
+    border: 1px solid #556B2F;
+    border-radius: 4px;
+}
+input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; }
+button {
+    padding: 10px 15px;
+    border: 1px solid #90EE90;
+    background-color: transparent;
+    color: #90EE90;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+}
+button:hover { background-color: #90EE90; color: #1a2015; }
+.projekti-valitsin { margin-bottom: 20px; }
+.aktiivinen-kirjaus { text-align: center; }
+#aloitaLopetaBtn { width: 100%; padding: 15px; font-weight: bold; }
+#aloitaLopetaBtn.aktiivinen { background-color: #e74c3c; border-color: #e74c3c; color: white; }
+.aikaleima { margin: 10px 0; }
+.form-rivi { display: flex; gap: 10px; }
+.form-ryhma { flex: 1; }
+.management-details { border: 1px solid #2A381C; border-radius: 5px; background-color: #2A381C; }
+.management-details summary { padding: 10px; cursor: pointer; font-weight: bold; }
+.management-details .details-content { padding: 10px; }
+#yhteenveto { background-color: #2A381C; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+#yhteenveto h3 { margin-top: 0; }
+.kokonaisaika { font-size: 1.2em; text-align: right; }
+ul { list-style: none; padding: 0; }
+.kirjaus-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
+.kirjaus-tiedot { flex-grow: 1; }
+.aika-tiedot { display: flex; align-items: center; gap: 5px; }
+.kesto { font-size: 0.9em; color: #FFD700; margin-top: 5px; }
+.kirjaus-toiminnot button { background: none; border: none; font-size: 1.2em; padding: 5px; }
