@@ -43,6 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const globalPgcAddContainer = document.getElementById('globalPgcAddContainer');
     const globalPgcPasteArea = document.getElementById('globalPgcPasteArea');
     const globalAddFromPgcBtn = document.getElementById('globalAddFromPgcBtn');
+    const toggleGpxAddBtn = document.getElementById('toggleGpxAddBtn');
+    const gpxAddContainer = document.getElementById('gpxAddContainer');
+    const selectGpxFileBtn = document.getElementById('selectGpxFileBtn');
+    const gpxFileInput = document.getElementById('gpxFileInput');
+    const gpxFileName = document.getElementById('gpxFileName');
+    const importGpxBtn = document.getElementById('importGpxBtn');
     const logPgcPasteArea = document.getElementById('logPgcPasteArea');
     const logAddFromPgcBtn = document.getElementById('logAddFromPgcBtn');
     const loggerList = document.getElementById('loggerList');
@@ -734,6 +740,24 @@ document.addEventListener('DOMContentLoaded', () => {
         togglePgcAddBtn.textContent = isHidden ? 'Lisää PGC-datalla' : 'Piilota PGC-lisäys';
     });
 
+    toggleGpxAddBtn.addEventListener('click', () => {
+        const isHidden = gpxAddContainer.classList.toggle('hidden');
+        toggleGpxAddBtn.textContent = isHidden ? 'Tuo GPX-tiedosto' : 'Piilota GPX-tuonti';
+    });
+
+    selectGpxFileBtn.addEventListener('click', () => gpxFileInput.click());
+
+    gpxFileInput.addEventListener('change', () => {
+        if (gpxFileInput.files.length > 0) {
+            const file = gpxFileInput.files[0];
+            gpxFileName.textContent = `Valittu: ${file.name}`;
+            importGpxBtn.classList.remove('hidden');
+        } else {
+            gpxFileName.textContent = '';
+            importGpxBtn.classList.add('hidden');
+        }
+    });
+
     bulkAddBtn.addEventListener('click', handleBulkAdd);
     
     globalAddFromPgcBtn.addEventListener('click', async () => {
@@ -786,6 +810,138 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         globalAddFromPgcBtn.disabled = false; globalAddFromPgcBtn.textContent = "Lisää ja paikanna";
     });
+
+    const handleGpxImport = async () => {
+        if (gpxFileInput.files.length === 0) {
+            alert("Valitse ensin GPX-tiedosto.");
+            return;
+        }
+
+        importGpxBtn.disabled = true;
+        importGpxBtn.textContent = "Käsitellään...";
+
+        const file = gpxFileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = async (event) => {
+            const gpxText = event.target.result;
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(gpxText, "text/xml");
+
+            const waypoints = xmlDoc.getElementsByTagName('wpt');
+            let cachesAddedCount = 0;
+            let cachesAlreadyExist = 0;
+
+            for (let i = 0; i < waypoints.length; i++) {
+                try {
+                    const wpt = waypoints[i];
+                    const lat = parseFloat(wpt.getAttribute('lat'));
+                    const lon = parseFloat(wpt.getAttribute('lon'));
+
+                    const getElementText = (parent, tagName) => {
+                        const element = parent.getElementsByTagName(tagName)[0];
+                        return element ? element.textContent.trim() : '';
+                    };
+                    
+                    const groundspeakCache = wpt.getElementsByTagName('groundspeak:cache')[0];
+                    if (!groundspeakCache) continue; // Ei ole geokätkö-waypoint
+
+                    const gcCode = getElementText(wpt, 'name');
+
+                    // Tarkista, onko kätkö jo olemassa missään kunnassa
+                    const cacheExists = municipalities.some(mun =>
+                        mun.caches && mun.caches.some(cache => cache.gcCode === gcCode)
+                    );
+
+                    if (cacheExists) {
+                        cachesAlreadyExist++;
+                        continue;
+                    }
+
+                    const cacheName = getElementText(groundspeakCache, 'groundspeak:name');
+                    const cacheType = getElementText(groundspeakCache, 'groundspeak:type');
+                    const cacheSize = getElementText(groundspeakCache, 'groundspeak:container');
+                    const difficulty = getElementText(groundspeakCache, 'groundspeak:difficulty');
+                    const terrain = getElementText(groundspeakCache, 'groundspeak:terrain');
+
+                    if (!gcCode || !cacheName || !cacheType || isNaN(lat) || isNaN(lon)) {
+                        console.warn("Ohitetaan puutteellinen kätkötieto:", wpt);
+                        continue;
+                    }
+                    
+                    const munName = await getMunicipalityForCoordinates(lat, lon);
+                    if (!munName) {
+                        console.warn(`Ei löytynyt kuntaa kätkölle ${gcCode} koordinaateilla: ${lat}, ${lon}`);
+                        continue;
+                    }
+
+                    const cacheData = {
+                        id: Date.now() + Math.random(),
+                        name: cacheName,
+                        gcCode: gcCode,
+                        fp: '', // GPX-tiedostossa ei ole FP-tietoa
+                        type: cacheType,
+                        size: cacheSize,
+                        difficulty: difficulty,
+                        terrain: terrain,
+                        lat: lat,
+                        lon: lon,
+                        alert_approach_given: false,
+                        alert_target_given: false
+                    };
+
+                    let munIndex = municipalities.findIndex(m => m.name.toLowerCase() === munName.toLowerCase());
+
+                    if (munIndex === -1) {
+                        const newMunicipality = {
+                            name: munName,
+                            caches: [cacheData],
+                            lat: lat,
+                            lon: lon,
+                            isDone: false,
+                            hadCaches: true
+                        };
+                        municipalities.push(newMunicipality);
+                    } else {
+                        if (!municipalities[munIndex].caches) {
+                            municipalities[munIndex].caches = [];
+                        }
+                        municipalities[munIndex].caches.push(cacheData);
+                        municipalities[munIndex].hadCaches = true;
+                    }
+                    cachesAddedCount++;
+                    importGpxBtn.textContent = `Käsitellään... ${i + 1} / ${waypoints.length}`;
+                    await delay(50); // Pieni viive estämään UI:n jumiutumista ja API-kutsujen tulvaa
+                } catch (e) {
+                    console.error("GPX-waypointin jäsentäminen epäonnistui:", e);
+                }
+            }
+
+            if (cachesAddedCount > 0) {
+                saveState();
+                alert(`Lisättiin ${cachesAddedCount} uutta kätköä. ${cachesAlreadyExist} kätköä oli jo listalla.`);
+            } else {
+                alert(`Ei lisätty uusia kätköjä. ${cachesAlreadyExist} kätköä oli jo ennestään listalla.`);
+            }
+
+            // Nollaa tila
+            gpxFileInput.value = '';
+            gpxFileName.textContent = '';
+            importGpxBtn.classList.add('hidden');
+            importGpxBtn.disabled = false;
+            importGpxBtn.textContent = "Tuo kätköt";
+        };
+
+        reader.onerror = () => {
+            alert("Virhe tiedoston lukemisessa.");
+            importGpxBtn.disabled = false;
+            importGpxBtn.textContent = "Tuo kätköt";
+        };
+
+        reader.readAsText(file);
+    };
+
+    importGpxBtn.addEventListener('click', handleGpxImport);
 
     logAddFromPgcBtn.addEventListener('click', async () => {
         const text = logPgcPasteArea.value.trim(); if (!text) return;
