@@ -417,3 +417,37 @@ ul { list-style: none; padding: 0; }
         flex-direction: column; /* Asetetaan napit allekkain pienillä näytöillä */
     }
 }
+
+/* --- Reissulistan Indeksin TYYLIT --- */
+#tripIndexContainer {
+    background-color: #2A381C;
+    border: 1px solid #556B2F;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+#tripIndexList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#tripIndexList li {
+    margin-bottom: 8px;
+}
+#tripIndexList a {
+    display: block;
+    padding: 12px;
+    background-color: #4a5c3a;
+    color: #FFFFFF;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-weight: bold;
+    text-align: center;
+}
+#tripIndexList a:hover {
+    background-color: #FFD700;
+    color: #1a2015;
+    transform: scale(1.02);
+}
+/* --- LOPPU --- */
