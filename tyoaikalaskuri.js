@@ -1,7 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
-// TÄRKEÄÄ: Kopioi Firebase-konfiguraatiosi tähän reissuapurin script.js-tiedostosta
 const firebaseConfig = {
     apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
     authDomain: "geokatkosuunnittelija.firebaseapp.com",
@@ -20,6 +19,7 @@ const projektinNimiInput = document.getElementById('projektinNimi');
 const projektiValikko = document.getElementById('projektiValikko');
 const laskuriOsio = document.getElementById('laskuri-osio');
 const aktiivinenProjektiNimi = document.getElementById('aktiivinenProjektiNimi');
+const aktiivinenKirjausDiv = document.querySelector('.aktiivinen-kirjaus');
 const aloitaLopetaBtn = document.getElementById('aloitaLopetaBtn');
 const aktiivinenTehtavaInput = document.getElementById('aktiivinenTehtava');
 const alkuAikaNaytto = document.getElementById('alkuAikaNaytto');
@@ -32,19 +32,24 @@ const manuaalinenLoppuInput = document.getElementById('manuaalinenLoppu');
 const paivittaisetSummatDiv = document.getElementById('paivittaisetSummat');
 const kokonaisAikaSumma = document.getElementById('kokonaisAikaSumma');
 
-// Sovelluksen tila
 let currentProject = null;
 let entries = [];
 let activeEntry = null;
 
-// Alustaa projektinäkymän
+// KORJAUS: Apufunktio, joka muuntaa Date-objektin paikalliseksi YYYY-MM-DDTHH:mm -merkkijonoksi
+const toLocalISOString = (date) => {
+    if (!date) return '';
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000; // Aikavyöhykkeen ero millisekunteina
+    const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, -1);
+    return localISOTime.slice(0, 16);
+};
+
 projektinNimiInput.addEventListener('change', () => {
     const projectName = projektinNimiInput.value.trim().toLowerCase().replace(/\s+/g, '-');
     if (projectName) {
         currentProject = projectName;
         laskuriOsio.classList.remove('hidden');
         aktiivinenProjektiNimi.textContent = `Projekti: ${projektinNimiInput.value.trim()}`;
-        // Asetetaan valittu projekti myös pudotusvalikkoon
         if (projektiValikko.value !== projectName) {
             projektiValikko.value = projectName;
         }
@@ -55,7 +60,6 @@ projektinNimiInput.addEventListener('change', () => {
     }
 });
 
-// Kuunnellaan pudotusvalikon muutoksia
 projektiValikko.addEventListener('change', () => {
     const selectedProject = projektiValikko.value;
     if (selectedProject) {
@@ -64,19 +68,17 @@ projektiValikko.addEventListener('change', () => {
     }
 });
 
-
-// Lataa tiedot Firebasesta
 const loadProjectData = () => {
     const projectRef = ref(database, `tyoaikaprojektit/${currentProject}/kirjaukset`);
     onValue(projectRef, (snapshot) => {
         const data = snapshot.val();
         entries = data ? Object.values(data) : [];
-        activeEntry = entries.find(e => e.loppuAika === null) || null;
+        // KORJAUS: Tunnistetaan keskeneräinen kirjaus luotettavammin
+        activeEntry = entries.find(e => !e.loppuAika) || null;
         renderAll();
     });
 };
 
-// Tallentaa koko tilan Firebaseen
 const saveState = () => {
     if (!currentProject) return;
     const dataToSave = {};
@@ -86,17 +88,15 @@ const saveState = () => {
     set(ref(database, `tyoaikaprojektit/${currentProject}/kirjaukset`), dataToSave);
 };
 
-// Aloita/Lopeta-napin logiikka
 aloitaLopetaBtn.addEventListener('click', () => {
-    if (activeEntry) { // Lopetetaan ajanotto
+    if (activeEntry) {
         activeEntry.loppuAika = new Date().toISOString();
         saveState();
-    } else { // Aloitetaan ajanotto
-        // MUUTOS: Tehtävän kuvaus on nyt vapaaehtoinen.
+    } else {
         const tehtava = aktiivinenTehtavaInput.value.trim();
         const newEntry = {
             id: Date.now().toString(),
-            tehtava: tehtava, // Voi olla tyhjä
+            tehtava: tehtava,
             alkuAika: new Date().toISOString(),
             loppuAika: null
         };
@@ -105,9 +105,7 @@ aloitaLopetaBtn.addEventListener('click', () => {
     }
 });
 
-// Manuaalisen kirjauksen lisäys
 lisaaManuaalisestiBtn.addEventListener('click', () => {
-    // MUUTOS: Tehtävän kuvaus on nyt vapaaehtoinen.
     const tehtava = manuaalinenTehtavaInput.value.trim(); 
     const alku = manuaalinenAlkuInput.value;
     const loppu = manuaalinenLoppuInput.value;
@@ -123,7 +121,7 @@ lisaaManuaalisestiBtn.addEventListener('click', () => {
 
     const newEntry = {
         id: new Date(alku).getTime().toString(),
-        tehtava: tehtava, // Voi olla tyhjä
+        tehtava: tehtava,
         alkuAika: new Date(alku).toISOString(),
         loppuAika: new Date(loppu).toISOString()
     };
@@ -135,38 +133,37 @@ lisaaManuaalisestiBtn.addEventListener('click', () => {
     manuaalinenLoppuInput.value = '';
 });
 
-
-// Kaiken renderöinti
 const renderAll = () => {
     renderActiveEntry();
     renderEntriesList();
     renderSummary();
 };
 
-// Päivittää aktiivisen kirjauksen näkymän
 const renderActiveEntry = () => {
     if (activeEntry) {
         aloitaLopetaBtn.textContent = 'Lopeta Ajanotto';
         aloitaLopetaBtn.classList.add('aktiivinen');
+        aktiivinenKirjausDiv.classList.add('highlight-active'); // MUUTOS: Lisätään korostusluokka
         aktiivinenTehtavaInput.value = activeEntry.tehtava;
         aktiivinenTehtavaInput.disabled = true;
-        alkuAikaNaytto.textContent = new Date(activeEntry.alkuAika).toLocaleTimeString('fi-FI');
+        alkuAikaNaytto.textContent = new Date(activeEntry.alkuAika).toLocaleString('fi-FI');
     } else {
         aloitaLopetaBtn.textContent = 'Aloita Ajanotto';
         aloitaLopetaBtn.classList.remove('aktiivinen');
+        aktiivinenKirjausDiv.classList.remove('highlight-active'); // MUUTOS: Poistetaan korostusluokka
         aktiivinenTehtavaInput.value = '';
         aktiivinenTehtavaInput.disabled = false;
         alkuAikaNaytto.textContent = '--:--';
     }
 };
 
-// Renderöi kirjauslistan
 const renderEntriesList = () => {
     kirjauksetLista.innerHTML = '';
     const sortedEntries = [...entries].sort((a, b) => new Date(b.alkuAika) - new Date(a.alkuAika));
 
     sortedEntries.forEach(entry => {
-        if (entry.id === activeEntry?.id) return;
+        // KORJAUS: Varmistetaan, että aktiivinen entry ei tule tähän listaan
+        if (activeEntry && entry.id === activeEntry.id) return;
 
         const clone = kirjausTemplate.content.cloneNode(true);
         const li = clone.querySelector('.kirjaus-item');
@@ -183,8 +180,10 @@ const renderEntriesList = () => {
 
         tehtavaInput.value = entry.tehtava;
         tehtavaInput.placeholder = "Nimetön tehtävä";
-        alkuInput.value = entry.alkuAika.slice(0, 16);
-        loppuInput.value = entry.loppuAika ? entry.loppuAika.slice(0, 16) : '';
+        
+        // KORJAUS: Käytetään apufunktiota aikavyöhykkeen korjaamiseksi
+        alkuInput.value = toLocalISOString(new Date(entry.alkuAika));
+        loppuInput.value = entry.loppuAika ? toLocalISOString(new Date(entry.loppuAika)) : '';
         kestoDiv.textContent = calculateDuration(entry.alkuAika, entry.loppuAika);
         
         muokkaaBtn.addEventListener('click', () => {
@@ -220,7 +219,6 @@ const renderEntriesList = () => {
     });
 };
 
-// Renderöi yhteenvedon
 const renderSummary = () => {
     const dailyTotals = {};
     let totalMinutes = 0;
@@ -248,7 +246,6 @@ const renderSummary = () => {
     kokonaisAikaSumma.textContent = formatDuration(totalMinutes);
 };
 
-// Apufunktiot
 const calculateDuration = (start, end) => {
     if (!start || !end) return 'Keskeneräinen';
     const minutes = (new Date(end) - new Date(start)) / 60000;
@@ -262,7 +259,6 @@ const formatDuration = (totalMinutes) => {
     return `${hours}h ${minutes}min`;
 };
 
-// Lataa olemassa olevien projektien nimet valikkoon
 const loadProjectList = () => {
     const projectsRef = ref(database, 'tyoaikaprojektit');
     onValue(projectsRef, (snapshot) => {
@@ -273,6 +269,7 @@ const loadProjectList = () => {
         projektiValikko.appendChild(placeholder);
 
         if (snapshot.exists()) {
+            console.log("Projektit löytyivät, ladataan valikkoon.");
             const projects = snapshot.val();
             Object.keys(projects).forEach(projectName => {
                 const option = document.createElement('option');
@@ -280,9 +277,12 @@ const loadProjectList = () => {
                 option.textContent = projectName.replace(/-/g, ' ');
                 projektiValikko.appendChild(option);
             });
+        } else {
+             console.log("Yhtään projektia ei löytynyt tietokannasta.");
         }
+    }, (error) => {
+        console.error("Virhe projektilistan haussa:", error);
     });
 };
 
-// Käynnistetään projektilistan lataus, kun sivu avataan
 loadProjectList();
