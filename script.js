@@ -1,12 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getDatabase, ref, set, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
 // --- ASETUKSET ---
 const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 232 PÄÄTTYVÄT ---
+// --- ASETUKSET 2 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -634,8 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStateFromOffline();
     initMap();
 
-    // LISÄTTY OSUUS: Hae ja näytä kaikki reissulistat, JOS ollaan pääsivulla (`index.html` ilman parametreja)
-    // TÄMÄ ON PARANNETTU VERSIO
+    // LISÄTTY OSUUS: Hae ja näytä kaikki reissulistat, JOS ollaan pääsivulla
     if (!listNameFromUrl) {
         const allListsRef = ref(database, '/'); // Viittaus tietokannan juureen
         onValue(allListsRef, (snapshot) => {
@@ -643,14 +642,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (allData) {
                 const listNames = Object.keys(allData);
                 
-                // Poistetaan "paalista" itse listasta ja järjestetään aakkosjärjestykseen
                 const filteredNames = listNames
                     .filter(name => name !== 'paalista')
                     .sort((a, b) => a.localeCompare(b));
 
                 if (filteredNames.length > 0) {
                     tripIndexList.innerHTML = filteredNames
-                        .map(name => `<li><a href="?lista=${encodeURIComponent(name)}">${name}</a></li>`)
+                        .map(name => `
+                            <li class="trip-index-item">
+                                <a href="?lista=${encodeURIComponent(name)}">${name}</a>
+                                <div class="actions">
+                                    <button class="edit-list-name-btn" data-list-name="${name}" title="Muokkaa nimeä">✏️</button>
+                                    <button class="delete-list-btn" data-list-name="${name}" title="Poista lista">🗑️</button>
+                                </div>
+                            </li>
+                        `)
                         .join('');
                     tripIndexContainer.classList.remove('hidden');
                 } else {
@@ -1225,6 +1231,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error("Virhe poistettaessa lokittajaa:", error);
                     alert("Lokittajan poisto epäonnistui! Tarkista konsoli.");
                 });
+        }
+    });
+
+    tripIndexList.addEventListener('click', async (e) => {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        const oldListName = button.dataset.listName;
+
+        if (button.classList.contains('delete-list-btn')) {
+            if (confirm(`Haluatko varmasti poistaa reissulistan "${oldListName}"?\nTätä toimintoa ei voi perua.`)) {
+                try {
+                    await remove(ref(database, oldListName));
+                    alert(`Lista "${oldListName}" poistettu.`);
+                } catch (error) {
+                    console.error("Virhe listan poistossa:", error);
+                    alert("Listan poisto epäonnistui.");
+                }
+            }
+        } else if (button.classList.contains('edit-list-name-btn')) {
+            const newListName = prompt("Anna uusi nimi reissulistalle:", oldListName);
+            if (newListName && newListName.trim() && newListName.trim() !== oldListName) {
+                const oldListRef = ref(database, oldListName);
+                const newListRef = ref(database, newListName.trim());
+
+                try {
+                    const snapshot = await get(oldListRef);
+                    if (snapshot.exists()) {
+                        await set(newListRef, snapshot.val());
+                        await remove(oldListRef);
+                        alert(`Lista "${oldListName}" on nyt nimetty uudelleen: "${newListName.trim()}"`);
+                    }
+                } catch (error) {
+                    console.error("Virhe listan nimen muokkauksessa:", error);
+                    alert("Nimen muokkaus epäonnistui.");
+                }
+            }
         }
     });
 
