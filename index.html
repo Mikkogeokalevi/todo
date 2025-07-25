@@ -67,6 +67,7 @@
                                 <p>Voit lisätä kuntia ja kätköjä reissulistallesi usealla eri tavalla. Nämä toiminnot löytyvät <strong>Reissulista</strong>-välilehden "Lisää & Hallinnoi" -osiosta.</p>
                                 <ul>
                                     <li><strong>Lisää kunta listana:</strong> Kirjoita tai liitä kuntien nimiä pilkulla tai rivinvaihdolla eroteltuna. Sovellus hakee kuntien sijainnit ja lisää ne listaan.</li>
+                                    <li><strong>Tuo GPX-tiedosto:</strong> Tuo kätköjä suoraan .gpx-tiedostosta, jonka olet ladannut esimerkiksi geocaching.com-sivuston Pocket Query -toiminnolla.</li>
                                     <li><strong>Lisää kätkö PGC-datalla:</strong> Kopioi Project-GC.com-sivustolta kätkötietoja (kolmen rivin lohkoja) ja liitä ne tekstikenttään. Sovellus selvittää automaattisesti kätköjen kunnat ja lisää ne reissulistallesi.<br>
                                         <em>Esimerkki kopioitavasta datasta:</em>
                                         <pre><code>GC9P3EP - Machomies heiluttaa - 4 FP (4%)
@@ -132,6 +133,15 @@ N 63° 00.033 E 022° 10.393</code></pre>
                                 <h3>Lisää kätkö PGC-datalla (automaattinen kunnan haku)</h3>
                                 <textarea id="globalPgcPasteArea" rows="4" placeholder="Liitä PGC:n kätkötiedot tähän..."></textarea>
                                 <button id="globalAddFromPgcBtn">Lisää ja paikanna</button>
+                            </div>
+
+                            <button id="toggleGpxAddBtn" class="toggle-button">Tuo GPX-tiedosto</button>
+                            <div id="gpxAddContainer" class="bulk-add hidden">
+                                <h3>Tuo kätköt .gpx-tiedostosta</h3>
+                                <input type="file" id="gpxFileInput" accept=".gpx" style="display: none;">
+                                <button id="selectGpxFileBtn">Valitse tiedosto</button>
+                                <p id="gpxFileName" style="text-align: center; margin-top: 10px;"></p>
+                                <button id="importGpxBtn" class="hidden">Tuo kätköt</button>
                             </div>
                         </div>
                     </details>
