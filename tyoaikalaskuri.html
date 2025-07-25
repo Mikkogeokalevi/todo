@@ -24,16 +24,6 @@
         <div id="laskuri-osio" class="hidden">
             <h2 id="aktiivinenProjektiNimi"></h2>
 
-            <div id="suoraLinkki" class="hidden">
-                <label>Projektin suora linkki:</label>
-                <div class="linkki-container">
-                    <input type="text" readonly>
-                    <button id="kopioiLinkkiBtn">Kopioi</button>
-                </div>
-            </div>
-
-            <hr class="custom-hr no-print">
-
             <div class="aktiivinen-kirjaus no-print">
                 <h3>Aktiivinen Tehtävä</h3>
                 <input type="text" id="aktiivinenTehtava" placeholder="Tehtävän kuvaus (vapaaehtoinen)">
@@ -74,6 +64,16 @@
 
             <h2 class="kirjaukset-otsikko">Kirjaukset</h2>
             <ul id="kirjauksetLista"></ul>
+            
+            <div id="suoraLinkki" class="hidden no-print">
+                <hr class="custom-hr">
+                <label>Projektin suora linkki:</label>
+                <div class="linkki-container">
+                    <input type="text" readonly>
+                    <button id="kopioiLinkkiBtn">Kopioi</button>
+                </div>
+            </div>
+
         </div>
     </div>
 
