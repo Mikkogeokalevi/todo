@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 2 PÄÄTTYVÄT ---
+// --- ASETUKSET 62 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -731,7 +731,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // --- REITIN OPTIMOINTI ALKAA TÄSTÄ (PARANNELLULLA VIRHEENKÄSITTELYLLÄ) ---
+    // --- REITIN OPTIMOINTI (KORJATTU CORS-VIRHE VÄLITYSPALVELIMELLA) ---
     const handleRouteOptimization = async () => {
         const munisToOptimize = municipalities.filter(mun => mun.lat && mun.lon);
         if (munisToOptimize.length < 2) {
@@ -742,15 +742,22 @@ document.addEventListener('DOMContentLoaded', () => {
         optimizeRouteBtn.disabled = true;
         optimizeRouteBtn.textContent = 'Haetaan etäisyyksiä...';
         
-        let osrmUrl = '';
         try {
-            // 1. Rakenna koordinaattilista OSRM-palvelua varten
+            // 1. Rakenna koordinaattilista ja kohde-URL OSRM-palveluun
             const coordsString = munisToOptimize.map(mun => `${mun.lon},${mun.lat}`).join(';');
-            osrmUrl = `https://router.osrm.org/table/v1/driving/${coordsString}`;
-            console.log("Kysely OSRM-palveluun:", osrmUrl); // Kirjataan URL konsoliin
+            const targetUrl = `https://router.osrm.org/table/v1/driving/${coordsString}`;
 
-            // 2. Hae ajoaikamatriisi OSRM-palvelusta
-            const response = await fetch(osrmUrl);
+            // 2. Käytä CORS-välityspalvelinta selaimen eston kiertämiseksi
+            const proxyUrl = 'https://api.allorigins.win/raw?url=';
+            const requestUrl = proxyUrl + encodeURIComponent(targetUrl);
+            
+            console.log("Kysely välityspalvelimelle:", requestUrl);
+
+            // 3. Hae ajoaikamatriisi
+            const response = await fetch(requestUrl);
+            if (!response.ok) {
+                throw new Error(`Verkkopyyntö epäonnistui, status: ${response.status}`);
+            }
             const data = await response.json();
 
             if (data.code !== 'Ok' || !data.durations) {
@@ -759,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const durations = data.durations;
 
-            // 3. Ratkaise reitti "lähin naapuri" -algoritmilla
+            // 4. Ratkaise reitti "lähin naapuri" -algoritmilla
             optimizeRouteBtn.textContent = 'Lasketaan reittiä...';
             const n = munisToOptimize.length;
             const unvisited = new Set(Array.from({ length: n }, (_, i) => i));
@@ -786,25 +793,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 unvisited.delete(currentIndex);
             }
 
-            // 4. Rakenna uusi, optimoitu kuntalista
+            // 5. Rakenna uusi, optimoitu kuntalista
             const optimizedMunicipalities = path.map(index => munisToOptimize[index]);
             
             // Korvaa vanha lista optimoidulla, säilyttäen kunnat joilla ei ollut koordinaatteja
             const otherMunicipalities = municipalities.filter(mun => !mun.lat || !mun.lon);
             municipalities = [...optimizedMunicipalities, ...otherMunicipalities];
             
-            // 5. Tallenna ja päivitä näkymä
+            // 6. Tallenna ja päivitä näkymä
             saveState();
             alert('Reitti on optimoitu!');
 
         } catch (error) {
             console.error("Reitin optimointi epäonnistui:", error);
-            // Annetaan käyttäjälle tarkempi palaute virheestä
             let userMessage = `Reitin optimointi epäonnistui. Tarkista selaimen konsoli (F12) saadaksesi lisätietoja.`;
             if (error.message.toLowerCase().includes('failed to fetch')) {
-                 userMessage = "Reitin optimointi epäonnistui: Verkkoyhteys reitityspalveluun (OSRM) ei onnistunut. Palvelu voi olla tilapäisesti poissa käytöstä tai verkkoyhteydessäsi on ongelma.";
+                 userMessage = "Reitin optimointi epäonnistui: Verkkoyhteys reitityspalveluun ei onnistunut. Palvelu voi olla tilapäisesti poissa käytöstä tai verkkoyhteydessäsi on ongelma.";
             } else if (error.message.includes('JSON')) {
-                userMessage = "Reitin optimointi epäonnistui: Reitityspalvelusta saatiin odottamaton vastaus (ei JSON-muodossa). Palvelu on todennäköisesti ylikuormitettu.";
+                userMessage = "Reitin optimointi epäonnistui: Reitityspalvelusta saatiin odottamaton vastaus. Palvelu on todennäköisesti ylikuormitettu.";
             } else {
                 userMessage = `Reitin optimointi epäonnistui: ${error.message}`;
             }
