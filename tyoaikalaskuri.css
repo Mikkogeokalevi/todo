@@ -4,7 +4,7 @@ body {
     margin: 0;
     padding: 10px;
     color: #F8F8F8;
-    -webkit-tap-highlight-color: transparent; /* Estää mobiililaitteiden napautuskorostuksen */
+    -webkit-tap-highlight-color: transparent; 
 }
 .sisalto-laatikko {
     max-width: 800px;
@@ -19,7 +19,6 @@ label { display: block; margin-bottom: 5px; font-size: 0.9em; }
 .hidden { display: none !important; }
 .custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 25px 0; }
 
-/* --- Syöttökentät ja napit --- */
 .projekti-input, input[type="text"], input[type="datetime-local"], select {
     width: 100%;
     padding: 12px;
@@ -30,7 +29,7 @@ label { display: block; margin-bottom: 5px; font-size: 0.9em; }
     border: 1px solid #556B2F;
     border-radius: 4px;
     font-family: 'Georgia', serif;
-    font-size: 16px; /* Mobiililaitteet eivät zoomaa tällä fonttikoolla */
+    font-size: 16px; 
 }
 input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; }
 button {
@@ -46,14 +45,31 @@ button {
 }
 button:hover { background-color: #90EE90; color: #1a2015; }
 
-/* --- Eri osioiden tyylit --- */
 .projekti-valitsin { margin-bottom: 20px; }
 .projekti-valitsin label:not(:first-child) { margin-top: 15px; }
 
-.aktiivinen-kirjaus { text-align: center; }
+.aktiivinen-kirjaus { 
+    text-align: center;
+    border: 2px solid transparent;
+    padding: 15px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+/* UUSI KOROSTUSTYYLI */
+.highlight-active {
+    border-color: #FFD700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+    animation: pulse-yellow 2s infinite;
+}
+@keyframes pulse-yellow {
+    0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.7); }
+    100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+}
+
 #aloitaLopetaBtn { padding: 15px; font-weight: bold; margin-top: 10px; }
 #aloitaLopetaBtn.aktiivinen { background-color: #e74c3c; border-color: #e74c3c; color: white; }
-.aikaleima { margin: 10px 0; }
+.aikaleima { margin: 10px 0; font-size: 1.1em; }
 
 .form-rivi { display: flex; gap: 10px; }
 .form-ryhma { flex: 1; }
@@ -76,33 +92,12 @@ ul { list-style: none; padding: 0; }
 .kirjaus-toiminnot { display: flex; gap: 5px; flex-shrink: 0; }
 .kirjaus-toiminnot button { width: auto; background: none; border: none; font-size: 1.5em; padding: 5px; }
 
-/* ======================================= */
-/* --- MOBIILIOPTIMOINNIT --- */
-/* ======================================= */
 @media (max-width: 600px) {
     body { padding: 5px; }
     .sisalto-laatikko { padding: 15px; margin: 5px; }
-    
-    .form-rivi {
-        flex-direction: column; /* Asetetaan alku- ja loppuaika päällekkäin */
-        gap: 0;
-    }
-    
-    .kirjaus-item {
-        flex-direction: column; /* Koko kirjaus pystysuuntaan */
-        align-items: stretch; /* Venytetään elementit koko leveydelle */
-        gap: 15px;
-    }
-    .aika-tiedot {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .aika-tiedot span {
-        text-align: center;
-        transform: rotate(90deg); /* Nuoli näyttää alaspäin */
-        margin: 5px 0;
-    }
-    .kirjaus-toiminnot {
-        justify-content: flex-end; /* Napit oikeaan reunaan */
-    }
+    .form-rivi { flex-direction: column; gap: 0; }
+    .kirjaus-item { flex-direction: column; align-items: stretch; gap: 15px; }
+    .aika-tiedot { flex-direction: column; align-items: stretch; }
+    .aika-tiedot span { text-align: center; transform: rotate(90deg); margin: 5px 0; }
+    .kirjaus-toiminnot { justify-content: flex-end; }
 }
