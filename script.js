@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 245 PÄÄTTYVÄT ---
+// --- ASETUKSET 2 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             (mun.caches || []).forEach(cache => {
                 if (cache.lat && cache.lon) {
-                    const cacheIcon = L.divIcon({className: 'cache-marker'});
+                    const cacheIcon = L.divIcon({className: `cache-marker ${getCacheTypeClass(cache.type)}`});
                     const marker = L.marker([cache.lat, cache.lon], { icon: cacheIcon }).addTo(map).bindTooltip(cache.name);
                     cacheMarkers.push(marker);
                     bounds.push([cache.lat, cache.lon]);
