@@ -71,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeMunicipalityContainer = document.getElementById('activeMunicipalityContainer');
     const logSortControls = document.getElementById('logSortControls');
     const settingsAndHelpContainer = document.getElementById('settingsAndHelpContainer');
+    const tripIndexContainer = document.getElementById('tripIndexContainer');
+    const tripIndexList = document.getElementById('tripIndexList');
     
     let municipalities = [];
     let foundCaches = [];
@@ -632,8 +634,35 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStateFromOffline();
     initMap();
 
+    // LISÄTTY OSUUS: Hae ja näytä kaikki reissulistat, JOS ollaan pääsivulla
+    if (FIREBASE_PATH === 'paalista') {
+        const allListsRef = ref(database, '/'); // Viittaus tietokannan juureen
+        onValue(allListsRef, (snapshot) => {
+            const allData = snapshot.val();
+            if (allData) {
+                const listNames = Object.keys(allData);
+                
+                // Poistetaan "paalista" itse listasta ja järjestetään aakkosjärjestykseen
+                const filteredNames = listNames
+                    .filter(name => name !== 'paalista')
+                    .sort((a, b) => a.localeCompare(b));
+
+                if (filteredNames.length > 0) {
+                    tripIndexList.innerHTML = filteredNames
+                        .map(name => `<li><a href="?lista=${encodeURIComponent(name)}">${name}</a></li>`)
+                        .join('');
+                    tripIndexContainer.classList.remove('hidden');
+                } else {
+                    // Jos muita listoja ei ole, pidetään osio piilossa
+                    tripIndexContainer.classList.add('hidden');
+                }
+            }
+        });
+    }
+
+    // Tämä on ALKUPERÄINEN datan kuuntelija, joka pysyy ennallaan ja toimii kaikilla sivuilla
     onValue(ref(database, FIREBASE_PATH), async (snapshot) => {
-        console.log("Haetaan data Firebasesta...");
+        console.log("Haetaan dataa Firebasesta polusta:", FIREBASE_PATH);
         const data = snapshot.val() || {};
         municipalities = data.municipalities || [];
         foundCaches = data.foundCaches || [];
