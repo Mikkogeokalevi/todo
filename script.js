@@ -175,6 +175,30 @@ document.addEventListener('DOMContentLoaded', () => {
         
         return 'type-default';
     };
+
+    const getCacheIcon = (typeName) => {
+        let iconUrl = 'icons/tradi.gif'; // Oletusikoni
+        if (typeName) {
+            const lowerTypeName = typeName.toLowerCase();
+            if (lowerTypeName.includes('traditional')) iconUrl = 'icons/tradi.gif';
+            else if (lowerTypeName.includes('multi-cache')) iconUrl = 'icons/multi.gif';
+            else if (lowerTypeName.includes('mystery') || lowerTypeName.includes('unknown')) iconUrl = 'icons/mysse.gif';
+            else if (lowerTypeName.includes('earthcache')) iconUrl = 'icons/earth.gif';
+            else if (lowerTypeName.includes('letterbox')) iconUrl = 'icons/letteri.gif';
+            else if (lowerTypeName.includes('wherigo')) iconUrl = 'icons/wherigo.gif';
+            else if (lowerTypeName.includes('cito')) iconUrl = 'icons/cito.gif';
+            else if (lowerTypeName.includes('mega')) iconUrl = 'icons/mega.gif';
+            else if (lowerTypeName.includes('event')) iconUrl = 'icons/event.gif';
+            else if (lowerTypeName.includes('virtual')) iconUrl = 'icons/virtual.gif';
+        }
+
+        return L.icon({
+            iconUrl: iconUrl,
+            iconSize: [20, 20], // Kuvakkeen koko pikseleinä
+            iconAnchor: [10, 10], // Piste kuvakkeesta, joka vastaa kartan pistettä
+            className: 'cache-marker-icon'
+        });
+    };
     
     const getDistance = (lat1, lon1, lat2, lon2) => {
         const R = 6371e3; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
@@ -335,7 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             (mun.caches || []).forEach(cache => {
                 if (cache.lat && cache.lon) {
-                    const cacheIcon = L.divIcon({className: `cache-marker ${getCacheTypeClass(cache.type)}`});
+                    const cacheIcon = getCacheIcon(cache.type); // KÄYTETÄÄN UUTTA FUNKTIOTA
                     const marker = L.marker([cache.lat, cache.lon], { icon: cacheIcon }).addTo(map).bindTooltip(cache.name);
                     cacheMarkers.push(marker);
                     bounds.push([cache.lat, cache.lon]);
