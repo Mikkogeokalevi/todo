@@ -177,19 +177,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const getCacheIconPath = (typeName) => {
-        let iconUrl = 'icons/tradi.gif'; // Oletusikoni
+        let iconUrl = 'icons/unknown.svg'; // UUSI OLETUSIKONI
         if (typeName) {
             const lowerTypeName = typeName.toLowerCase();
-            if (lowerTypeName.includes('traditional')) iconUrl = 'icons/tradi.gif';
-            else if (lowerTypeName.includes('multi-cache')) iconUrl = 'icons/multi.gif';
-            else if (lowerTypeName.includes('mystery') || lowerTypeName.includes('unknown')) iconUrl = 'icons/mysse.gif';
-            else if (lowerTypeName.includes('earthcache')) iconUrl = 'icons/earth.gif';
-            else if (lowerTypeName.includes('letterbox')) iconUrl = 'icons/letteri.gif';
-            else if (lowerTypeName.includes('wherigo')) iconUrl = 'icons/wherigo.gif';
-            else if (lowerTypeName.includes('cito')) iconUrl = 'icons/cito.gif';
-            else if (lowerTypeName.includes('mega')) iconUrl = 'icons/mega.gif';
-            else if (lowerTypeName.includes('event')) iconUrl = 'icons/event.gif';
-            else if (lowerTypeName.includes('virtual')) iconUrl = 'icons/virtual.gif';
+            if (lowerTypeName.includes('traditional')) iconUrl = 'icons/tradi.svg';
+            else if (lowerTypeName.includes('multi-cache')) iconUrl = 'icons/multi.svg';
+            else if (lowerTypeName.includes('mystery') || lowerTypeName.includes('unknown')) iconUrl = 'icons/mysse.svg';
+            else if (lowerTypeName.includes('earthcache')) iconUrl = 'icons/earth.svg';
+            else if (lowerTypeName.includes('letterbox')) iconUrl = 'icons/letteri.svg';
+            else if (lowerTypeName.includes('wherigo')) iconUrl = 'icons/wherigo.svg';
+            else if (lowerTypeName.includes('cito')) iconUrl = 'icons/cito.svg';
+            else if (lowerTypeName.includes('mega')) iconUrl = 'icons/mega.svg';
+            else if (lowerTypeName.includes('event')) iconUrl = 'icons/event.svg';
+            else if (lowerTypeName.includes('virtual')) iconUrl = 'icons/virtual.svg';
         }
         return iconUrl;
     };
