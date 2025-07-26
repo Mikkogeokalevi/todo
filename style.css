@@ -200,13 +200,11 @@ ul { list-style: none; padding: 0; }
 @keyframes fadeInOut { 0% { opacity: 0; top: 0; } 15% { opacity: 1; top: 20px; } 85% { opacity: 1; top: 20px; } 100% { opacity: 0; top: -50px; } }
 .municipality-marker { background: rgba(42, 56, 28, 0.8); color: #FFD700; border: 1px solid #FFD700; border-radius: 5px; padding: 2px 5px; font-size: 12px; font-weight: bold; text-align: center; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.4); pointer-events: none; }
 
-/* TÄMÄ ON UUSI OSA KUVAREILLE */
 .cache-marker-icon {
     background: none;
     border: none;
     box-shadow: none;
 }
-/* UUSI OSA PÄÄTTYY */
 
 .municipality-boundary {
     fillColor: "#FFD700";
@@ -264,6 +262,15 @@ ul { list-style: none; padding: 0; }
 .cache-detail-tag.type {
     font-weight: bold;
     color: #1a2015;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* UUSI SÄÄNTÖ LISTAN KUVAKKEELLE */
+.cache-type-icon-list {
+    height: 16px;
+    width: 16px;
+    margin-right: 5px;
 }
 
 .type-traditional { background-color: #4CAF50; }
