@@ -363,7 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             (mun.caches || []).forEach(cache => {
                 if (cache.lat && cache.lon) {
-                    const cacheIcon = getCacheIcon(cache.type); // KÄYTETÄÄN UUTTA FUNKTIOTA
+                    const cacheIcon = getCacheIcon(cache.type);
                     const marker = L.marker([cache.lat, cache.lon], { icon: cacheIcon }).addTo(map).bindTooltip(cache.name);
                     cacheMarkers.push(marker);
                     bounds.push([cache.lat, cache.lon]);
@@ -528,10 +528,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const typeClass = getCacheTypeClass(cache.type);
 
                 const detailsHtml = `
-                    <span class="cache-detail-tag type ${typeClass}">
-                        <img src="${getCacheIconPath(cache.type)}" class="cache-type-icon-list" alt="${cache.type || ''}">
-                        ${cache.type || 'Muu'}
-                    </span>
+                    <img src="${getCacheIconPath(cache.type)}" class="cache-type-icon-list" alt="${cache.type || ''}">
+                    <span class="cache-detail-tag type ${typeClass}">${cache.type || 'Muu'}</span>
                     <span class="cache-detail-tag size">${cache.size || ''}</span>
                     <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
                     ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
@@ -601,10 +599,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const typeClass = getCacheTypeClass(cache.type);
 
             const detailsHtml = `
-                <span class="cache-detail-tag type ${typeClass}">
-                    <img src="${getCacheIconPath(cache.type)}" class="cache-type-icon-list" alt="${cache.type || ''}">
-                    ${cache.type || 'Muu'}
-                </span>
+                <img src="${getCacheIconPath(cache.type)}" class="cache-type-icon-list" alt="${cache.type || ''}">
+                <span class="cache-detail-tag type ${typeClass}">${cache.type || 'Muu'}</span>
                 <span class="cache-detail-tag size">${cache.size || ''}</span>
                 <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
                 ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
