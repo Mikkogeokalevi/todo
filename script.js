@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'type-default';
     };
 
-    const getCacheIcon = (typeName) => {
+    const getCacheIconPath = (typeName) => {
         let iconUrl = 'icons/tradi.gif'; // Oletusikoni
         if (typeName) {
             const lowerTypeName = typeName.toLowerCase();
@@ -191,11 +191,15 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (lowerTypeName.includes('event')) iconUrl = 'icons/event.gif';
             else if (lowerTypeName.includes('virtual')) iconUrl = 'icons/virtual.gif';
         }
+        return iconUrl;
+    };
 
+    const getCacheIcon = (typeName) => {
+        const iconUrl = getCacheIconPath(typeName);
         return L.icon({
             iconUrl: iconUrl,
-            iconSize: [20, 20], // Kuvakkeen koko pikseleinä
-            iconAnchor: [10, 10], // Piste kuvakkeesta, joka vastaa kartan pistettä
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
             className: 'cache-marker-icon'
         });
     };
@@ -524,7 +528,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const typeClass = getCacheTypeClass(cache.type);
 
                 const detailsHtml = `
-                    <span class="cache-detail-tag type ${typeClass}">${cache.type || 'Muu'}</span>
+                    <span class="cache-detail-tag type ${typeClass}">
+                        <img src="${getCacheIconPath(cache.type)}" class="cache-type-icon-list" alt="${cache.type || ''}">
+                        ${cache.type || 'Muu'}
+                    </span>
                     <span class="cache-detail-tag size">${cache.size || ''}</span>
                     <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
                     ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
@@ -594,7 +601,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const typeClass = getCacheTypeClass(cache.type);
 
             const detailsHtml = `
-                <span class="cache-detail-tag type ${typeClass}">${cache.type || 'Muu'}</span>
+                <span class="cache-detail-tag type ${typeClass}">
+                    <img src="${getCacheIconPath(cache.type)}" class="cache-type-icon-list" alt="${cache.type || ''}">
+                    ${cache.type || 'Muu'}
+                </span>
                 <span class="cache-detail-tag size">${cache.size || ''}</span>
                 <span class="cache-detail-tag dt">D ${cache.difficulty || '?'} / T ${cache.terrain || '?'}</span>
                 ${cache.fp ? `<span class="cache-detail-tag fp">${cache.fp}</span>` : ''}
