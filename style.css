@@ -256,17 +256,22 @@ ul { list-style: none; padding: 0; }
 .cache-name { font-weight: bold; margin-bottom: 5px; word-break: break-word; }
 .cache-name a { color: inherit; text-decoration: underline; }
 .cache-name a:hover { color: #FFD700; }
-.cache-details { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+
+.cache-details { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 5px; 
+    margin-bottom: 8px;
+    align-items: center;
+}
+
 .cache-detail-tag { font-size: 0.8em; background-color: #3D4F2B; color: #dddddd; padding: 2px 8px; border-radius: 10px; white-space: nowrap; border: 1px solid #4a5c3a; }
 
 .cache-detail-tag.type {
     font-weight: bold;
     color: #1a2015;
-    display: inline-flex;
-    align-items: center;
 }
 
-/* UUSI SÄÄNTÖ LISTAN KUVAKKEELLE */
 .cache-type-icon-list {
     height: 16px;
     width: 16px;
