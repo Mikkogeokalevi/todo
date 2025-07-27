@@ -478,3 +478,21 @@ ul { list-style: none; padding: 0; }
     color: #FFD700;
 }
 /* --- LOPPU --- */
+
+/* --- UUSI LISÄYS: Kartan kustomoidun napin tyyli --- */
+.leaflet-control-custom {
+    background-color: white;
+    background-clip: padding-box;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-radius: 4px;
+    color: #333;
+    font: bold 12px/1.4 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    text-align: center;
+    padding: 4px 8px;
+    cursor: pointer;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+}
+.leaflet-control-custom:hover {
+    background-color: #f4f4f4;
+}
+/* --- LOPPU --- */
