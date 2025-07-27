@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit 34
+// DOM-elementit
 const kontinNimiInput = document.getElementById('kontinNimi');
 const konttiValikko = document.getElementById('konttiValikko');
 const lokiOsio = document.getElementById('loki-osio');
@@ -30,21 +30,29 @@ const tulostaBtn = document.getElementById('tulostaBtn');
 let currentContainerId = null;
 let containerSeals = [];
 
-// UUSI APUFUNKTIO: Muuntaa "pp.kk.vvvv hh:mm" -muotoisen ajan Date-objektiksi
-const parseFinnishDateTime = (str) => {
-    if (!str || str.trim() === '') {
-        return null;
-    }
-    const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/);
-    if (parts) {
-        // new Date(vuosi, kuukausi (0-11), päivä, tunti, minuutti)
-        return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]);
-    }
-    return null; // Palauttaa null, jos muoto on virheellinen
+const parseFinnishDateTime = (str) => { if (!str || str.trim() === '') { return null; } const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/); if (parts) { return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]); } return null; };
+const handleContainerSelection = (containerName) => { if (!containerName || containerName.trim() === '') return; const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-'); currentContainerId = normalizedId; const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`; history.pushState({ path: newUrl }, '', newUrl); document.querySelector('.kontti-valitsin').classList.add('hidden'); lokiOsio.classList.remove('hidden'); aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`; loadContainerData(); };
+
+// KORJATTU FUNKTIO
+const loadContainerData = () => {
+    if (!currentContainerId) return;
+    const containerRef = ref(database, `sinettiloki/${currentContainerId}`);
+    onValue(containerRef, (snapshot) => {
+        // Haetaan vain 'seals'-polku kontin alta
+        const sealsData = snapshot.child('seals').val();
+        containerSeals = sealsData ? Object.values(sealsData) : [];
+        
+        if (!snapshot.exists()) {
+             // Jos koko konttia ei ole olemassa, luodaan se tyhjänä.
+             // Tämä on tärkeää uusille konteille.
+            saveState();
+        }
+        renderAll();
+    }, {
+        onlyOnce: false // Varmistetaan, että data päivittyy jatkuvasti
+    });
 };
 
-const handleContainerSelection = (containerName) => { if (!containerName || containerName.trim() === '') return; const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-'); currentContainerId = normalizedId; const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`; history.pushState({ path: newUrl }, '', newUrl); document.querySelector('.kontti-valitsin').classList.add('hidden'); lokiOsio.classList.remove('hidden'); aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`; loadContainerData(); };
-const loadContainerData = () => { const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`); onValue(containerRef, (snapshot) => { containerSeals = snapshot.exists() ? Object.values(snapshot.val()) : []; if (containerSeals.length === 0) { saveState(); } renderAll(); }); };
 const saveState = () => { if (!currentContainerId) return; const dataToSave = {}; containerSeals.forEach(seal => { dataToSave[seal.id] = seal; }); const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`); set(containerRef, dataToSave); };
 const renderAll = () => { const activeSeals = containerSeals.filter(seal => !seal.removedTimestamp); renderActiveSeals(activeSeals); renderHistory(); };
 
@@ -87,34 +95,15 @@ const renderHistory = () => {
     });
 };
 
-// Tapahtumankäsittelijät
 kontinNimiInput.addEventListener('change', () => handleContainerSelection(kontinNimiInput.value));
 konttiValikko.addEventListener('change', () => handleContainerSelection(konttiValikko.value));
 
-lisaaSinetBtn.addEventListener('click', () => {
-    const newSealNumber = uusiSinetinNumeroInput.value.trim();
-    if (!newSealNumber) {
-        alert("Anna uuden sinetin numero.");
-        return;
-    }
-    const now = new Date().toISOString();
-    containerSeals.forEach(seal => {
-        if (!seal.removedTimestamp) {
-            seal.removedTimestamp = now;
-        }
-    });
-    const newSeal = { id: Date.now(), sealNumber: newSealNumber, addedTimestamp: now, removedTimestamp: null };
-    containerSeals.push(newSeal);
-    uusiSinetinNumeroInput.value = '';
-    saveState();
-});
-
+lisaaSinetBtn.addEventListener('click', () => { const newSealNumber = uusiSinetinNumeroInput.value.trim(); if (!newSealNumber) { alert("Anna uuden sinetin numero."); return; } const now = new Date().toISOString(); containerSeals.forEach(seal => { if (!seal.removedTimestamp) { seal.removedTimestamp = now; } }); const newSeal = { id: Date.now(), sealNumber: newSealNumber, addedTimestamp: now, removedTimestamp: null }; containerSeals.push(newSeal); uusiSinetinNumeroInput.value = ''; saveState(); });
 tulostaBtn.addEventListener('click', () => window.print());
 
 historiaLista.addEventListener('click', (e) => {
     const sealId = e.target.closest('.historia-item')?.dataset.id;
     if (!sealId) return;
-
     const sealIndex = containerSeals.findIndex(s => s.id == sealId);
     if (sealIndex === -1) return;
     const seal = containerSeals[sealIndex];
@@ -126,14 +115,11 @@ historiaLista.addEventListener('click', (e) => {
         }
     }
 
-    // KORJATTU MUOKKAUSLOGIIKKA
     if (e.target.closest('.muokkaa-btn')) {
         const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber);
         if (newSealNumber === null) return;
-
         const newAddedTimeStr = prompt("Muokkaa lisäysaikaa (muodossa pp.kk.vvvv hh:mm):", new Date(seal.addedTimestamp).toLocaleString('fi-FI'));
         if (newAddedTimeStr === null) return;
-        
         const currentRemovedTimeStr = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : '';
         const newRemovedTimeStr = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTimeStr);
         if (newRemovedTimeStr === null) return;
@@ -141,14 +127,8 @@ historiaLista.addEventListener('click', (e) => {
         const newAddedDate = parseFinnishDateTime(newAddedTimeStr);
         const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
 
-        if (newAddedTimeStr.trim() !== '' && !newAddedDate) {
-            alert("Virheellinen lisäysajan muoto. Käytä muotoa pp.kk.vvvv hh:mm");
-            return;
-        }
-        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
-            alert("Virheellinen poistoajan muoto. Käytä muotoa pp.kk.vvvv hh:mm");
-            return;
-        }
+        if (newAddedTimeStr.trim() !== '' && !newAddedDate) { alert("Virheellinen lisäysajan muoto. Käytä muotoa pp.kk.vvvv hh:mm"); return; }
+        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) { alert("Virheellinen poistoajan muoto. Käytä muotoa pp.kk.vvvv hh:mm"); return; }
 
         seal.sealNumber = newSealNumber.trim();
         seal.addedTimestamp = newAddedDate.toISOString();
