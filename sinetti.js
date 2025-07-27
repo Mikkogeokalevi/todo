@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// === MUUTETUT JA UUDET DOM-ELEMENTIT ===
+// DOM-elementit
 const kontinValitsinDiv = document.querySelector('.kontti-valitsin');
 const kontinNimiInput = document.getElementById('kontinNimi');
 const konttiValikko = document.getElementById('konttiValikko');
@@ -27,46 +27,12 @@ const historiaLista = document.getElementById('historiaLista');
 const historiaTemplate = document.getElementById('historia-template');
 const tulostaBtn = document.getElementById('tulostaBtn');
 
-// UUDET: Modal-ikkunan elementit
-const muokkausModal = document.getElementById('muokkausModal');
-const muokkausLomake = document.getElementById('muokkausLomake');
-const muokattavanIdInput = document.getElementById('muokattavanId');
-const modalSinetinNumeroInput = document.getElementById('modalSinetinNumero');
-const modalLisattyAikaInput = document.getElementById('modalLisattyAika');
-const modalPoistettuAikaInput = document.getElementById('modalPoistettuAika');
-const peruutaMuokkausBtn = document.getElementById('peruutaMuokkausBtn');
-// ===================================
-
+// Sovelluksen tila
 let currentContainerId = null;
 let containerSeals = [];
 
-// === HELPER-FUNKTIOT (samat kuin ennen) ===
-const parseFinnishDateTime = (str) => {
-    if (!str || str.trim() === '') return null;
-    const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/);
-    if (parts) return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]);
-    return null;
-};
-
-const formatToFinnishDateTime = (isoString) => {
-    if (!isoString) return '';
-    return new Date(isoString).toLocaleString('fi-FI', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit'
-    }).replace(',', '');
-};
-
-const handleContainerSelection = (containerName) => {
-    if (!containerName || containerName.trim() === '') return;
-    const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-');
-    currentContainerId = normalizedId;
-    const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`;
-    history.pushState({ path: newUrl }, '', newUrl);
-    kontinValitsinDiv.classList.add('hidden');
-    lokiOsio.classList.remove('hidden');
-    aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`;
-    loadContainerData();
-};
+const parseFinnishDateTime = (str) => { if (!str || str.trim() === '') { return null; } const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/); if (parts) { return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]); } return null; };
+const handleContainerSelection = (containerName) => { if (!containerName || containerName.trim() === '') return; const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-'); currentContainerId = normalizedId; const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`; history.pushState({ path: newUrl }, '', newUrl); kontinValitsinDiv.classList.add('hidden'); lokiOsio.classList.remove('hidden'); aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`; loadContainerData(); };
 
 const loadContainerData = () => {
     if (!currentContainerId) return;
@@ -83,20 +49,8 @@ const loadContainerData = () => {
     });
 };
 
-const saveState = () => {
-    if (!currentContainerId) return;
-    const dataToSave = {};
-    containerSeals.forEach(seal => { dataToSave[seal.id] = seal; });
-    const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`);
-    set(containerRef, dataToSave);
-};
-
-// === RENDERÖINTIFUNKTIOT (samat kuin ennen) ===
-const renderAll = () => {
-    const activeSeals = containerSeals.filter(seal => !seal.removedTimestamp);
-    renderActiveSeals(activeSeals);
-    renderHistory();
-};
+const saveState = () => { if (!currentContainerId) return; const dataToSave = {}; containerSeals.forEach(seal => { dataToSave[seal.id] = seal; }); const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`); set(containerRef, dataToSave); };
+const renderAll = () => { const activeSeals = containerSeals.filter(seal => !seal.removedTimestamp); renderActiveSeals(activeSeals); renderHistory(); };
 
 const renderActiveSeals = (activeSeals) => {
     aktiivisetSinetitLista.innerHTML = '';
@@ -120,147 +74,68 @@ const renderHistory = () => {
         const item = clone.querySelector('.historia-item');
         item.dataset.id = seal.id;
         const statusSpan = item.querySelector('.sinetin-status');
-        if (seal.removedTimestamp) {
-            statusSpan.textContent = 'POISTETTU';
-            statusSpan.classList.add('poistettu');
-        } else {
-            statusSpan.textContent = 'AKTIIVINEN';
-            statusSpan.classList.remove('poistettu');
-        }
+        if (seal.removedTimestamp) { statusSpan.textContent = 'POISTETTU'; statusSpan.classList.add('poistettu'); } else { statusSpan.textContent = 'AKTIIVINEN'; statusSpan.classList.remove('poistettu'); }
         item.querySelector('.sinetin-numero').textContent = seal.sealNumber;
-        item.querySelector('.lisatty-aika').textContent = formatToFinnishDateTime(seal.addedTimestamp);
-        item.querySelector('.poistettu-aika').textContent = seal.removedTimestamp ? formatToFinnishDateTime(seal.removedTimestamp) : ' - ';
+        item.querySelector('.lisatty-aika').textContent = new Date(seal.addedTimestamp).toLocaleString('fi-FI');
+        item.querySelector('.poistettu-aika').textContent = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : ' - ';
         historiaLista.appendChild(item);
     });
 };
 
-// === EVENT LISTENERS (osa muokattu, osa uusia) ===
 kontinNimiInput.addEventListener('change', () => handleContainerSelection(kontinNimiInput.value));
 konttiValikko.addEventListener('change', () => handleContainerSelection(konttiValikko.value));
 
-lisaaSinetBtn.addEventListener('click', () => {
-    const newSealNumber = uusiSinetinNumeroInput.value.trim();
-    if (!newSealNumber) { alert("Anna uuden sinetin numero."); return; }
-    const now = new Date().toISOString();
-    containerSeals.forEach(seal => { if (!seal.removedTimestamp) { seal.removedTimestamp = now; } });
-    const newSeal = { id: Date.now(), sealNumber: newSealNumber, addedTimestamp: now, removedTimestamp: null };
-    containerSeals.push(newSeal);
-    uusiSinetinNumeroInput.value = '';
-    saveState();
-});
-
+lisaaSinetBtn.addEventListener('click', () => { const newSealNumber = uusiSinetinNumeroInput.value.trim(); if (!newSealNumber) { alert("Anna uuden sinetin numero."); return; } const now = new Date().toISOString(); containerSeals.forEach(seal => { if (!seal.removedTimestamp) { seal.removedTimestamp = now; } }); const newSeal = { id: Date.now(), sealNumber: newSealNumber, addedTimestamp: now, removedTimestamp: null }; containerSeals.push(newSeal); uusiSinetinNumeroInput.value = ''; saveState(); });
 tulostaBtn.addEventListener('click', () => window.print());
 
-// MUOKATTU: Historialistan klikkausten käsittely
 historiaLista.addEventListener('click', (e) => {
-    const item = e.target.closest('.historia-item');
-    if (!item) return;
-    const sealId = item.dataset.id;
-    const seal = containerSeals.find(s => s.id == sealId);
-    if (!seal) return;
+    const sealId = e.target.closest('.historia-item')?.dataset.id;
+    if (!sealId) return;
+    const sealIndex = containerSeals.findIndex(s => s.id == sealId);
+    if (sealIndex === -1) return;
+    const seal = containerSeals[sealIndex];
 
-    // Poiston logiikka
     if (e.target.closest('.poista-btn')) {
         if (confirm(`Haluatko varmasti poistaa sinetin "${seal.sealNumber}" ja kaikki sen tiedot?`)) {
-            containerSeals = containerSeals.filter(s => s.id != sealId);
+            containerSeals.splice(sealIndex, 1);
             saveState();
         }
     }
 
-    // UUSI: Muokkausnappia painettaessa avataan modal
+    // KORJATTU MUOKKAUSLOGIIKKA
     if (e.target.closest('.muokkaa-btn')) {
-        openEditModal(seal);
-    }
-});
+        const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber);
+        if (newSealNumber === null) return;
 
-// UUSI: Modal-ikkunan logiikka
-const openEditModal = (seal) => {
-    muokattavanIdInput.value = seal.id;
-    modalSinetinNumeroInput.value = seal.sealNumber;
-    modalLisattyAikaInput.value = formatToFinnishDateTime(seal.addedTimestamp);
-    modalPoistettuAikaInput.value = seal.removedTimestamp ? formatToFinnishDateTime(seal.removedTimestamp) : '';
-    muokkausModal.classList.remove('hidden');
-};
+        const newAddedTimeStr = prompt("Muokkaa lisäysaikaa (muodossa pp.kk.vvvv hh:mm):", new Date(seal.addedTimestamp).toLocaleString('fi-FI'));
+        if (newAddedTimeStr === null) return;
+        
+        const currentRemovedTimeStr = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : '';
+        const newRemovedTimeStr = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTimeStr);
+        if (newRemovedTimeStr === null) return;
+        
+        const newAddedDate = parseFinnishDateTime(newAddedTimeStr);
+        const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
 
-const closeEditModal = () => {
-    muokkausModal.classList.add('hidden');
-};
-
-peruutaMuokkausBtn.addEventListener('click', closeEditModal);
-
-muokkausLomake.addEventListener('submit', (e) => {
-    e.preventDefault(); // Estää lomakkeen oletustoiminnan
-    
-    const sealId = muokattavanIdInput.value;
-    const sealToUpdate = containerSeals.find(s => s.id == sealId);
-    if (!sealToUpdate) {
-        alert("Virhe: Muokattavaa sinettiä ei löytynyt.");
-        return;
-    }
-
-    // Hae ja validoi arvot
-    const newSealNumber = modalSinetinNumeroInput.value.trim();
-    const newAddedDate = parseFinnishDateTime(modalLisattyAikaInput.value);
-    const newRemovedDate = parseFinnishDateTime(modalPoistettuAikaInput.value);
-
-    if (!newSealNumber) {
-        alert("Sinetin numero ei voi olla tyhjä.");
-        return;
-    }
-    if (!newAddedDate) {
-        alert("Virheellinen lisäysajan muoto. Se ei voi olla tyhjä. Käytä muotoa pp.kk.vvvv hh:mm");
-        return;
-    }
-    if (modalPoistettuAikaInput.value.trim() !== '' && !newRemovedDate) {
-        alert("Virheellinen poistoajan muoto. Käytä muotoa pp.kk.vvvv hh:mm tai jätä kenttä tyhjäksi.");
-        return;
-    }
-    
-    // Päivitä tiedot
-    sealToUpdate.sealNumber = newSealNumber;
-    sealToUpdate.addedTimestamp = newAddedDate.toISOString();
-    sealToUpdate.removedTimestamp = newRemovedDate ? newRemovedDate.toISOString() : null;
-    
-    saveState();
-    closeEditModal();
-});
-
-// === ALUSTUSFUNKTIOT (samat kuin ennen) ===
-const loadContainerList = () => {
-    const containerListRef = ref(database, 'sinettiloki');
-    onValue(containerListRef, (snapshot) => {
-        konttiValikko.innerHTML = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'Valitse kontti...';
-        konttiValikko.appendChild(placeholder);
-        if (snapshot.exists()) {
-            const containers = snapshot.val();
-            Object.keys(containers).forEach(containerId => {
-                const option = document.createElement('option');
-                option.value = containerId;
-                option.textContent = containerId.replace(/-/g, ' ');
-                konttiValikko.appendChild(option);
-            });
+        // TÄRKEIN KORJAUS TÄSSÄ: Varmistetaan, että lisäysaika on AINA kelvollinen, eikä voi olla tyhjä.
+        if (!newAddedDate) {
+            alert("Virheellinen lisäysajan muoto. Se ei voi olla tyhjä. Käytä muotoa pp.kk.vvvv hh:mm");
+            return;
         }
-    }, (error) => {
-        console.error("Virhe konttilistan haussa:", error);
-        konttiValikko.innerHTML = '<option value="">Virhe latauksessa</option>';
-    });
-};
+        // Varmistetaan poistoaika vain, jos se ei ole tyhjä.
+        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
+            alert("Virheellinen poistoajan muoto. Käytä muotoa pp.kk.vvvv hh:mm tai jätä tyhjäksi.");
+            return;
+        }
 
-const initializePage = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const containerFromUrl = urlParams.get('kontti');
-    loadContainerList();
-    if (containerFromUrl) {
-        kontinNimiInput.value = containerFromUrl.replace(/-/g, ' ');
-        konttiValikko.value = containerFromUrl;
-        handleContainerSelection(containerFromUrl);
-    } else {
-        kontinValitsinDiv.classList.remove('hidden');
-        lokiOsio.classList.add('hidden');
+        seal.sealNumber = newSealNumber.trim();
+        seal.addedTimestamp = newAddedDate.toISOString();
+        seal.removedTimestamp = newRemovedDate ? newRemovedDate.toISOString() : null;
+        saveState();
     }
-};
+});
+
+const loadContainerList = () => { const containerListRef = ref(database, 'sinettiloki'); onValue(containerListRef, (snapshot) => { konttiValikko.innerHTML = ''; const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'Valitse kontti...'; konttiValikko.appendChild(placeholder); if (snapshot.exists()) { const containers = snapshot.val(); Object.keys(containers).forEach(containerId => { const option = document.createElement('option'); option.value = containerId; option.textContent = containerId.replace(/-/g, ' '); konttiValikko.appendChild(option); }); } }, (error) => { console.error("Virhe konttilistan haussa:", error); konttiValikko.innerHTML = '<option value="">Virhe latauksessa</option>'; }); };
+const initializePage = () => { const urlParams = new URLSearchParams(window.location.search); const containerFromUrl = urlParams.get('kontti'); loadContainerList(); if (containerFromUrl) { kontinNimiInput.value = containerFromUrl.replace(/-/g, ' '); konttiValikko.value = containerFromUrl; handleContainerSelection(containerFromUrl); } else { kontinValitsinDiv.classList.remove('hidden'); lokiOsio.classList.add('hidden'); } };
 
 initializePage();
