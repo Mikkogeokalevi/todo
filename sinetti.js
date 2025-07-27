@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit 352
+// DOM-elementit
 const kontinValitsinDiv = document.querySelector('.kontti-valitsin');
 const kontinNimiInput = document.getElementById('kontinNimi');
 const konttiValikko = document.getElementById('konttiValikko');
@@ -117,7 +117,7 @@ const renderHistory = () => {
             statusSpan.classList.remove('poistettu');
         }
         item.querySelector('.sinetin-numero').textContent = seal.sealNumber;
-        item.querySelector('.lisatty-aika').textContent = new Date(seal.addedTimestamp).toLocaleString('fi-FI');
+        item.querySelector('.lisatty-aika').textContent = seal.addedTimestamp ? new Date(seal.addedTimestamp).toLocaleString('fi-FI') : 'Aika puuttuu';
         item.querySelector('.poistettu-aika').textContent = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : ' - ';
         historiaLista.appendChild(item);
     });
@@ -147,70 +147,73 @@ lisaaSinetBtn.addEventListener('click', () => {
 tulostaBtn.addEventListener('click', () => window.print());
 
 historiaLista.addEventListener('click', (e) => {
-    // Etsitään lähin historiarivi, jota klikattiin, ja haetaan sen data-id.
     const sealItem = e.target.closest('.historia-item');
     if (!sealItem) return;
 
     const sealId = sealItem.dataset.id;
     if (!sealId) return;
 
-    // Etsitään oikea sinetti 'containerSeals'-listasta ID:n perusteella.
     const sealIndex = containerSeals.findIndex(s => s.id == sealId);
     if (sealIndex === -1) return;
 
     const seal = containerSeals[sealIndex];
 
-    // --- POISTO-TOIMINTO (säilyy ennallaan) ---
     if (e.target.closest('.poista-btn')) {
         if (confirm(`Haluatko varmasti poistaa sinetin "${seal.sealNumber}" ja kaikki sen tiedot?`)) {
             containerSeals.splice(sealIndex, 1);
-            saveState(); // Tallennetaan muutokset Firebaseen.
+            saveState();
         }
+        return; // Lopetetaan suoritus poiston jälkeen
     }
 
-    // --- UUSI MUOKKAUS-TOIMINTO ---
     if (e.target.closest('.muokkaa-btn')) {
-        // 1. Pyydetään uudet tiedot käyttäjältä prompt-ikkunoiden avulla.
-        // Esitäytetään kentät olemassa olevilla tiedoilla muokkaamisen helpottamiseksi.
-        const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber);
-        if (newSealNumber === null) return; // Käyttäjä painoi "Peruuta"
+        const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber || "");
+        if (newSealNumber === null) return;
 
-        // Muotoillaan nykyiset ajat suomalaiseen muotoon prompt-ikkunaa varten.
-        const currentAddedTimeStr = new Date(seal.addedTimestamp).toLocaleString('fi-FI', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        // **KORJATTU OSA: Aikaleimojen turvallinen käsittely**
+        let currentAddedTimeStr = '';
+        if (seal.addedTimestamp) {
+            const addedDate = new Date(seal.addedTimestamp);
+            if (!isNaN(addedDate.getTime())) { // Tarkistetaan, onko päivämäärä kelvollinen
+                currentAddedTimeStr = addedDate.toLocaleString('fi-FI', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+        }
         const newAddedTimeStr = prompt("Muokkaa lisäysaikaa (pp.kk.vvvv hh:mm):", currentAddedTimeStr);
-        if (newAddedTimeStr === null) return; // Käyttäjä painoi "Peruuta"
-        
-        const currentRemovedTimeStr = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+        if (newAddedTimeStr === null) return;
+
+        let currentRemovedTimeStr = '';
+        if (seal.removedTimestamp) {
+            const removedDate = new Date(seal.removedTimestamp);
+            if (!isNaN(removedDate.getTime())) { // Tarkistetaan, onko päivämäärä kelvollinen
+                currentRemovedTimeStr = removedDate.toLocaleString('fi-FI', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            }
+        }
         const newRemovedTimeStr = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTimeStr);
-        if (newRemovedTimeStr === null) return; // Käyttäjä painoi "Peruuta"
-        
-        // 2. Muunnetaan syötetyt merkkijonot Date-objekteiksi.
-        // Hyödynnetään olemassa olevaa parseFinnishDateTime-funktiota.
+        if (newRemovedTimeStr === null) return;
+
+        // Syötteiden validointi
         const newAddedDate = parseFinnishDateTime(newAddedTimeStr);
         const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
 
-        // 3. Validoidaan syötteet.
-        // Lisäysajan on oltava aina kelvollinen.
         if (!newAddedDate) {
             alert("Virheellinen lisäysajan muoto. Muokkausta ei tallennettu. Käytä muotoa pp.kk.vvvv hh:mm.");
             return;
         }
-        // Poistoaika tarkistetaan vain, jos kenttään on kirjoitettu jotain.
         if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
             alert("Virheellinen poistoajan muoto. Muokkausta ei tallennettu. Käytä muotoa pp.kk.vvvv hh:mm tai jätä kenttä tyhjäksi.");
             return;
         }
 
-        // 4. Päivitetään tiedot paikalliseen 'seal'-objektiin.
+        // Datan päivitys ja tallennus
         seal.sealNumber = newSealNumber.trim();
-        seal.addedTimestamp = newAddedDate.toISOString(); // Tallennetaan ISO-muodossa
-        seal.removedTimestamp = newRemovedDate ? newRemovedDate.toISOString() : null; // Tallennetaan ISO-muodossa tai nullina
-
-        // 5. Tallennetaan koko päivitetty lista Firebaseen.
+        seal.addedTimestamp = newAddedDate.toISOString();
+        seal.removedTimestamp = newRemovedDate ? newRemovedDate.toISOString() : null;
+        
         saveState();
         alert("Tiedot päivitetty onnistuneesti!");
     }
 });
+
 
 const loadContainerList = () => {
     const containerListRef = ref(database, 'sinettiloki');
@@ -240,7 +243,6 @@ const initializePage = () => {
     const containerFromUrl = urlParams.get('kontti');
     loadContainerList();
     if (containerFromUrl) {
-        // Normalisoidaan URL:n parametri, jotta se vastaa sekä inputin arvoa että valikon arvoa
         const cleanContainerName = containerFromUrl.replace(/-/g, ' ');
         kontinNimiInput.value = cleanContainerName;
         konttiValikko.value = containerFromUrl;
