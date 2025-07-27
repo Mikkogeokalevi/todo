@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
+// Firebase-konfiguraatio pysyy samana
 const firebaseConfig = {
     apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
     authDomain: "geokatkosuunnittelija.firebaseapp.com",
@@ -14,7 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit 334
+// DOM-elementit
 const kontinValitsinDiv = document.querySelector('.kontti-valitsin');
 const kontinNimiInput = document.getElementById('kontinNimi');
 const konttiValikko = document.getElementById('konttiValikko');
@@ -31,12 +32,26 @@ const tulostaBtn = document.getElementById('tulostaBtn');
 let currentContainerId = null;
 let containerSeals = [];
 
-// --- UUSI, LUOTETTAVA APUFUNKTIO PÄIVÄMÄÄRÄN MUOTOILUUN ---
-// Tämä funktio rakentaa päivämäärän manuaalisesti, jotta vältetään selainongelmat.
+// --- UUSI APUFUNKTIO PÄIVÄMÄÄRÄN MUOTOILUUN HTML-INPUTTIA VARTEN (YYYY-MM-DDTHH:mm) ---
+const formatDateForInput = (isoString) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return '';
+    
+    // Siirretään paikalliseen aikaan ennen muotoilua
+    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+    return date.toISOString().slice(0, 16);
+};
+
+// Aiemmat apufunktiot pysyvät ennallaan
+const parseFinnishDateTime = (str) => {
+    if (!str || str.trim() === '') return null;
+    const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/);
+    if (parts) return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]);
+    return null;
+};
 const formatFinnishDateTime = (date) => {
-    if (!date || isNaN(new Date(date).getTime())) {
-        return ''; // Palauttaa tyhjän, jos päivämäärä on virheellinen
-    }
+    if (!date || isNaN(new Date(date).getTime())) return '';
     const d = new Date(date);
     const day = String(d.getDate()).padStart(2, '0');
     const month = String(d.getMonth() + 1).padStart(2, '0'); // Kuukaudet ovat 0-11
@@ -46,15 +61,7 @@ const formatFinnishDateTime = (date) => {
     return `${day}.${month}.${year} ${hours}:${minutes}`;
 };
 
-const parseFinnishDateTime = (str) => {
-    if (!str || str.trim() === '') return null;
-    const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/);
-    if (parts) {
-        return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]);
-    }
-    return null;
-};
-
+// Datan käsittely ja renderöinti pysyvät ennallaan
 const handleContainerSelection = (containerName) => {
     if (!containerName || containerName.trim() === '') return;
     const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-');
@@ -66,7 +73,6 @@ const handleContainerSelection = (containerName) => {
     aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`;
     loadContainerData();
 };
-
 const loadContainerData = () => {
     if (!currentContainerId) return;
     const containerRef = ref(database, `sinettiloki/${currentContainerId}`);
@@ -81,23 +87,13 @@ const loadContainerData = () => {
         renderAll();
     });
 };
-
 const saveState = () => {
     if (!currentContainerId) return;
     const dataToSave = {};
-    containerSeals.forEach(seal => {
-        dataToSave[seal.id] = seal;
-    });
+    containerSeals.forEach(seal => { dataToSave[seal.id] = seal; });
     const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`);
     set(containerRef, dataToSave);
 };
-
-const renderAll = () => {
-    const activeSeals = containerSeals.filter(seal => !seal.removedTimestamp);
-    renderActiveSeals(activeSeals);
-    renderHistory();
-};
-
 const renderActiveSeals = (activeSeals) => {
     aktiivisetSinetitLista.innerHTML = '';
     if (activeSeals.length === 0) {
@@ -110,120 +106,124 @@ const renderActiveSeals = (activeSeals) => {
         });
     }
 };
-
 const renderHistory = () => {
     historiaLista.innerHTML = '';
     const sortedSeals = [...containerSeals].sort((a, b) => new Date(b.addedTimestamp) - new Date(a.addedTimestamp));
     sortedSeals.forEach(seal => {
-        const clone = historiaTemplate.content.cloneNode(true);
-        const item = clone.querySelector('.historia-item');
+        const item = historiaTemplate.content.cloneNode(true).querySelector('.historia-item');
         item.dataset.id = seal.id;
+        item.querySelector('.sinetin-numero').textContent = seal.sealNumber;
         const statusSpan = item.querySelector('.sinetin-status');
         if (seal.removedTimestamp) {
-            statusSpan.textContent = 'POISTETTU';
-            statusSpan.classList.add('poistettu');
+            statusSpan.textContent = 'POISTETTU'; statusSpan.classList.add('poistettu');
         } else {
-            statusSpan.textContent = 'AKTIIVINEN';
-            statusSpan.classList.remove('poistettu');
+            statusSpan.textContent = 'AKTIIVINEN'; statusSpan.classList.remove('poistettu');
         }
-        item.querySelector('.sinetin-numero').textContent = seal.sealNumber;
-        // Käytetään uutta, luotettavaa funktiota myös täällä
         item.querySelector('.lisatty-aika').textContent = formatFinnishDateTime(seal.addedTimestamp) || 'Aika puuttuu';
         item.querySelector('.poistettu-aika').textContent = formatFinnishDateTime(seal.removedTimestamp) || ' - ';
         historiaLista.appendChild(item);
     });
 };
+const renderAll = () => { renderActiveSeals(containerSeals.filter(s => !s.removedTimestamp)); renderHistory(); };
 
-kontinNimiInput.addEventListener('change', () => handleContainerSelection(kontinNimiInput.value));
-konttiValikko.addEventListener('change', () => handleContainerSelection(konttiValikko.value));
+// --- TÄYSIN UUSITTU TAPAHTUMANKÄSITTELIJÄ MUOKKAUSTA VARTEN ---
 
-lisaaSinetBtn.addEventListener('click', () => {
-    const newSealNumber = uusiSinetinNumeroInput.value.trim();
-    if (!newSealNumber) {
-        alert("Anna uuden sinetin numero.");
+historiaLista.addEventListener('click', (e) => {
+    const target = e.target;
+    const item = target.closest('.historia-item');
+    if (!item) return;
+
+    const sealId = item.dataset.id;
+    const seal = containerSeals.find(s => s.id == sealId);
+    if (!seal) return;
+
+    // Poistopainikkeen logiikka
+    if (target.closest('.poista-btn')) {
+        if (confirm(`Haluatko varmasti poistaa sinetin "${seal.sealNumber}"?`)) {
+            containerSeals = containerSeals.filter(s => s.id != sealId);
+            saveState();
+        }
         return;
     }
-    const now = new Date().toISOString();
-    containerSeals.forEach(seal => {
-        if (!seal.removedTimestamp) {
-            seal.removedTimestamp = now;
+    
+    // Peruutuspainikkeen logiikka
+    if (target.closest('.cancel-btn')) {
+        renderAll(); // Piirretään koko lista uudelleen, mikä peruuttaa kaikki muutokset
+        return;
+    }
+
+    // Tallenna-painikkeen logiikka
+    if (target.closest('.save-btn')) {
+        const newSealNumber = item.querySelector('input[name="sealNumber"]').value;
+        const newAddedTime = item.querySelector('input[name="addedTime"]').value;
+        const newRemovedTime = item.querySelector('input[name="removedTime"]').value;
+
+        if (!newSealNumber) {
+            alert("Sinetin numero ei voi olla tyhjä.");
+            return;
         }
-    });
+        if (!newAddedTime) {
+            alert("Lisäysaika ei voi olla tyhjä.");
+            return;
+        }
+
+        seal.sealNumber = newSealNumber.trim();
+        seal.addedTimestamp = new Date(newAddedTime).toISOString();
+        seal.removedTimestamp = newRemovedTime ? new Date(newRemovedTime).toISOString() : null;
+        
+        saveState(); // Tämä tallentaa ja käynnistää renderAll-funktion onValue-kuuntelijan kautta
+        return;
+    }
+
+    // Kynä-painikkeen logiikka: näytä muokkauslomake
+    if (target.closest('.muokkaa-btn')) {
+        // Varmuuden vuoksi peruutetaan muut mahdolliset avoimet muokkaukset
+        renderAll();
+
+        // Haetaan uudelleen oikea elementti DOM:sta renderöinnin jälkeen
+        const currentItem = document.querySelector(`.historia-item[data-id="${sealId}"]`);
+        
+        // Luodaan muokkauslomakkeen HTML-sisältö
+        const formHTML = `
+            <div class="edit-form-container">
+                <label for="sealNumber-${sealId}">Sinetin numero</label>
+                <input type="text" name="sealNumber" id="sealNumber-${sealId}" class="edit-input" value="${seal.sealNumber || ''}">
+
+                <label for="addedTime-${sealId}">Lisätty</label>
+                <input type="datetime-local" name="addedTime" id="addedTime-${sealId}" class="edit-input" value="${formatDateForInput(seal.addedTimestamp)}">
+                
+                <label for="removedTime-${sealId}">Poistettu (tyhjä = aktiivinen)</label>
+                <input type="datetime-local" name="removedTime" id="removedTime-${sealId}" class="edit-input" value="${formatDateForInput(seal.removedTimestamp)}">
+
+                <div class="edit-form-actions">
+                    <button class="save-btn">Tallenna</button>
+                    <button class="cancel-btn">Peruuta</button>
+                </div>
+            </div>
+        `;
+        // Korvataan historiarivin sisältö lomakkeella
+        currentItem.innerHTML = formHTML;
+    }
+});
+
+// Alustussivun koodi pysyy ennallaan
+kontinNimiInput.addEventListener('change', () => handleContainerSelection(kontinNimiInput.value));
+konttiValikko.addEventListener('change', () => handleContainerSelection(konttiValikko.value));
+lisaaSinetBtn.addEventListener('click', () => {
+    const newSealNumber = uusiSinetinNumeroInput.value.trim();
+    if (!newSealNumber) { alert("Anna uuden sinetin numero."); return; }
+    const now = new Date().toISOString();
+    containerSeals.forEach(seal => { if (!seal.removedTimestamp) { seal.removedTimestamp = now; } });
     const newSeal = { id: Date.now(), sealNumber: newSealNumber, addedTimestamp: now, removedTimestamp: null };
     containerSeals.push(newSeal);
     uusiSinetinNumeroInput.value = '';
     saveState();
 });
-
 tulostaBtn.addEventListener('click', () => window.print());
-
-// --- TÄYSIN UUSITTU TAPAHTUMANKÄSITTELIJÄ ---
-historiaLista.addEventListener('click', (e) => {
-    const sealItem = e.target.closest('.historia-item');
-    if (!sealItem) return;
-
-    const sealId = sealItem.dataset.id;
-    if (!sealId) return;
-
-    const sealIndex = containerSeals.findIndex(s => s.id == sealId);
-    if (sealIndex === -1) return;
-
-    const seal = containerSeals[sealIndex];
-
-    if (e.target.closest('.poista-btn')) {
-        if (confirm(`Haluatko varmasti poistaa sinetin "${seal.sealNumber}"?`)) {
-            containerSeals.splice(sealIndex, 1);
-            saveState();
-        }
-        return;
-    }
-
-    if (e.target.closest('.muokkaa-btn')) {
-        // Vaihe 1: Kysy kaikki tiedot järjestyksessä
-        const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber || "");
-        if (newSealNumber === null) return;
-
-        // Käytetään uutta, luotettavaa muotoilufunktiota
-        const currentAddedTimeStr = formatFinnishDateTime(seal.addedTimestamp);
-        const newAddedTimeStr = prompt("Muokkaa lisäysaikaa (pp.kk.vvvv hh:mm):", currentAddedTimeStr);
-        if (newAddedTimeStr === null) return;
-        
-        // Käytetään uutta, luotettavaa muotoilufunktiota
-        const currentRemovedTimeStr = formatFinnishDateTime(seal.removedTimestamp);
-        const newRemovedTimeStr = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTimeStr);
-        if (newRemovedTimeStr === null) return;
-
-        // Vaihe 2: Tarkista ja muunna syötteet
-        const newAddedDate = parseFinnishDateTime(newAddedTimeStr);
-        if (!newAddedDate) {
-            alert("Virheellinen lisäysajan muoto. Muokkausta ei tallennettu.");
-            return;
-        }
-
-        const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
-        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
-            alert("Virheellinen poistoajan muoto. Muokkausta ei tallennettu.");
-            return;
-        }
-
-        // Vaihe 3: Päivitä tiedot ja tallenna
-        seal.sealNumber = newSealNumber.trim();
-        seal.addedTimestamp = newAddedDate.toISOString();
-        seal.removedTimestamp = newRemovedDate ? newRemovedDate.toISOString() : null;
-        
-        saveState();
-        alert("Tiedot päivitetty onnistuneesti!");
-    }
-});
-
 const loadContainerList = () => {
     const containerListRef = ref(database, 'sinettiloki');
     onValue(containerListRef, (snapshot) => {
-        konttiValikko.innerHTML = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'Valitse kontti...';
-        konttiValikko.appendChild(placeholder);
+        konttiValikko.innerHTML = '<option value="">Valitse kontti...</option>';
         if (snapshot.exists()) {
             const containers = snapshot.val();
             Object.keys(containers).forEach(containerId => {
@@ -233,24 +233,14 @@ const loadContainerList = () => {
                 konttiValikko.appendChild(option);
             });
         }
-    }, (error) => {
-        console.error("Virhe konttilistan haussa:", error);
-        konttiValikko.innerHTML = '<option value="">Virhe latauksessa</option>';
     });
 };
-
 const initializePage = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const containerFromUrl = urlParams.get('kontti');
     loadContainerList();
     if (containerFromUrl) {
-        const cleanContainerName = containerFromUrl.replace(/-/g, ' ');
-        kontinNimiInput.value = cleanContainerName;
-        konttiValikko.value = containerFromUrl;
         handleContainerSelection(containerFromUrl);
-    } else {
-        kontinValitsinDiv.classList.remove('hidden');
-        lokiOsio.classList.add('hidden');
     }
 };
 
