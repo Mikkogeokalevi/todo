@@ -12,7 +12,13 @@
         <h1 class="no-print">Sinettien Seuranta</h1>
 
         <div class="kontti-valitsin no-print">
-            <label for="kontinNimi">Kontin nimi tai tunnus:</label>
+            <h3>Valitse tai luo kontti</h3>
+            <label for="konttiValikko">Valitse olemassa oleva kontti:</label>
+            <select id="konttiValikko">
+                <option value="">Ladataan...</option>
+            </select>
+
+            <label for="kontinNimi">Tai luo uusi kirjoittamalla nimi:</label>
             <input type="text" id="kontinNimi" placeholder="Esim. KONTTI-123">
         </div>
 
