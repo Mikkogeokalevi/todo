@@ -21,7 +21,9 @@ h1, h2, h3 {
     margin-top: 0;
 }
 .hidden { display: none !important; }
-input[type="text"] {
+
+/* MUUTOS: Lisätty select-elementti */
+input[type="text"], select {
     width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box;
     background-color: #2A381C; color: #F8F8F8; border: 1px solid #556B2F;
     border-radius: 4px; font-family: 'Georgia', serif; font-size: 16px; 
@@ -35,6 +37,7 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 ul { list-style: none; padding: 0; }
 
 .kontti-valitsin { text-align: center; margin-bottom: 20px; }
+.kontti-valitsin label { margin-top: 15px; }
 .otsikko-container { display: flex; align-items: center; justify-content: center; }
 .otsikko-container h2 { flex-grow: 1; }
 #tulostaBtn { width: auto; font-size: 1.5em; border: none; background: none; }
@@ -65,9 +68,6 @@ ul { list-style: none; padding: 0; }
 .historia-toiminnot button { width: auto; background: none; border: none; font-size: 1.3em; padding: 5px; color: #cccccc; }
 .historia-toiminnot button:hover { color: #FFD700; background: none; }
 
-/* ================================== */
-/* === UUDET TULOSTUSTYYLIT === */
-/* ================================== */
 @media print {
     body { background-color: #fff; color: #000; font-family: sans-serif; }
     .no-print { display: none !important; }
