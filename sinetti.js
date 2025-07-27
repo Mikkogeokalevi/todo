@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit er
+// DOM-elementit
 const kontinValitsinDiv = document.querySelector('.kontti-valitsin');
 const kontinNimiInput = document.getElementById('kontinNimi');
 const konttiValikko = document.getElementById('konttiValikko');
@@ -34,7 +34,6 @@ let containerSeals = [];
 const parseFinnishDateTime = (str) => { if (!str || str.trim() === '') { return null; } const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/); if (parts) { return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]); } return null; };
 const handleContainerSelection = (containerName) => { if (!containerName || containerName.trim() === '') return; const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-'); currentContainerId = normalizedId; const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`; history.pushState({ path: newUrl }, '', newUrl); kontinValitsinDiv.classList.add('hidden'); lokiOsio.classList.remove('hidden'); aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`; loadContainerData(); };
 
-// KORJATTU DATAN LATAUSFUNKTIO
 const loadContainerData = () => {
     if (!currentContainerId) return;
     const containerRef = ref(database, `sinettiloki/${currentContainerId}`);
@@ -43,7 +42,6 @@ const loadContainerData = () => {
             const sealsData = snapshot.child('seals').val();
             containerSeals = sealsData ? Object.values(sealsData) : [];
         } else {
-            // Konttia ei ole olemassa, alustetaan se tyhjänä ja tallennetaan.
             containerSeals = [];
             saveState();
         }
@@ -75,20 +73,11 @@ const renderHistory = () => {
         const clone = historiaTemplate.content.cloneNode(true);
         const item = clone.querySelector('.historia-item');
         item.dataset.id = seal.id;
-
         const statusSpan = item.querySelector('.sinetin-status');
-        if (seal.removedTimestamp) {
-            statusSpan.textContent = 'POISTETTU';
-            statusSpan.classList.add('poistettu');
-        } else {
-            statusSpan.textContent = 'AKTIIVINEN';
-            statusSpan.classList.remove('poistettu');
-        }
-
+        if (seal.removedTimestamp) { statusSpan.textContent = 'POISTETTU'; statusSpan.classList.add('poistettu'); } else { statusSpan.textContent = 'AKTIIVINEN'; statusSpan.classList.remove('poistettu'); }
         item.querySelector('.sinetin-numero').textContent = seal.sealNumber;
         item.querySelector('.lisatty-aika').textContent = new Date(seal.addedTimestamp).toLocaleString('fi-FI');
         item.querySelector('.poistettu-aika').textContent = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : ' - ';
-        
         historiaLista.appendChild(item);
     });
 };
@@ -113,11 +102,14 @@ historiaLista.addEventListener('click', (e) => {
         }
     }
 
+    // KORJATTU MUOKKAUSLOGIIKKA
     if (e.target.closest('.muokkaa-btn')) {
         const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber);
         if (newSealNumber === null) return;
+
         const newAddedTimeStr = prompt("Muokkaa lisäysaikaa (muodossa pp.kk.vvvv hh:mm):", new Date(seal.addedTimestamp).toLocaleString('fi-FI'));
         if (newAddedTimeStr === null) return;
+        
         const currentRemovedTimeStr = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : '';
         const newRemovedTimeStr = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTimeStr);
         if (newRemovedTimeStr === null) return;
@@ -125,8 +117,16 @@ historiaLista.addEventListener('click', (e) => {
         const newAddedDate = parseFinnishDateTime(newAddedTimeStr);
         const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
 
-        if (newAddedTimeStr.trim() !== '' && !newAddedDate) { alert("Virheellinen lisäysajan muoto. Käytä muotoa pp.kk.vvvv hh:mm"); return; }
-        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) { alert("Virheellinen poistoajan muoto. Käytä muotoa pp.kk.vvvv hh:mm"); return; }
+        // TÄRKEIN KORJAUS TÄSSÄ: Varmistetaan, että lisäysaika on AINA kelvollinen, eikä voi olla tyhjä.
+        if (!newAddedDate) {
+            alert("Virheellinen lisäysajan muoto. Se ei voi olla tyhjä. Käytä muotoa pp.kk.vvvv hh:mm");
+            return;
+        }
+        // Varmistetaan poistoaika vain, jos se ei ole tyhjä.
+        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
+            alert("Virheellinen poistoajan muoto. Käytä muotoa pp.kk.vvvv hh:mm tai jätä tyhjäksi.");
+            return;
+        }
 
         seal.sealNumber = newSealNumber.trim();
         seal.addedTimestamp = newAddedDate.toISOString();
@@ -136,20 +136,6 @@ historiaLista.addEventListener('click', (e) => {
 });
 
 const loadContainerList = () => { const containerListRef = ref(database, 'sinettiloki'); onValue(containerListRef, (snapshot) => { konttiValikko.innerHTML = ''; const placeholder = document.createElement('option'); placeholder.value = ''; placeholder.textContent = 'Valitse kontti...'; konttiValikko.appendChild(placeholder); if (snapshot.exists()) { const containers = snapshot.val(); Object.keys(containers).forEach(containerId => { const option = document.createElement('option'); option.value = containerId; option.textContent = containerId.replace(/-/g, ' '); konttiValikko.appendChild(option); }); } }, (error) => { console.error("Virhe konttilistan haussa:", error); konttiValikko.innerHTML = '<option value="">Virhe latauksessa</option>'; }); };
-
-const initializePage = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const containerFromUrl = urlParams.get('kontti');
-    loadContainerList();
-    if (containerFromUrl) {
-        // Asetetaan arvo sekä tekstikenttään että valikkoon.
-        kontinNimiInput.value = containerFromUrl.replace(/-/g, ' ');
-        konttiValikko.value = containerFromUrl;
-        handleContainerSelection(containerFromUrl);
-    } else {
-        kontinValitsinDiv.classList.remove('hidden');
-        lokiOsio.classList.add('hidden');
-    }
-};
+const initializePage = () => { const urlParams = new URLSearchParams(window.location.search); const containerFromUrl = urlParams.get('kontti'); loadContainerList(); if (containerFromUrl) { kontinNimiInput.value = containerFromUrl.replace(/-/g, ' '); konttiValikko.value = containerFromUrl; handleContainerSelection(containerFromUrl); } else { kontinValitsinDiv.classList.remove('hidden'); lokiOsio.classList.add('hidden'); } };
 
 initializePage();
