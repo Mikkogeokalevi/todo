@@ -1,161 +1,80 @@
-/* Yleiset tyylit */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #f0f2f5;
+    background-color: #1a2015;
+    font-family: 'Georgia', serif;
     margin: 0;
-    padding: 20px;
-    color: #1c1e21;
+    padding: 10px;
+    color: #F8F8F8;
 }
-
 .sisalto-laatikko {
     max-width: 800px;
-    margin: 20px auto;
+    margin: 15px auto;
     padding: 20px;
-    background-color: #ffffff;
-    border: 1px solid #dddfe2;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #3D4F2B;
+    border: 3px solid #11150C;
+    border-radius: 12px;
 }
-
 h1, h2, h3 {
-    color: #333;
+    color: #90EE90;
+    text-align: center;
+    border-bottom: 1px solid #4a5c3a;
+    padding-bottom: 10px;
+    margin-top: 0;
 }
-
-input[type="text"], select, button {
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #ccd0d5;
+.hidden { display: none !important; }
+input[type="text"], select {
+    width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box;
+    background-color: #2A381C; color: #F8F8F8; border: 1px solid #556B2F;
+    border-radius: 4px; font-family: 'Georgia', serif; font-size: 16px; 
 }
-
 button {
-    background-color: #1877f2;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    padding: 12px 18px; border: 1px solid #90EE90; background-color: transparent;
+    color: #90EE90; border-radius: 4px; cursor: pointer;
+    font-size: 16px; width: 100%; box-sizing: border-box;
+}
+button:hover { background-color: #90EE90; color: #1a2015; }
+ul { list-style: none; padding: 0; }
+
+.kontti-valitsin { text-align: center; margin-bottom: 20px; }
+.kontti-valitsin label { margin-top: 15px; }
+.otsikko-container { display: flex; align-items: center; justify-content: center; }
+.otsikko-container h2 { flex-grow: 1; }
+#tulostaBtn { width: auto; font-size: 1.5em; border: none; background: none; }
+#tulostaBtn:hover { color: #FFD700; background: none; }
+
+.osio-laatikko { background-color: #2A381C; padding: 15px; border-radius: 8px; margin-top: 20px; }
+.osio-laatikko p { font-size: 0.9em; line-height: 1.5; opacity: 0.8; }
+
+#aktiivisetSinetitLista li {
+    background-color: #FFD700; color: #1a2015; font-weight: bold;
+    padding: 10px; border-radius: 4px; text-align: center;
+    margin-bottom: 5px; font-size: 1.2em;
 }
 
-button:hover {
-    background-color: #166fe5;
-}
+.lisaa-sinetti-container { display: flex; gap: 10px; margin-top: 15px; }
+.lisaa-sinetti-container input { flex-grow: 1; margin: 0; }
+.lisaa-sinetti-container button { width: auto; flex-shrink: 0; }
 
-.hidden {
-    display: none !important;
-}
+.historia-item { display: flex; gap: 15px; padding: 10px 0; border-bottom: 1px solid #3D4F2B; align-items: center; }
+.historia-item:last-child { border-bottom: none; }
+.historia-sinetti { flex-basis: 150px; text-align: center; }
+.sinetin-numero { font-family: monospace; font-size: 1.4em; display: block; }
+.sinetin-status { font-size: 0.8em; font-weight: bold; color: #27ae60; }
+.sinetin-status.poistettu { color: #c0392b; }
 
-/* Tulostustyylit */
+.historia-aikaleimat { flex-grow: 1; font-size: 0.9em; }
+.aikaleima-rivi strong { color: #90EE90; min-width: 70px; display: inline-block; }
+
+.historia-toiminnot { display: flex; gap: 5px; }
+.historia-toiminnot button { width: auto; background: none; border: none; font-size: 1.3em; padding: 5px; color: #cccccc; }
+.historia-toiminnot button:hover { color: #FFD700; background: none; }
+
 @media print {
-    .no-print {
-        display: none !important;
-    }
-    body {
-        padding: 0;
-        background-color: #fff;
-    }
-    .sisalto-laatikko {
-        box-shadow: none;
-        border: none;
-        margin: 0;
-        max-width: 100%;
-    }
-}
-
-/* Osioiden asettelu */
-.osio-laatikko {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #f7f8fa;
-    border-radius: 6px;
-}
-.otsikko-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-#tulostaBtn {
-    font-size: 24px;
-    background: none;
-    border: none;
-    padding: 0 10px;
-}
-
-/* Historialista */
-#historiaLista {
-    list-style: none;
-    padding: 0;
-}
-.historia-item {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    border-bottom: 1px solid #e0e0e0;
-}
-.historia-item:last-child {
-    border-bottom: none;
-}
-.sinetin-status {
-    font-weight: bold;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    margin-left: 10px;
-}
-.sinetin-status.poistettu {
-    background-color: #fad2d2;
-    color: #d93025;
-}
-.sinetin-status:not(.poistettu) {
-    background-color: #d2e7d4;
-    color: #1e8e3e;
-}
-
-/* UUDET MODAL-TYYLIT ALKAVAT TÄSTÄ */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.6);
-    z-index: 2000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.modal-content {
-    background-color: #ffffff;
-    padding: 25px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.4);
-}
-.form-group {
-    margin-bottom: 15px;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-.form-group input {
-    width: 100%;
-    box-sizing: border-box;
-}
-.modal-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    justify-content: flex-end;
-}
-#peruutaMuokkausBtn {
-    background-color: #e4e6eb;
-    color: #333;
-    font-weight: bold;
-}
-#peruutaMuokkausBtn:hover {
-    background-color: #d8dadf;
+    body { background-color: #fff; color: #000; font-family: sans-serif; }
+    .no-print { display: none !important; }
+    .sisalto-laatikko { border: none; box-shadow: none; padding: 0; }
+    h1, h2, h3 { color: #000; text-align: left; border: none; }
+    #aktiivinenKonttiNimi { text-align: center; font-size: 1.5em; margin-bottom: 20px; }
+    .osio-laatikko { background: none; padding: 0; margin-top: 20px; }
+    .historia-item { border-color: #ccc; page-break-inside: avoid; }
+    .aikaleima-rivi strong { color: #000; }
 }
