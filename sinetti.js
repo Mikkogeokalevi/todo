@@ -30,33 +30,23 @@ const tulostaBtn = document.getElementById('tulostaBtn');
 let currentContainerId = null;
 let containerSeals = [];
 
+// UUSI APUFUNKTIO: Muuntaa "pp.kk.vvvv hh:mm" -muotoisen ajan Date-objektiksi
+const parseFinnishDateTime = (str) => {
+    if (!str || str.trim() === '') {
+        return null;
+    }
+    const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/);
+    if (parts) {
+        // new Date(vuosi, kuukausi (0-11), päivä, tunti, minuutti)
+        return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]);
+    }
+    return null; // Palauttaa null, jos muoto on virheellinen
+};
+
 const handleContainerSelection = (containerName) => { if (!containerName || containerName.trim() === '') return; const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-'); currentContainerId = normalizedId; const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`; history.pushState({ path: newUrl }, '', newUrl); document.querySelector('.kontti-valitsin').classList.add('hidden'); lokiOsio.classList.remove('hidden'); aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`; loadContainerData(); };
-
-const loadContainerData = () => {
-    const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`);
-    onValue(containerRef, (snapshot) => {
-        containerSeals = snapshot.exists() ? Object.values(snapshot.val()) : [];
-        if (containerSeals.length === 0) {
-            // Jos kontti on uusi tai tyhjä, luodaan se tietokantaan
-            saveState();
-        }
-        renderAll();
-    });
-};
-
-const saveState = () => {
-    if (!currentContainerId) return;
-    const dataToSave = {};
-    containerSeals.forEach(seal => { dataToSave[seal.id] = seal; });
-    const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`);
-    set(containerRef, dataToSave);
-};
-
-const renderAll = () => {
-    const activeSeals = containerSeals.filter(seal => !seal.removedTimestamp);
-    renderActiveSeals(activeSeals);
-    renderHistory();
-};
+const loadContainerData = () => { const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`); onValue(containerRef, (snapshot) => { containerSeals = snapshot.exists() ? Object.values(snapshot.val()) : []; if (containerSeals.length === 0) { saveState(); } renderAll(); }); };
+const saveState = () => { if (!currentContainerId) return; const dataToSave = {}; containerSeals.forEach(seal => { dataToSave[seal.id] = seal; }); const containerRef = ref(database, `sinettiloki/${currentContainerId}/seals`); set(containerRef, dataToSave); };
+const renderAll = () => { const activeSeals = containerSeals.filter(seal => !seal.removedTimestamp); renderActiveSeals(activeSeals); renderHistory(); };
 
 const renderActiveSeals = (activeSeals) => {
     aktiivisetSinetitLista.innerHTML = '';
@@ -107,24 +97,14 @@ lisaaSinetBtn.addEventListener('click', () => {
         alert("Anna uuden sinetin numero.");
         return;
     }
-
     const now = new Date().toISOString();
-    // 1. Merkitse kaikki vanhat aktiiviset sinetit poistetuiksi
     containerSeals.forEach(seal => {
         if (!seal.removedTimestamp) {
             seal.removedTimestamp = now;
         }
     });
-
-    // 2. Luo uusi aktiivinen sinetti
-    const newSeal = {
-        id: Date.now(),
-        sealNumber: newSealNumber,
-        addedTimestamp: now,
-        removedTimestamp: null
-    };
+    const newSeal = { id: Date.now(), sealNumber: newSealNumber, addedTimestamp: now, removedTimestamp: null };
     containerSeals.push(newSeal);
-    
     uusiSinetinNumeroInput.value = '';
     saveState();
 });
@@ -146,25 +126,34 @@ historiaLista.addEventListener('click', (e) => {
         }
     }
 
+    // KORJATTU MUOKKAUSLOGIIKKA
     if (e.target.closest('.muokkaa-btn')) {
         const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber);
         if (newSealNumber === null) return;
 
-        const newAddedTime = prompt("Muokkaa lisäysaikaa (muodossa pp.kk.vvvv hh:mm):", new Date(seal.addedTimestamp).toLocaleString('fi-FI'));
-        if (newAddedTime === null) return;
+        const newAddedTimeStr = prompt("Muokkaa lisäysaikaa (muodossa pp.kk.vvvv hh:mm):", new Date(seal.addedTimestamp).toLocaleString('fi-FI'));
+        if (newAddedTimeStr === null) return;
         
-        const currentRemovedTime = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : '';
-        const newRemovedTime = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTime);
-        if (newRemovedTime === null) return;
+        const currentRemovedTimeStr = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : '';
+        const newRemovedTimeStr = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTimeStr);
+        if (newRemovedTimeStr === null) return;
         
-        try {
-            seal.sealNumber = newSealNumber.trim();
-            seal.addedTimestamp = new Date(newAddedTime.replace(/(\d{2})\.(\d{2})\.(\d{4})/, '$3-$2-$1')).toISOString();
-            seal.removedTimestamp = newRemovedTime.trim() ? new Date(newRemovedTime.replace(/(\d{2})\.(\d{2})\.(\d{4})/, '$3-$2-$1')).toISOString() : null;
-            saveState();
-        } catch (error) {
-            alert("Virheellinen päivämäärän muoto. Käytä muotoa pp.kk.vvvv hh:mm");
+        const newAddedDate = parseFinnishDateTime(newAddedTimeStr);
+        const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
+
+        if (newAddedTimeStr.trim() !== '' && !newAddedDate) {
+            alert("Virheellinen lisäysajan muoto. Käytä muotoa pp.kk.vvvv hh:mm");
+            return;
         }
+        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
+            alert("Virheellinen poistoajan muoto. Käytä muotoa pp.kk.vvvv hh:mm");
+            return;
+        }
+
+        seal.sealNumber = newSealNumber.trim();
+        seal.addedTimestamp = newAddedDate.toISOString();
+        seal.removedTimestamp = newRemovedDate ? newRemovedDate.toISOString() : null;
+        saveState();
     }
 });
 
