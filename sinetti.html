@@ -17,7 +17,6 @@
             <select id="konttiValikko">
                 <option value="">Ladataan...</option>
             </select>
-
             <label for="kontinNimi">Tai luo uusi kirjoittamalla nimi:</label>
             <input type="text" id="kontinNimi" placeholder="Esim. KONTTI-123">
         </div>
@@ -29,27 +28,23 @@
             </div>
             
             <div class="osio-laatikko no-print">
-                <h3>Nykyiset sinetit kontissa</h3>
-                <ul id="nykyisetSinetitLista">
+                <h3>Aktiiviset sinetit kontissa</h3>
+                <ul id="aktiivisetSinetitLista">
                     <li>Ei aktiivisia sinettejä.</li>
                 </ul>
-                <div id="lisaaEnsimmainenSinetti" class="lisaa-sinetti-container hidden">
-                    <input type="text" id="ensimmainenSinetinNumero" placeholder="Lisää ensimmäinen sinetti...">
-                    <button id="lisaaEnsimmainenBtn">+</button>
-                </div>
             </div>
 
             <div class="osio-laatikko no-print">
-                <h3>Toimenpide: Poista vanhat ja lisää uusi</h3>
-                <p>Kun suoritat toimenpiteen, kaikki yllä olevat "Nykyiset sinetit" siirretään historiaan ja korvataan alla antamallasi uudella sinetillä.</p>
+                <h3>Toimenpide</h3>
+                <p>Lisää uusi sinetti. Tämä merkitsee kaikki nykyiset aktiiviset sinetit poistetuiksi.</p>
                 <div class="lisaa-sinetti-container">
                     <input type="text" id="uusiSinetinNumero" placeholder="Uuden sinetin numero...">
-                    <button id="suoritaVaihtoBtn">Kirjaa toimenpide</button>
+                    <button id="lisaaSinetBtn">Lisää uusi sinetti</button>
                 </div>
             </div>
             
             <div class="osio-laatikko">
-                <h3>Historia</h3>
+                <h3>Sinettihistoria</h3>
                 <ul id="historiaLista"></ul>
             </div>
         </div>
@@ -57,15 +52,18 @@
 
     <template id="historia-template">
         <li class="historia-item">
-            <div class="historia-aikaleima"></div>
-            <div class="historia-tiedot">
-                <div class="historia-rivi">
-                    <strong>Poistettu:</strong>
-                    <span class="poistetut-sinetit"></span>
+            <div class="historia-sinetti">
+                <span class="sinetin-numero"></span>
+                <span class="sinetin-status"></span>
+            </div>
+            <div class="historia-aikaleimat">
+                <div class="aikaleima-rivi">
+                    <strong>Lisätty:</strong>
+                    <span class="lisatty-aika"></span>
                 </div>
-                <div class="historia-rivi">
-                    <strong>Uusi:</strong>
-                    <span class="uusi-sinetti"></span>
+                <div class="aikaleima-rivi">
+                    <strong>Poistettu:</strong>
+                    <span class="poistettu-aika"></span>
                 </div>
             </div>
             <div class="historia-toiminnot no-print">
