@@ -15,6 +15,7 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // DOM-elementit
+const kontinValitsinDiv = document.querySelector('.kontti-valitsin');
 const kontinNimiInput = document.getElementById('kontinNimi');
 const konttiValikko = document.getElementById('konttiValikko');
 const lokiOsio = document.getElementById('loki-osio');
@@ -31,25 +32,22 @@ let currentContainerId = null;
 let containerSeals = [];
 
 const parseFinnishDateTime = (str) => { if (!str || str.trim() === '') { return null; } const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/); if (parts) { return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]); } return null; };
-const handleContainerSelection = (containerName) => { if (!containerName || containerName.trim() === '') return; const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-'); currentContainerId = normalizedId; const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`; history.pushState({ path: newUrl }, '', newUrl); document.querySelector('.kontti-valitsin').classList.add('hidden'); lokiOsio.classList.remove('hidden'); aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`; loadContainerData(); };
+const handleContainerSelection = (containerName) => { if (!containerName || containerName.trim() === '') return; const normalizedId = containerName.trim().toLowerCase().replace(/\s+/g, '-'); currentContainerId = normalizedId; const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`; history.pushState({ path: newUrl }, '', newUrl); kontinValitsinDiv.classList.add('hidden'); lokiOsio.classList.remove('hidden'); aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`; loadContainerData(); };
 
-// KORJATTU FUNKTIO
+// KORJATTU DATAN LATAUSFUNKTIO
 const loadContainerData = () => {
     if (!currentContainerId) return;
     const containerRef = ref(database, `sinettiloki/${currentContainerId}`);
     onValue(containerRef, (snapshot) => {
-        // Haetaan vain 'seals'-polku kontin alta
-        const sealsData = snapshot.child('seals').val();
-        containerSeals = sealsData ? Object.values(sealsData) : [];
-        
-        if (!snapshot.exists()) {
-             // Jos koko konttia ei ole olemassa, luodaan se tyhjänä.
-             // Tämä on tärkeää uusille konteille.
+        if (snapshot.exists()) {
+            const sealsData = snapshot.child('seals').val();
+            containerSeals = sealsData ? Object.values(sealsData) : [];
+        } else {
+            // Konttia ei ole olemassa, alustetaan se tyhjänä ja tallennetaan.
+            containerSeals = [];
             saveState();
         }
         renderAll();
-    }, {
-        onlyOnce: false // Varmistetaan, että data päivittyy jatkuvasti
     });
 };
 
@@ -144,10 +142,12 @@ const initializePage = () => {
     const containerFromUrl = urlParams.get('kontti');
     loadContainerList();
     if (containerFromUrl) {
-        kontinNimiInput.value = containerFromUrl;
+        // Asetetaan arvo sekä tekstikenttään että valikkoon.
+        kontinNimiInput.value = containerFromUrl.replace(/-/g, ' ');
+        konttiValikko.value = containerFromUrl;
         handleContainerSelection(containerFromUrl);
     } else {
-        document.querySelector('.kontti-valitsin').classList.remove('hidden');
+        kontinValitsinDiv.classList.remove('hidden');
         lokiOsio.classList.add('hidden');
     }
 };
