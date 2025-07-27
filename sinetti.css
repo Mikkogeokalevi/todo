@@ -21,8 +21,6 @@ h1, h2, h3 {
     margin-top: 0;
 }
 .hidden { display: none !important; }
-
-/* MUUTOS: Lisätty select-elementti */
 input[type="text"], select {
     width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box;
     background-color: #2A381C; color: #F8F8F8; border: 1px solid #556B2F;
@@ -46,7 +44,7 @@ ul { list-style: none; padding: 0; }
 .osio-laatikko { background-color: #2A381C; padding: 15px; border-radius: 8px; margin-top: 20px; }
 .osio-laatikko p { font-size: 0.9em; line-height: 1.5; opacity: 0.8; }
 
-#nykyisetSinetitLista li {
+#aktiivisetSinetitLista li {
     background-color: #FFD700; color: #1a2015; font-weight: bold;
     padding: 10px; border-radius: 4px; text-align: center;
     margin-bottom: 5px; font-size: 1.2em;
@@ -58,11 +56,13 @@ ul { list-style: none; padding: 0; }
 
 .historia-item { display: flex; gap: 15px; padding: 10px 0; border-bottom: 1px solid #3D4F2B; align-items: center; }
 .historia-item:last-child { border-bottom: none; }
-.historia-aikaleima { font-size: 0.8em; opacity: 0.7; white-space: pre; text-align: right; }
-.historia-tiedot { flex-grow: 1; }
-.historia-rivi { margin-bottom: 5px; }
-.historia-rivi strong { color: #90EE90; }
-.poistetut-sinetit, .uusi-sinetti { font-family: monospace; font-size: 1.1em; }
+.historia-sinetti { flex-basis: 150px; text-align: center; }
+.sinetin-numero { font-family: monospace; font-size: 1.4em; display: block; }
+.sinetin-status { font-size: 0.8em; font-weight: bold; color: #27ae60; }
+.sinetin-status.poistettu { color: #c0392b; }
+
+.historia-aikaleimat { flex-grow: 1; font-size: 0.9em; }
+.aikaleima-rivi strong { color: #90EE90; min-width: 70px; display: inline-block; }
 
 .historia-toiminnot { display: flex; gap: 5px; }
 .historia-toiminnot button { width: auto; background: none; border: none; font-size: 1.3em; padding: 5px; color: #cccccc; }
@@ -76,5 +76,5 @@ ul { list-style: none; padding: 0; }
     #aktiivinenKonttiNimi { text-align: center; font-size: 1.5em; margin-bottom: 20px; }
     .osio-laatikko { background: none; padding: 0; margin-top: 20px; }
     .historia-item { border-color: #ccc; page-break-inside: avoid; }
-    .historia-rivi strong { color: #000; }
+    .aikaleima-rivi strong { color: #000; }
 }
