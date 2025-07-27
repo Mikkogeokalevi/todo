@@ -9,17 +9,20 @@
 <body>
 
     <div class="sisalto-laatikko">
-        <h1>Sinettien Seuranta</h1>
+        <h1 class="no-print">Sinettien Seuranta</h1>
 
-        <div class="kontti-valitsin">
+        <div class="kontti-valitsin no-print">
             <label for="kontinNimi">Kontin nimi tai tunnus:</label>
             <input type="text" id="kontinNimi" placeholder="Esim. KONTTI-123">
         </div>
 
         <div id="loki-osio" class="hidden">
-            <h2 id="aktiivinenKonttiNimi"></h2>
+            <div class="otsikko-container">
+                <h2 id="aktiivinenKonttiNimi"></h2>
+                <button id="tulostaBtn" class="no-print" title="Tulosta loki">🖨️</button>
+            </div>
             
-            <div class="osio-laatikko">
+            <div class="osio-laatikko no-print">
                 <h3>Nykyiset sinetit kontissa</h3>
                 <ul id="nykyisetSinetitLista">
                     <li>Ei aktiivisia sinettejä.</li>
@@ -30,7 +33,7 @@
                 </div>
             </div>
 
-            <div class="osio-laatikko">
+            <div class="osio-laatikko no-print">
                 <h3>Toimenpide: Poista vanhat ja lisää uusi</h3>
                 <p>Kun suoritat toimenpiteen, kaikki yllä olevat "Nykyiset sinetit" siirretään historiaan ja korvataan alla antamallasi uudella sinetillä.</p>
                 <div class="lisaa-sinetti-container">
@@ -58,6 +61,10 @@
                     <strong>Uusi:</strong>
                     <span class="uusi-sinetti"></span>
                 </div>
+            </div>
+            <div class="historia-toiminnot no-print">
+                <button class="muokkaa-btn" title="Muokkaa kirjausta">✏️</button>
+                <button class="poista-btn" title="Poista kirjaus">🗑️</button>
             </div>
         </li>
     </template>
