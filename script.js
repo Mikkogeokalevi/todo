@@ -6,7 +6,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const listNameFromUrl = urlParams.get('lista');
 const FIREBASE_PATH = listNameFromUrl || 'paalista';
 const OFFLINE_KEY = `georeissu-offline-${FIREBASE_PATH}`;
-// --- ASETUKSET 2 PÄÄTTYVÄT ---
+// --- ASETUKSET w2 PÄÄTTYVÄT ---
 
 document.addEventListener('DOMContentLoaded', () => {
     document.title = `${FIREBASE_PATH} — MK Reissuapuri —`;
@@ -88,6 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let clickMarker = null;
     let lastCheckedCoords = null;
     let wakeLock = null;
+    // --- UUSI LISÄYS: Tila kuntamerkkien näkyvyydelle ---
+    let showMunicipalityMarkers = true; 
+    // --- LOPPU ---
 
     const ALERT_APPROACH_DISTANCE = 1500;
     const ALERT_TARGET_DISTANCE = 200;
@@ -327,6 +330,28 @@ document.addEventListener('DOMContentLoaded', () => {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
         const userIcon = L.divIcon({className: 'user-marker'});
         userMarker = L.marker([0, 0], { icon: userIcon }).addTo(map);
+        
+        // --- UUSI LISÄYS: Lisätään kartalle nappi, jolla voi piilottaa kuntien nimet ---
+        const ToggleMarkersControl = L.Control.extend({
+            onAdd: function(map) {
+                const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
+                btn.innerHTML = 'Piilota kunnat'; // Alkuteksti
+                btn.title = 'Näytä/Piilota kuntien nimet kartalla';
+
+                btn.onclick = (e) => {
+                    L.DomEvent.stopPropagation(e); // Estää kartan klikkaus-eventin
+                    showMunicipalityMarkers = !showMunicipalityMarkers; // Vaihda tilaa
+                    btn.innerHTML = showMunicipalityMarkers ? 'Piilota kunnat' : 'Näytä kunnat'; // Päivitä napin teksti
+                    updateAllMarkers(); // Päivitä kartan merkit
+                };
+                return btn;
+            },
+            onRemove: function(map) { }
+        });
+
+        new ToggleMarkersControl({ position: 'topleft' }).addTo(map);
+        // --- LOPPU ---
+
         map.on('click', handleMapClick);
     };
 
@@ -354,13 +379,21 @@ document.addEventListener('DOMContentLoaded', () => {
         municipalityMarkers.forEach(marker => marker.removeFrom(map)); municipalityMarkers = [];
         cacheMarkers.forEach(marker => marker.removeFrom(map)); cacheMarkers = [];
         const bounds = [];
+        
+        // --- MUOKATTU KOHTA: Kuntamerkit piirretään vain jos asetus on päällä ---
+        if (showMunicipalityMarkers) {
+            municipalities.forEach(mun => {
+                if (mun.lat && mun.lon) {
+                    const markerIcon = L.divIcon({ className: 'municipality-marker', html: `<span>${mun.name}</span>`, iconSize: 'auto' });
+                    const marker = L.marker([mun.lat, mun.lon], { icon: markerIcon }).addTo(map);
+                    municipalityMarkers.push(marker);
+                    bounds.push([mun.lat, mun.lon]);
+                }
+            });
+        }
+        // --- LOPPU ---
+
         municipalities.forEach(mun => {
-            if (mun.lat && mun.lon) {
-                const markerIcon = L.divIcon({ className: 'municipality-marker', html: `<span>${mun.name}</span>`, iconSize: 'auto' });
-                const marker = L.marker([mun.lat, mun.lon], { icon: markerIcon }).addTo(map);
-                municipalityMarkers.push(marker);
-                bounds.push([mun.lat, mun.lon]);
-            }
             (mun.caches || []).forEach(cache => {
                 if (cache.lat && cache.lon) {
                     const cacheIcon = getCacheIcon(cache.type);
@@ -1215,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', () => {
             editFpInput.value = cache.fp || '';
             editCoordsInput.value = formatCoordinates(cache.lat, cache.lon);
             
-            editCacheModal.classList.remove('hidden');
+            editCacheModal.classList.add('hidden');
         } else if (target.classList.contains('delete-found-btn')) {
             if (confirm(`Haluatko varmasti poistaa lokista kätkön "${cache.name}"?`)) {
                 const cacheIndex = foundCaches.findIndex(c => c.id === cacheId);
