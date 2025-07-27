@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit
+// DOM-elementit 334
 const kontinValitsinDiv = document.querySelector('.kontti-valitsin');
 const kontinNimiInput = document.getElementById('kontinNimi');
 const konttiValikko = document.getElementById('konttiValikko');
@@ -31,14 +31,25 @@ const tulostaBtn = document.getElementById('tulostaBtn');
 let currentContainerId = null;
 let containerSeals = [];
 
-// Apufunktio suomalaisen päivämäärän ja ajan muuntamiseksi Date-objektiksi
-const parseFinnishDateTime = (str) => {
-    if (!str || str.trim() === '') {
-        return null;
+// --- UUSI, LUOTETTAVA APUFUNKTIO PÄIVÄMÄÄRÄN MUOTOILUUN ---
+// Tämä funktio rakentaa päivämäärän manuaalisesti, jotta vältetään selainongelmat.
+const formatFinnishDateTime = (date) => {
+    if (!date || isNaN(new Date(date).getTime())) {
+        return ''; // Palauttaa tyhjän, jos päivämäärä on virheellinen
     }
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0'); // Kuukaudet ovat 0-11
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}.${month}.${year} ${hours}:${minutes}`;
+};
+
+const parseFinnishDateTime = (str) => {
+    if (!str || str.trim() === '') return null;
     const parts = str.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s*(\d{1,2}):(\d{1,2})/);
     if (parts) {
-        // new Date(vuosi, kuukausi (0-11), päivä, tunti, minuutti)
         return new Date(parts[3], parts[2] - 1, parts[1], parts[4], parts[5]);
     }
     return null;
@@ -103,7 +114,6 @@ const renderActiveSeals = (activeSeals) => {
 const renderHistory = () => {
     historiaLista.innerHTML = '';
     const sortedSeals = [...containerSeals].sort((a, b) => new Date(b.addedTimestamp) - new Date(a.addedTimestamp));
-
     sortedSeals.forEach(seal => {
         const clone = historiaTemplate.content.cloneNode(true);
         const item = clone.querySelector('.historia-item');
@@ -117,8 +127,9 @@ const renderHistory = () => {
             statusSpan.classList.remove('poistettu');
         }
         item.querySelector('.sinetin-numero').textContent = seal.sealNumber;
-        item.querySelector('.lisatty-aika').textContent = seal.addedTimestamp ? new Date(seal.addedTimestamp).toLocaleString('fi-FI') : 'Aika puuttuu';
-        item.querySelector('.poistettu-aika').textContent = seal.removedTimestamp ? new Date(seal.removedTimestamp).toLocaleString('fi-FI') : ' - ';
+        // Käytetään uutta, luotettavaa funktiota myös täällä
+        item.querySelector('.lisatty-aika').textContent = formatFinnishDateTime(seal.addedTimestamp) || 'Aika puuttuu';
+        item.querySelector('.poistettu-aika').textContent = formatFinnishDateTime(seal.removedTimestamp) || ' - ';
         historiaLista.appendChild(item);
     });
 };
@@ -146,6 +157,7 @@ lisaaSinetBtn.addEventListener('click', () => {
 
 tulostaBtn.addEventListener('click', () => window.print());
 
+// --- TÄYSIN UUSITTU TAPAHTUMANKÄSITTELIJÄ ---
 historiaLista.addEventListener('click', (e) => {
     const sealItem = e.target.closest('.historia-item');
     if (!sealItem) return;
@@ -159,52 +171,42 @@ historiaLista.addEventListener('click', (e) => {
     const seal = containerSeals[sealIndex];
 
     if (e.target.closest('.poista-btn')) {
-        if (confirm(`Haluatko varmasti poistaa sinetin "${seal.sealNumber}" ja kaikki sen tiedot?`)) {
+        if (confirm(`Haluatko varmasti poistaa sinetin "${seal.sealNumber}"?`)) {
             containerSeals.splice(sealIndex, 1);
             saveState();
         }
-        return; // Lopetetaan suoritus poiston jälkeen
+        return;
     }
 
     if (e.target.closest('.muokkaa-btn')) {
+        // Vaihe 1: Kysy kaikki tiedot järjestyksessä
         const newSealNumber = prompt("Muokkaa sinetin numeroa:", seal.sealNumber || "");
         if (newSealNumber === null) return;
 
-        // **KORJATTU OSA: Aikaleimojen turvallinen käsittely**
-        let currentAddedTimeStr = '';
-        if (seal.addedTimestamp) {
-            const addedDate = new Date(seal.addedTimestamp);
-            if (!isNaN(addedDate.getTime())) { // Tarkistetaan, onko päivämäärä kelvollinen
-                currentAddedTimeStr = addedDate.toLocaleString('fi-FI', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            }
-        }
+        // Käytetään uutta, luotettavaa muotoilufunktiota
+        const currentAddedTimeStr = formatFinnishDateTime(seal.addedTimestamp);
         const newAddedTimeStr = prompt("Muokkaa lisäysaikaa (pp.kk.vvvv hh:mm):", currentAddedTimeStr);
         if (newAddedTimeStr === null) return;
-
-        let currentRemovedTimeStr = '';
-        if (seal.removedTimestamp) {
-            const removedDate = new Date(seal.removedTimestamp);
-            if (!isNaN(removedDate.getTime())) { // Tarkistetaan, onko päivämäärä kelvollinen
-                currentRemovedTimeStr = removedDate.toLocaleString('fi-FI', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-            }
-        }
+        
+        // Käytetään uutta, luotettavaa muotoilufunktiota
+        const currentRemovedTimeStr = formatFinnishDateTime(seal.removedTimestamp);
         const newRemovedTimeStr = prompt("Muokkaa poistoaikaa (tyhjä = aktiivinen):", currentRemovedTimeStr);
         if (newRemovedTimeStr === null) return;
 
-        // Syötteiden validointi
+        // Vaihe 2: Tarkista ja muunna syötteet
         const newAddedDate = parseFinnishDateTime(newAddedTimeStr);
-        const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
-
         if (!newAddedDate) {
-            alert("Virheellinen lisäysajan muoto. Muokkausta ei tallennettu. Käytä muotoa pp.kk.vvvv hh:mm.");
-            return;
-        }
-        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
-            alert("Virheellinen poistoajan muoto. Muokkausta ei tallennettu. Käytä muotoa pp.kk.vvvv hh:mm tai jätä kenttä tyhjäksi.");
+            alert("Virheellinen lisäysajan muoto. Muokkausta ei tallennettu.");
             return;
         }
 
-        // Datan päivitys ja tallennus
+        const newRemovedDate = parseFinnishDateTime(newRemovedTimeStr);
+        if (newRemovedTimeStr.trim() !== '' && !newRemovedDate) {
+            alert("Virheellinen poistoajan muoto. Muokkausta ei tallennettu.");
+            return;
+        }
+
+        // Vaihe 3: Päivitä tiedot ja tallenna
         seal.sealNumber = newSealNumber.trim();
         seal.addedTimestamp = newAddedDate.toISOString();
         seal.removedTimestamp = newRemovedDate ? newRemovedDate.toISOString() : null;
@@ -213,7 +215,6 @@ historiaLista.addEventListener('click', (e) => {
         alert("Tiedot päivitetty onnistuneesti!");
     }
 });
-
 
 const loadContainerList = () => {
     const containerListRef = ref(database, 'sinettiloki');
