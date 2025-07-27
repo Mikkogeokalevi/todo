@@ -15,8 +15,9 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 // DOM-elementit
+const kontinValitsinDiv = document.querySelector('.kontti-valitsin');
 const kontinNimiInput = document.getElementById('kontinNimi');
-const konttiValikko = document.getElementById('konttiValikko'); // UUSI
+const konttiValikko = document.getElementById('konttiValikko');
 const lokiOsio = document.getElementById('loki-osio');
 const aktiivinenKonttiNimi = document.getElementById('aktiivinenKonttiNimi');
 const nykyisetSinetitLista = document.getElementById('nykyisetSinetitLista');
@@ -41,8 +42,7 @@ const handleContainerSelection = (containerName) => {
     const newUrl = `${window.location.pathname}?kontti=${currentContainerId}`;
     history.pushState({ path: newUrl }, '', newUrl);
 
-    // Piilotetaan valikko ja näytetään loki
-    document.querySelector('.kontti-valitsin').classList.add('hidden');
+    kontinValitsinDiv.classList.add('hidden');
     lokiOsio.classList.remove('hidden');
     
     aktiivinenKonttiNimi.textContent = `Kontti: ${containerName.trim()}`;
@@ -130,37 +130,50 @@ historiaLista.addEventListener('click', (e) => {
     }
 });
 
-// UUSI FUNKTIO: Konttilistan lataaminen
+// KORJATTU FUNKTIO: Konttilistan lataaminen virheenkäsittelyllä
 const loadContainerList = () => {
     const containerListRef = ref(database, 'sinettiloki');
-    onValue(containerListRef, (snapshot) => {
-        konttiValikko.innerHTML = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'Valitse kontti...';
-        konttiValikko.appendChild(placeholder);
+    onValue(containerListRef, 
+        // 1. Onnistunut haku
+        (snapshot) => {
+            konttiValikko.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Valitse kontti...';
+            konttiValikko.appendChild(placeholder);
 
-        if (snapshot.exists()) {
-            const containers = snapshot.val();
-            Object.keys(containers).forEach(containerId => {
-                const option = document.createElement('option');
-                option.value = containerId;
-                option.textContent = containerId.replace(/-/g, ' ');
-                konttiValikko.appendChild(option);
-            });
+            if (snapshot.exists()) {
+                const containers = snapshot.val();
+                Object.keys(containers).forEach(containerId => {
+                    const option = document.createElement('option');
+                    option.value = containerId;
+                    option.textContent = containerId.replace(/-/g, ' ');
+                    konttiValikko.appendChild(option);
+                });
+            }
+        }, 
+        // 2. Virheen käsittely
+        (error) => {
+            console.error("Virhe konttilistan haussa:", error);
+            konttiValikko.innerHTML = '<option value="">Virhe latauksessa</option>';
         }
-    });
+    );
 };
 
-// Sivun alustus
+// KORJATTU FUNKTIO: Sivun alustus
 const initializePage = () => {
-    loadContainerList(); // Ladataan lista heti alussa
     const urlParams = new URLSearchParams(window.location.search);
     const containerFromUrl = urlParams.get('kontti');
+    
+    loadContainerList(); // Ladataan aina lista ensin
 
     if (containerFromUrl) {
         kontinNimiInput.value = containerFromUrl;
         handleContainerSelection(containerFromUrl);
+    } else {
+        // Varmistetaan, että valikko näkyy, jos URL:ssa ei ole konttia
+        kontinValitsinDiv.classList.remove('hidden');
+        lokiOsio.classList.add('hidden');
     }
 };
 
