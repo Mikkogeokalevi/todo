@@ -3,10 +3,10 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 
 const firebaseConfig = {
     apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
-    authDomain: "geokatkosunnittelija.firebaseapp.com",
-    databaseURL: "https://geokatkosunnittelija-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "geokatkosunnittelija",
-    storageBucket: "geokatkosunnittelija.appspot.com",
+    authDomain: "geokatkosuunnittelija.firebaseapp.com",
+    databaseURL: "https://geokatkosuunnittelija-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "geokatkosuunnittelija",
+    storageBucket: "geokatkosuunnittelija.appspot.com",
     messagingSenderId: "745498680990",
     appId: "1:745498680990:web:869074eb0f0b72565ca58f"
 };
