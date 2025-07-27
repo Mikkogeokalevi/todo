@@ -14,7 +14,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit
 const projektinValintaDiv = document.querySelector('.projekti-valitsin');
 const projektinNimiInput = document.getElementById('projektinNimi');
 const projektiValikko = document.getElementById('projektiValikko');
@@ -42,13 +41,7 @@ let currentProject = null;
 let entries = [];
 let activeEntry = null;
 
-const toLocalISOString = (date) => {
-    if (!date) return '';
-    const tzoffset = (new Date()).getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, -1);
-    return localISOTime.slice(0, 16);
-};
-
+const toLocalISOString = (date) => { if (!date) return ''; const tzoffset = (new Date()).getTimezoneOffset() * 60000; const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, -1); return localISOTime.slice(0, 16); };
 const loadProject = (projectName) => { if (!projectName || projectName.trim() === '') return; const normalizedProjectName = projectName.trim().toLowerCase().replace(/\s+/g, '-'); currentProject = normalizedProjectName; const newUrl = `${window.location.pathname}?projekti=${currentProject}`; history.pushState({ path: newUrl }, '', newUrl); projektinValintaDiv.classList.add('hidden'); laskuriOsio.classList.remove('hidden'); const displayName = currentProject.replace(/-/g, ' '); aktiivinenProjektiNimi.textContent = `Projekti: ${displayName}`; projektiValikko.value = currentProject; suoraLinkkiDiv.querySelector('input').value = window.location.href; suoraLinkkiDiv.classList.remove('hidden'); loadProjectData(); };
 const loadProjectData = () => { if (!currentProject) return; const projectRef = ref(database, `tyoaikaprojektit/${currentProject}/kirjaukset`); onValue(projectRef, (snapshot) => { const data = snapshot.val(); entries = data ? Object.values(data) : []; activeEntry = entries.find(e => !e.loppuAika) || null; renderAll(); }); };
 const saveState = () => { if (!currentProject) return; const dataToSave = {}; entries.forEach(entry => { dataToSave[entry.id] = entry; }); set(ref(database, `tyoaikaprojektit/${currentProject}/kirjaukset`), dataToSave); };
@@ -66,90 +59,33 @@ tulostaBtn.addEventListener('click', () => { window.print(); });
 kopioiLinkkiBtn.addEventListener('click', () => { const linkInput = suoraLinkkiDiv.querySelector('input'); linkInput.select(); linkInput.setSelectionRange(0, 99999); try { document.execCommand('copy'); kopioiLinkkiBtn.textContent = 'Kopioitu!'; setTimeout(() => { kopioiLinkkiBtn.textContent = 'Kopioi'; }, 2000); } catch (err) { alert('Linkin kopiointi epäonnistui'); } });
 const renderAll = () => { renderActiveEntry(); renderEntriesList(); renderSummary(); };
 const renderActiveEntry = () => { if (activeEntry) { aloitaLopetaBtn.textContent = 'Lopeta Ajanotto'; aloitaLopetaBtn.classList.add('aktiivinen'); aktiivinenKirjausDiv.classList.add('highlight-active'); aktiivinenTehtavaInput.value = activeEntry.tehtava; aktiivinenTehtavaInput.disabled = true; alkuAikaNaytto.textContent = new Date(activeEntry.alkuAika).toLocaleString('fi-FI'); } else { aloitaLopetaBtn.textContent = 'Aloita Ajanotto'; aloitaLopetaBtn.classList.remove('aktiivinen'); aktiivinenKirjausDiv.classList.remove('highlight-active'); aktiivinenTehtavaInput.value = ''; aktiivinenTehtavaInput.disabled = false; alkuAikaNaytto.textContent = '--:--'; } };
+const renderEntriesList = () => { kirjauksetLista.innerHTML = ''; const sortedEntries = [...entries].sort((a, b) => new Date(b.alkuAika) - new Date(a.alkuAika)); sortedEntries.forEach(entry => { if (activeEntry && entry.id === activeEntry.id) return; const clone = kirjausTemplate.content.cloneNode(true); const li = clone.querySelector('.kirjaus-item'); li.dataset.id = entry.id; const tehtavaInput = li.querySelector('.tehtava-input'); const alkuInput = li.querySelector('.alku-input'); const loppuInput = li.querySelector('.loppu-input'); const kestoDiv = li.querySelector('.kesto strong'); const muokkaaBtn = li.querySelector('.muokkaa-btn'); const tallennaBtn = li.querySelector('.tallenna-btn'); const poistaBtn = li.querySelector('.poista-btn'); const lukitusCheckbox = li.querySelector('.lukitse-kirjaus-checkbox'); entry.isLocked = entry.isLocked || false; lukitusCheckbox.checked = entry.isLocked; if (entry.isLocked) { li.classList.add('locked'); } else { li.classList.remove('locked'); } lukitusCheckbox.addEventListener('change', () => { entry.isLocked = lukitusCheckbox.checked; li.classList.toggle('locked', entry.isLocked); saveState(); }); tehtavaInput.value = entry.tehtava; tehtavaInput.placeholder = "Nimetön tehtävä"; alkuInput.value = toLocalISOString(new Date(entry.alkuAika)); loppuInput.value = entry.loppuAika ? toLocalISOString(new Date(entry.loppuAika)) : ''; kestoDiv.textContent = calculateDuration(entry.alkuAika, entry.loppuAika); muokkaaBtn.addEventListener('click', () => { if (entry.isLocked) return; tehtavaInput.disabled = false; alkuInput.disabled = false; loppuInput.disabled = false; muokkaaBtn.classList.add('hidden'); tallennaBtn.classList.remove('hidden'); }); poistaBtn.addEventListener('click', () => { if (entry.isLocked) return; if (confirm(`Haluatko varmasti poistaa kirjauksen "${entry.tehtava || 'Nimetön'}"?`)) { entries = entries.filter(e => e.id !== entry.id); saveState(); } }); tallennaBtn.addEventListener('click', () => { entry.tehtava = tehtavaInput.value.trim(); entry.alkuAika = new Date(alkuInput.value).toISOString(); entry.loppuAika = new Date(loppuInput.value).toISOString(); tehtavaInput.disabled = true; alkuInput.disabled = true; loppuInput.disabled = true; muokkaaBtn.classList.remove('hidden'); tallennaBtn.classList.add('hidden'); saveState(); }); kirjauksetLista.appendChild(li); }); };
 
-const renderEntriesList = () => {
-    kirjauksetLista.innerHTML = '';
-    const sortedEntries = [...entries].sort((a, b) => new Date(b.alkuAika) - new Date(a.alkuAika));
-
-    sortedEntries.forEach(entry => {
-        if (activeEntry && entry.id === activeEntry.id) return;
-
-        const clone = kirjausTemplate.content.cloneNode(true);
-        const li = clone.querySelector('.kirjaus-item');
-        li.dataset.id = entry.id;
-
-        const tehtavaInput = li.querySelector('.tehtava-input');
-        const alkuInput = li.querySelector('.alku-input');
-        const loppuInput = li.querySelector('.loppu-input');
-        const kestoDiv = li.querySelector('.kesto strong');
-        
-        const muokkaaBtn = li.querySelector('.muokkaa-btn');
-        const tallennaBtn = li.querySelector('.tallenna-btn');
-        const poistaBtn = li.querySelector('.poista-btn');
-
-        // MUUTOS: Lukituksen käsittely
-        const lukitusCheckbox = li.querySelector('.lukitse-kirjaus-checkbox');
-        
-        // Asetetaan lukituksen tila renderöidessä
-        entry.isLocked = entry.isLocked || false; // Varmistetaan, että oletusarvo on olemassa
-        lukitusCheckbox.checked = entry.isLocked;
-        if (entry.isLocked) {
-            li.classList.add('locked');
-        } else {
-            li.classList.remove('locked');
+const renderSummary = () => {
+    const dailyTotals = {};
+    let totalMinutes = 0;
+    entries.forEach(entry => {
+        if (!entry.loppuAika) return;
+        const durationMinutes = (new Date(entry.loppuAika) - new Date(entry.alkuAika)) / 60000;
+        totalMinutes += durationMinutes;
+        const dateKey = new Date(entry.alkuAika).toLocaleDateString('fi-FI');
+        if (!dailyTotals[dateKey]) {
+            dailyTotals[dateKey] = 0;
         }
-
-        // Lisätään tapahtumankäsittelijä lukolle
-        lukitusCheckbox.addEventListener('change', () => {
-            entry.isLocked = lukitusCheckbox.checked;
-            li.classList.toggle('locked', entry.isLocked);
-            saveState();
-        });
-
-
-        tehtavaInput.value = entry.tehtava;
-        tehtavaInput.placeholder = "Nimetön tehtävä";
-        
-        alkuInput.value = toLocalISOString(new Date(entry.alkuAika));
-        loppuInput.value = entry.loppuAika ? toLocalISOString(new Date(entry.loppuAika)) : '';
-        kestoDiv.textContent = calculateDuration(entry.alkuAika, entry.loppuAika);
-        
-        muokkaaBtn.addEventListener('click', () => {
-            // Varmistus, ettei lukittua voi muokata (CSS:n lisäksi)
-            if (entry.isLocked) return; 
-            tehtavaInput.disabled = false;
-            alkuInput.disabled = false;
-            loppuInput.disabled = false;
-            muokkaaBtn.classList.add('hidden');
-            tallennaBtn.classList.remove('hidden');
-        });
-
-        poistaBtn.addEventListener('click', () => {
-            // Varmistus, ettei lukittua voi poistaa (CSS:n lisäksi)
-            if (entry.isLocked) return;
-            if (confirm(`Haluatko varmasti poistaa kirjauksen "${entry.tehtava || 'Nimetön'}"?`)) {
-                entries = entries.filter(e => e.id !== entry.id);
-                saveState();
-            }
-        });
-
-        tallennaBtn.addEventListener('click', () => {
-            entry.tehtava = tehtavaInput.value.trim();
-            entry.alkuAika = new Date(alkuInput.value).toISOString();
-            entry.loppuAika = new Date(loppuInput.value).toISOString();
-            
-            tehtavaInput.disabled = true;
-            alkuInput.disabled = true;
-            loppuInput.disabled = true;
-            muokkaaBtn.classList.remove('hidden');
-            tallennaBtn.classList.add('hidden');
-            saveState();
-        });
-
-        kirjauksetLista.appendChild(li);
+        dailyTotals[dateKey] += durationMinutes;
     });
+
+    paivittaisetSummatDiv.innerHTML = '';
+    Object.keys(dailyTotals).sort((a, b) => new Date(b.split('.').reverse().join('-')) - new Date(a.split('.').reverse().join('-'))).forEach(date => {
+        const p = document.createElement('p');
+        // KORJAUS: Lisätään päivämäärä takaisin tekstisisältöön.
+        p.textContent = `${date}: ${formatDuration(dailyTotals[date])}`;
+        paivittaisetSummatDiv.appendChild(p);
+    });
+    
+    kokonaisAikaSumma.textContent = formatDuration(totalMinutes);
 };
-const renderSummary = () => { const dailyTotals = {}; let totalMinutes = 0; entries.forEach(entry => { if (!entry.loppuAika) return; const durationMinutes = (new Date(entry.loppuAika) - new Date(entry.alkuAika)) / 60000; totalMinutes += durationMinutes; const dateKey = new Date(entry.alkuAika).toLocaleDateString('fi-FI'); if (!dailyTotals[dateKey]) { dailyTotals[dateKey] = 0; } dailyTotals[dateKey] += durationMinutes; }); paivittaisetSummatDiv.innerHTML = ''; Object.keys(dailyTotals).sort((a, b) => new Date(b.split('.').reverse().join('-')) - new Date(a.split('.').reverse().join('-'))).forEach(date => { const p = document.createElement('p'); p.textContent = `${formatDuration(dailyTotals[date])}`; paivittaisetSummatDiv.appendChild(p); }); kokonaisAikaSumma.textContent = formatDuration(totalMinutes); };
+
 const calculateDuration = (start, end) => { if (!start || !end) return 'Keskeneräinen'; const minutes = (new Date(end) - new Date(start)) / 60000; return formatDuration(minutes); };
 const formatDuration = (totalMinutes) => { if (isNaN(totalMinutes)) return '0h 0min'; const hours = Math.floor(totalMinutes / 60); const minutes = Math.round(totalMinutes % 60); return `${hours}h ${minutes}min`; };
 
