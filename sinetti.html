@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinettiloki</title>
+    <link rel="stylesheet" href="sinetti.css">
+</head>
+<body>
+
+    <div class="sisalto-laatikko">
+        <h1>Sinettien Seuranta</h1>
+
+        <div class="kontti-valitsin">
+            <label for="kontinNimi">Kontin nimi tai tunnus:</label>
+            <input type="text" id="kontinNimi" placeholder="Esim. KONTTI-123">
+        </div>
+
+        <div id="loki-osio" class="hidden">
+            <h2 id="aktiivinenKonttiNimi"></h2>
+            
+            <div class="osio-laatikko">
+                <h3>Nykyiset sinetit kontissa</h3>
+                <ul id="nykyisetSinetitLista">
+                    <li>Ei aktiivisia sinettejä.</li>
+                </ul>
+                <div id="lisaaEnsimmainenSinetti" class="lisaa-sinetti-container hidden">
+                    <input type="text" id="ensimmainenSinetinNumero" placeholder="Lisää ensimmäinen sinetti...">
+                    <button id="lisaaEnsimmainenBtn">+</button>
+                </div>
+            </div>
+
+            <div class="osio-laatikko">
+                <h3>Toimenpide: Poista vanhat ja lisää uusi</h3>
+                <p>Kun suoritat toimenpiteen, kaikki yllä olevat "Nykyiset sinetit" siirretään historiaan ja korvataan alla antamallasi uudella sinetillä.</p>
+                <div class="lisaa-sinetti-container">
+                    <input type="text" id="uusiSinetinNumero" placeholder="Uuden sinetin numero...">
+                    <button id="suoritaVaihtoBtn">Kirjaa toimenpide</button>
+                </div>
+            </div>
+            
+            <div class="osio-laatikko">
+                <h3>Historia</h3>
+                <ul id="historiaLista"></ul>
+            </div>
+        </div>
+    </div>
+
+    <template id="historia-template">
+        <li class="historia-item">
+            <div class="historia-aikaleima"></div>
+            <div class="historia-tiedot">
+                <div class="historia-rivi">
+                    <strong>Poistettu:</strong>
+                    <span class="poistetut-sinetit"></span>
+                </div>
+                <div class="historia-rivi">
+                    <strong>Uusi:</strong>
+                    <span class="uusi-sinetti"></span>
+                </div>
+            </div>
+        </li>
+    </template>
+
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script type="module" src="sinetti.js"></script>
+</body>
+</html>
