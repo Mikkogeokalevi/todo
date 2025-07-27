@@ -96,47 +96,103 @@ ul { list-style: none; padding: 0; }
 .kirjaus-item.locked .muokkaa-btn,
 .kirjaus-item.locked .poista-btn { opacity: 0.2; pointer-events: none; }
 
-@media print { /* Tulostustyylit pysyvät ennallaan */ }
+/* ======================================= */
+/* --- TULOSTUSTYYLIT (PALAUTETTU) --- */
+/* ======================================= */
+@media print {
+    body {
+        background-color: #ffffff;
+        color: #000000;
+        font-family: sans-serif;
+    }
+    .sisalto-laatikko, .kirjaus-item, #yhteenveto {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+        background: none;
+    }
+    .no-print {
+        display: none !important;
+    }
+    h1, h2, h3, #aktiivinenProjektiNimi {
+        color: #000000;
+        text-align: left;
+        margin-bottom: 10px;
+    }
+    #yhteenveto {
+        margin-bottom: 20px;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+    }
+    .kokonaisaika {
+        text-align: left;
+    }
+    .kirjaukset-otsikko {
+        margin-top: 20px;
+    }
+    .kirjaus-item {
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ccc;
+        page-break-inside: avoid;
+    }
+    input:disabled {
+        border: none;
+        padding: 0;
+        background: none;
+        color: #000;
+        font-family: sans-serif;
+        font-size: 1em;
+        font-weight: normal;
+    }
+    .kirjaus-tiedot .tehtava-input {
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    .kesto {
+        color: #333;
+    }
+    .aika-nuoli {
+        display: inline-block;
+        margin: 0 5px;
+    }
+    .aika-tiedot input {
+        display: inline-block;
+        width: auto;
+    }
+}
 
-/* =============================================== */
-/* === UUDET, TIIVIIMMÄT MOBIILITYYLIT (KORJAUS) === */
-/* =============================================== */
 @media (max-width: 600px) {
     body { padding: 5px; }
     .sisalto-laatikko { padding: 10px; margin: 5px; }
     .form-rivi { flex-direction: column; gap: 0; }
 
     .kirjaus-item {
-        gap: 5px 10px; /* Pienemmät välit */
+        gap: 5px 10px;
     }
-
-    /* Tehtävä ja ajat vievät koko leveyden ylärivillä */
     .kirjaus-tiedot {
         flex-basis: 100%;
         min-width: 0;
     }
-
-    /* Kesto ja lukitus tulevat vasemmalle toiselle riville */
     .kesto-ja-lukitus-container {
-        flex-grow: 1; /* Vie käytettävissä olevan tilan */
+        flex-grow: 1;
         width: auto;
         margin-top: 0;
     }
     .kesto {
-        font-size: 0.9em; /* Hieman pienempi fontti */
+        font-size: 0.9em;
         flex-grow: 0;
     }
     .lukko-ikoni {
-        font-size: 1.2em; /* Pienennetty ikoni */
+        font-size: 1.2em;
     }
-
-    /* Muokkausnapit tulevat oikealle toiselle riville */
     .kirjaus-toiminnot {
         flex-shrink: 0;
         gap: 0;
     }
     .kirjaus-toiminnot button {
-        font-size: 1.3em; /* Pienennetty ikoni */
+        font-size: 1.3em;
         padding: 5px;
     }
 }
