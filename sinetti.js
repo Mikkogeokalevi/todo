@@ -3,10 +3,10 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 
 const firebaseConfig = {
     apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
-    authDomain: "geokatkosunnittelija.firebaseapp.com",
-    databaseURL: "https://geokatkosunnittelija-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "geokatkosunnittelija",
-    storageBucket: "geokatkosunnittelija.appspot.com",
+    authDomain: "geokatkosuunnittelija.firebaseapp.com",
+    databaseURL: "https://geokatkosuunnittelija-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "geokatkosuunnittelija",
+    storageBucket: "geokatkosuunnittelija.appspot.com",
     messagingSenderId: "745498680990",
     appId: "1:745498680990:web:869074eb0f0b72565ca58f"
 };
@@ -57,7 +57,9 @@ const loadContainerData = () => {
             if (!containerData.activeSeals) containerData.activeSeals = [];
             if (!containerData.log) containerData.log = [];
         } else {
+            // KORJAUS: Jos konttia ei ole olemassa, luodaan se heti tyhjänä.
             containerData = { activeSeals: [], log: [] };
+            saveState(); // Tallennetaan tyhjä kontti tietokantaan.
         }
         renderAll();
     });
@@ -130,11 +132,9 @@ historiaLista.addEventListener('click', (e) => {
     }
 });
 
-// KORJATTU FUNKTIO: Konttilistan lataaminen virheenkäsittelyllä
 const loadContainerList = () => {
     const containerListRef = ref(database, 'sinettiloki');
     onValue(containerListRef, 
-        // 1. Onnistunut haku
         (snapshot) => {
             konttiValikko.innerHTML = '';
             const placeholder = document.createElement('option');
@@ -152,7 +152,6 @@ const loadContainerList = () => {
                 });
             }
         }, 
-        // 2. Virheen käsittely
         (error) => {
             console.error("Virhe konttilistan haussa:", error);
             konttiValikko.innerHTML = '<option value="">Virhe latauksessa</option>';
@@ -160,18 +159,16 @@ const loadContainerList = () => {
     );
 };
 
-// KORJATTU FUNKTIO: Sivun alustus
 const initializePage = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const containerFromUrl = urlParams.get('kontti');
     
-    loadContainerList(); // Ladataan aina lista ensin
+    loadContainerList();
 
     if (containerFromUrl) {
         kontinNimiInput.value = containerFromUrl;
         handleContainerSelection(containerFromUrl);
     } else {
-        // Varmistetaan, että valikko näkyy, jos URL:ssa ei ole konttia
         kontinValitsinDiv.classList.remove('hidden');
         lokiOsio.classList.add('hidden');
     }
