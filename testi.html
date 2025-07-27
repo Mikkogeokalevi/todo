@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <title>Firebase Yhteystesti</title>
+    <style>
+        body { font-family: sans-serif; padding: 2em; font-size: 1.5em; text-align: center; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Testataan yhteyttä Firebaseen...</h1>
+    <div id="status"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // Tässä on sinun firebaseConfig-objektisi.
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1OgSGhgYgmxDLv7-xkPPsUGCpcxFaI8M",
+            authDomain: "geokatkosunnittelija.firebaseapp.com",
+            databaseURL: "https://geokatkosunnittelija-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "geokatkosunnittelija",
+            storageBucket: "geokatkosunnittelija.appspot.com",
+            messagingSenderId: "745498680990",
+            appId: "1:745498680990:web:869074eb0f0b72565ca58f"
+        };
+
+        const statusDiv = document.getElementById('status');
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const database = getDatabase(app);
+            const sinettiRef = ref(database, 'sinettiloki');
+
+            onValue(sinettiRef, 
+                (snapshot) => {
+                    // Tämä suoritetaan, jos yhteys onnistuu ja lukuoikeus on kunnossa.
+                    console.log("Yhteys ja luku onnistui!", snapshot.val());
+                    statusDiv.textContent = "Yhteys onnistui!";
+                    statusDiv.className = "success";
+                }, 
+                (error) => {
+                    // Tämä suoritetaan, jos tulee virhe (esim. säännöt estävät).
+                    console.error("Firebase-virhe:", error);
+                    statusDiv.textContent = "Yhteys epäonnistui! Tarkista selaimen konsoli (F12).";
+                    statusDiv.className = "error";
+                }
+            );
+
+        } catch (e) {
+            console.error("Yleinen virhe:", e);
+            statusDiv.textContent = "Yhteys epäonnistui! Jokin esti Firebasen alustamisen. Tarkista konsoli (F12).";
+            statusDiv.className = "error";
+        }
+    </script>
+</body>
+</html>
