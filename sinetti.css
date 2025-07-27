@@ -1,80 +1,52 @@
-body {
-    background-color: #1a2015;
-    font-family: 'Georgia', serif;
-    margin: 0;
+/* --- UUDEN MUOKKAUSLOMAKKEEN TYYLIT --- */
+.edit-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     padding: 10px;
-    color: #F8F8F8;
+    background-color: #3D4F2B; /* Hieman vaaleampi tausta erottuvuuden vuoksi */
+    border-radius: 6px;
+    width: 100%;
 }
-.sisalto-laatikko {
-    max-width: 800px;
-    margin: 15px auto;
-    padding: 20px;
-    background-color: #3D4F2B;
-    border: 3px solid #11150C;
-    border-radius: 12px;
-}
-h1, h2, h3 {
+
+.edit-form-container label {
+    font-size: 0.9em;
     color: #90EE90;
-    text-align: center;
-    border-bottom: 1px solid #4a5c3a;
-    padding-bottom: 10px;
-    margin-top: 0;
-}
-.hidden { display: none !important; }
-input[type="text"], select {
-    width: 100%; padding: 12px; margin-bottom: 10px; box-sizing: border-box;
-    background-color: #2A381C; color: #F8F8F8; border: 1px solid #556B2F;
-    border-radius: 4px; font-family: 'Georgia', serif; font-size: 16px; 
-}
-button {
-    padding: 12px 18px; border: 1px solid #90EE90; background-color: transparent;
-    color: #90EE90; border-radius: 4px; cursor: pointer;
-    font-size: 16px; width: 100%; box-sizing: border-box;
-}
-button:hover { background-color: #90EE90; color: #1a2015; }
-ul { list-style: none; padding: 0; }
-
-.kontti-valitsin { text-align: center; margin-bottom: 20px; }
-.kontti-valitsin label { margin-top: 15px; }
-.otsikko-container { display: flex; align-items: center; justify-content: center; }
-.otsikko-container h2 { flex-grow: 1; }
-#tulostaBtn { width: auto; font-size: 1.5em; border: none; background: none; }
-#tulostaBtn:hover { color: #FFD700; background: none; }
-
-.osio-laatikko { background-color: #2A381C; padding: 15px; border-radius: 8px; margin-top: 20px; }
-.osio-laatikko p { font-size: 0.9em; line-height: 1.5; opacity: 0.8; }
-
-#aktiivisetSinetitLista li {
-    background-color: #FFD700; color: #1a2015; font-weight: bold;
-    padding: 10px; border-radius: 4px; text-align: center;
-    margin-bottom: 5px; font-size: 1.2em;
+    margin-bottom: -5px;
 }
 
-.lisaa-sinetti-container { display: flex; gap: 10px; margin-top: 15px; }
-.lisaa-sinetti-container input { flex-grow: 1; margin: 0; }
-.lisaa-sinetti-container button { width: auto; flex-shrink: 0; }
+.edit-form-container input {
+    font-size: 1em;
+    padding: 8px;
+    margin-bottom: 0;
+}
 
-.historia-item { display: flex; gap: 15px; padding: 10px 0; border-bottom: 1px solid #3D4F2B; align-items: center; }
-.historia-item:last-child { border-bottom: none; }
-.historia-sinetti { flex-basis: 150px; text-align: center; }
-.sinetin-numero { font-family: monospace; font-size: 1.4em; display: block; }
-.sinetin-status { font-size: 0.8em; font-weight: bold; color: #27ae60; }
-.sinetin-status.poistettu { color: #c0392b; }
+.edit-form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
 
-.historia-aikaleimat { flex-grow: 1; font-size: 0.9em; }
-.aikaleima-rivi strong { color: #90EE90; min-width: 70px; display: inline-block; }
+.edit-form-actions button {
+    padding: 8px 12px;
+    font-size: 0.9em;
+    width: 50%;
+}
 
-.historia-toiminnot { display: flex; gap: 5px; }
-.historia-toiminnot button { width: auto; background: none; border: none; font-size: 1.3em; padding: 5px; color: #cccccc; }
-.historia-toiminnot button:hover { color: #FFD700; background: none; }
+.save-btn {
+    border-color: #66BB6A; /* Vihreä tallennuspainikkeelle */
+    color: #66BB6A;
+}
+.save-btn:hover {
+    background-color: #66BB6A;
+    color: #1a2015;
+}
 
-@media print {
-    body { background-color: #fff; color: #000; font-family: sans-serif; }
-    .no-print { display: none !important; }
-    .sisalto-laatikko { border: none; box-shadow: none; padding: 0; }
-    h1, h2, h3 { color: #000; text-align: left; border: none; }
-    #aktiivinenKonttiNimi { text-align: center; font-size: 1.5em; margin-bottom: 20px; }
-    .osio-laatikko { background: none; padding: 0; margin-top: 20px; }
-    .historia-item { border-color: #ccc; page-break-inside: avoid; }
-    .aikaleima-rivi strong { color: #000; }
+.cancel-btn {
+    border-color: #FF7043; /* Oranssinpunainen peruutuspainikkeelle */
+    color: #FF7043;
+}
+.cancel-btn:hover {
+    background-color: #FF7043;
+    color: #1a2015;
 }
