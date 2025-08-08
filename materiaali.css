@@ -73,20 +73,14 @@ button:hover {
     background-color: #3D4F2B;
     padding: 15px;
     border-bottom: 1px solid #2A381C;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
 }
 
 #kirjaus-lista li:last-child {
     border-bottom: none;
-}
-
-.kirjaus-paatiedot {
-    padding-bottom: 5px;
-}
-
-.kirjaus-alempi-rivi {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .kirjaus-tiedot {
@@ -96,7 +90,7 @@ button:hover {
 }
 
 .kirjaus-aika {
-    font-size: 0.8em;
+    font-size: 0.9em;
     color: #b3c9a3;
     white-space: nowrap;
 }
@@ -187,24 +181,6 @@ button:hover {
     text-align: center;
 }
 
-#muista-materiaali-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-#muista-materiaali-container input[type="checkbox"] {
-    width: auto;
-    margin: 0;
-}
-
-.checkbox-label {
-    margin: 0;
-    color: #F8F8F8;
-    font-weight: normal;
-}
-
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -233,6 +209,7 @@ button:hover {
     margin-top: 20px;
 }
 
+/* UUDET YHTEENVETO-TYYLIT */
 #yhteenveto-container {
     margin-top: 25px;
     padding-top: 15px;
