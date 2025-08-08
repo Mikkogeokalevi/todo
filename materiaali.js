@@ -71,10 +71,6 @@ async function lataaSijainninMateriaalit(sijainti) {
     if (snapshot.exists()) {
         const materiaalit = snapshot.val();
         Object.values(materiaalit)
-            // PÄIVITETTY LOGIIKKA:
-            // 1. Jos listalla ei ole sijaintia (!sijainti), näytä kaikki.
-            // 2. Jos listalla on sijainti, näytä sen sijainnin materiaalit.
-            // 3. Näytä AINA myös "Yleinen"-sijainnin materiaalit.
             .filter(m => !sijainti || m.sijainti === sijainti || m.sijainti === 'Yleinen')
             .sort((a, b) => a.nimi.localeCompare(b.nimi))
             .forEach(m => {
@@ -119,7 +115,6 @@ async function handleListSelection(listId) {
 }
 
 function loadListData(onArkistoitu) {
-    // ... (Tämä funktio pysyy ennallaan)
     if (!currentListId) return;
     if (listDataUnsubscribe) listDataUnsubscribe();
     const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
@@ -206,7 +201,6 @@ luoUusiListaBtn.addEventListener('click', () => {
     const sijainti = uusiListaSijaintiSelect.value;
     if (!listName) return alert('Anna uudelle listalle nimi.');
     
-    // ID luodaan nyt nimestä ja sijainnista, jotta se on uniikimpi
     const listId = normalizeListName(`${sijainti || 'sijainniton'}-${listName}`);
     
     const uusiListaMeta = { nimi: listName, status: 'active', sijainti: sijainti };
@@ -300,9 +294,6 @@ cancelMaterialEditBtn.addEventListener('click', () => {
     currentEditingMaterialId = null;
 });
 
-// Kaikki muut event listenerit (palaa, tulosta, arkistoi, poista, muokkaa kirjausta jne.)
-// pysyvät ennallaan, joten ne on kopioitu alle sellaisenaan.
-
 palaaTakaisinBtn.addEventListener('click', palaaAlkuun);
 tulostaBtn.addEventListener('click', () => window.print());
 arkistoValikko.addEventListener('change', () => { if (arkistoValikko.value) handleListSelection(arkistoValikko.value) });
@@ -385,22 +376,31 @@ cancelEditBtn.addEventListener('click', () => {
     editModal.classList.add('hidden');
     currentEditingEntryId = null;
 });
+
+// TÄSSÄ ON MUUTOKSET
 muokkaaListaaBtn.addEventListener('click', () => {
-    muokkaaNimeaContainer.style.display = 'flex';
+    // Korvataan tyylin suora muokkaus luokan poistamisella.
+    muokkaaNimeaContainer.classList.remove('hidden'); 
     document.getElementById('muokkaa-nimea-input').value = aktiivinenListaNimi.textContent;
     document.getElementById('muokkaa-nimea-input').focus();
 });
+
 document.getElementById('peruuta-nimi-btn').addEventListener('click', () => {
-    muokkaaNimeaContainer.style.display = 'none';
+    // Korvataan tyylin suora muokkaus luokan lisäämisellä.
+    muokkaaNimeaContainer.classList.add('hidden');
 });
+
 document.getElementById('tallenna-nimi-btn').addEventListener('click', async () => {
-    // Listan nimen muokkauslogiikka säilyy ennallaan
+    // Tämän funktion sisällä oleva peruuta-napin klikkaus hoitaa nyt piilottamisen oikein.
     const muokkaaNimeaInput = document.getElementById('muokkaa-nimea-input');
     const newName = muokkaaNimeaInput.value.trim();
-    if (!newName || !currentListId) return document.getElementById('peruuta-nimi-btn').click();
+    if (!newName || !currentListId) {
+        muokkaaNimeaContainer.classList.add('hidden'); // Varmuuden vuoksi piilotus
+        return;
+    }
     await update(ref(database, `listat/${currentListId}`), { nimi: newName });
     aktiivinenListaNimi.textContent = newName;
-    document.getElementById('peruuta-nimi-btn').click();
+    muokkaaNimeaContainer.classList.add('hidden');
     alert('Nimi päivitetty!');
 });
 
