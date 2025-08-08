@@ -1,0 +1,93 @@
+body {
+    background-color: #1a2015;
+    font-family: 'Georgia', serif;
+    margin: 0;
+    padding: 20px;
+    color: #F8F8F8;
+}
+
+.sisalto-laatikko {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #3D4F2B;
+    border: 3px solid #11150C;
+    border-radius: 12px;
+}
+
+h1, h2, h3 {
+    color: #90EE90;
+    border-bottom: 1px solid #4a5c3a;
+    padding-bottom: 10px;
+}
+
+.osio-laatikko {
+    background-color: #2A381C;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #b3c9a3;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    background-color: #3a4a2c;
+    color: #F8F8F8;
+    border: 1px solid #556B2F;
+    border-radius: 4px;
+    font-family: 'Georgia', serif;
+    font-size: 16px;
+}
+
+button {
+    cursor: pointer;
+    border: 1px solid #90EE90;
+    background-color: transparent;
+    color: #90EE90;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #90EE90;
+    color: #1a2015;
+}
+
+.hidden {
+    display: none;
+}
+
+#kirjaus-lista {
+    list-style: none;
+    padding: 0;
+}
+
+#kirjaus-lista li {
+    background-color: #3D4F2B;
+    padding: 15px;
+    border-bottom: 1px solid #2A381C;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#kirjaus-lista li:last-child {
+    border-bottom: none;
+}
+
+.kirjaus-tiedot {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.kirjaus-aika {
+    font-size: 0.9em;
+    color: #b3c9a3;
+}
