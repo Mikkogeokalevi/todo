@@ -101,7 +101,7 @@ button:hover {
 }
 
 #otsikko-container h2 {
-    border-bottom: none; /* Poistetaan oletusviiva, koska se on jo laatikolla */
+    border-bottom: none;
     margin: 0;
 }
 
