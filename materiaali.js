@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// --- UUDET DOM-ELEMENTIT ---
+// --- UUDET DOM-ELEMENTIT 2 ---
 const uusiListaSijaintiSelect = document.getElementById('uusiListaSijainti');
 const lisaaMateriaaliLomake = document.getElementById('lisaa-materiaali-lomake');
 const uusiMateriaaliNimiInput = document.getElementById('uusiMateriaaliNimi');
