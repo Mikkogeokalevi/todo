@@ -19,7 +19,7 @@
                 </div>
             </div>
 
-            <div class="osio-laatikko">
+            <div class.osio-laatikko">
                 <h3>Arkistoidut listat</h3>
                 <select id="arkistoValikko">
                     <option value="">Valitse arkistoitu lista...</option>
@@ -35,9 +35,10 @@
 
         <div id="kirjaus-osio" class="hidden">
             <div id="otsikko-container">
-                <h2 id="aktiivinenListaNimi"></h2>
+                <h2><span id="aktiivinenListaNimi"></span> <span id="lista-status-badge"></span></h2>
                 <div id="otsikko-toiminnot">
                     <button id="palaa-takaisin-btn" title="Palaa listavalikkoon">⬅️ Palaa</button>
+                    <button id="poista-arkistointi-btn" title="Poista listan arkistointi" class="hidden">➡️ Aktivoi</button>
                     <button id="arkistoi-lista-btn" title="Arkistoi tämä lista">📥 Arkistoi</button>
                     <button id="muokkaa-listaa-btn" title="Muokkaa listan nimeä">✏️</button>
                     <button id="poista-lista-btn" title="Poista koko lista">🗑️</button>
