@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Materiaalikirjanpito</title>
+    <link rel="stylesheet" href="materiaali.css">
+</head>
+<body>
+
+    <main class="sisalto-laatikko">
+        <h1>Materiaalikirjanpito</h1>
+
+        <form id="materiaali-lomake" class="osio-laatikko">
+            <h2>Lisää uusi kirjaus</h2>
+
+            <label for="materiaali-tyyppi">Materiaalin tyyppi:</label>
+            <select id="materiaali-tyyppi" required>
+                <option value="" disabled selected>Valitse tyyppi...</option>
+                <option value="Muovi SER">Muovi SER</option>
+                <option value="Metalli SER">Metalli SER</option>
+                <option value="Johdot">Johdot</option>
+                <option value="Virtalähteet">Virtalähteet</option>
+                <option value="Muu">Muu, mikä?</option>
+            </select>
+
+            <input type="text" id="muu-materiaali-syotto" class="hidden" placeholder="Kirjoita materiaalin nimi...">
+
+            <label for="kilo-maara">Paino (kg):</label>
+            <input type="number" id="kilo-maara" step="0.1" placeholder="Esim. 12.5" required>
+
+            <button type="submit">Tallenna kirjaus</button>
+        </form>
+
+        <div class="osio-laatikko">
+            <h3>Kirjatut materiaalit</h3>
+            <ul id="kirjaus-lista">
+                </ul>
+        </div>
+    </main>
+
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <script type="module" src="materiaali.js"></script>
+</body>
+</html>
