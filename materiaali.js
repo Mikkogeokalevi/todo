@@ -33,7 +33,8 @@ const muokkaaNimeaContainer = document.getElementById('muokkaa-nimea-container')
 const kirjausLista = document.getElementById('kirjaus-lista');
 const yhteenvetoLista = document.getElementById('yhteenveto-lista');
 const lomake = document.getElementById('materiaali-lomake');
-// ...loput vanhat muuttujat...
+const materiaaliTyyppiSelect = document.getElementById('materiaali-tyyppi');
+const muuMateriaaliInput = document.getElementById('muu-materiaali-syotto');
 const editModal = document.getElementById('edit-modal');
 const editMateriaaliNimi = document.getElementById('edit-materiaali-nimi');
 const editKiloMaara = document.getElementById('edit-kilo-maara');
@@ -52,25 +53,20 @@ async function handleListSelection(listId) {
     currentListId = listId;
     const metaRef = ref(database, `listat/${listId}`);
     const metaSnapshot = await get(metaRef);
-
     if (!metaSnapshot.exists()) {
         alert("Virhe: Listan tietoja ei löytynyt.");
         return palaaAlkuun();
     }
-
     const meta = metaSnapshot.val();
     aktiivinenListaNimi.textContent = meta.nimi;
     const onArkistoitu = meta.status === 'archived';
     listaStatusBadge.textContent = onArkistoitu ? `Arkistoitu: ${formatSuomalainenAika(meta.arkistoituAika)}` : "";
-
     lomake.classList.toggle('hidden', onArkistoitu);
     muokkaaListaaBtn.classList.toggle('hidden', onArkistoitu);
     arkistoiListaBtn.classList.toggle('hidden', onArkistoitu);
     poistaArkistointiBtn.classList.toggle('hidden', !onArkistoitu);
-
     listanvalintaOsio.classList.add('hidden');
     kirjausOsio.classList.remove('hidden');
-    
     history.pushState({ path: `${window.location.pathname}?lista=${currentListId}` }, '', `${window.location.pathname}?lista=${currentListId}`);
     loadListData(onArkistoitu);
 }
@@ -78,19 +74,14 @@ async function handleListSelection(listId) {
 function loadListData(onArkistoitu) {
     if (!currentListId) return;
     if (listDataUnsubscribe) listDataUnsubscribe();
-    
     const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
     listDataUnsubscribe = onValue(kirjauksetRef, (snapshot) => {
         kirjausLista.innerHTML = '';
-        yhteenvetoLista.innerHTML = ''; // Tyhjennetään myös yhteenveto
-
+        yhteenvetoLista.innerHTML = '';
         if (snapshot.exists()) {
             const data = snapshot.val();
-            const sums = {}; // Objekti summien tallentamiseen
-
-            // Käydään läpi kirjaukset, renderöidään ne ja lasketaan summia
+            const sums = {};
             Object.entries(data).forEach(([key, kirjaus]) => {
-                // Renderöi yksittäinen kirjausrivi
                 const li = document.createElement('li');
                 li.dataset.id = key;
                 li.innerHTML = `
@@ -103,23 +94,14 @@ function loadListData(onArkistoitu) {
                     </div>` : ''}
                 `;
                 kirjausLista.appendChild(li);
-
-                // Laske yhteenvetoa
                 const materiaaliNimi = kirjaus.materiaali.trim();
-                if (sums[materiaaliNimi]) {
-                    sums[materiaaliNimi] += kirjaus.kilomäärä;
-                } else {
-                    sums[materiaaliNimi] = kirjaus.kilomäärä;
-                }
+                sums[materiaaliNimi] = (sums[materiaaliNimi] || 0) + kirjaus.kilomäärä;
             });
-
-            // Renderöi yhteenvetolista
             Object.entries(sums).sort().forEach(([materiaali, summa]) => {
                 const li = document.createElement('li');
                 li.innerHTML = `<strong>${materiaali} yhteensä:</strong> ${summa.toFixed(1)} kg`;
                 yhteenvetoLista.appendChild(li);
             });
-
         } else {
             kirjausLista.innerHTML = '<li>Ei vielä kirjauksia tällä listalla.</li>';
         }
@@ -133,13 +115,11 @@ function lataaListat() {
         if (snapshot.exists()) {
             const listat = snapshot.val();
             let activeCount = 0;
-            // TÄMÄ KOHTA ON KORJATTU VARMEMMAKSI
             const sortedLists = Object.entries(listat).sort((a, b) => {
-                const nameA = a[1]?.nimi || ''; // Varmistus, ettei kaadu jos nimi puuttuu
-                const nameB = b[1]?.nimi || ''; // Varmistus, ettei kaadu jos nimi puuttuu
+                const nameA = a[1]?.nimi || '';
+                const nameB = b[1]?.nimi || '';
                 return nameA.localeCompare(nameB);
             });
-
             sortedLists.forEach(([listId, meta]) => {
                 if (meta.status === 'active') {
                     activeCount++;
@@ -174,7 +154,7 @@ function palaaAlkuun() {
 
 palaaTakaisinBtn.addEventListener('click', palaaAlkuun);
 tulostaBtn.addEventListener('click', () => window.print());
-arkistoValikko.addEventListener('change', () => { if(arkistoValikko.value) handleListSelection(arkistoValikko.value) });
+arkistoValikko.addEventListener('change', () => { if (arkistoValikko.value) handleListSelection(arkistoValikko.value) });
 
 luoUusiListaBtn.addEventListener('click', () => {
     const listName = uusiListaNimiInput.value.trim();
@@ -184,22 +164,26 @@ luoUusiListaBtn.addEventListener('click', () => {
     set(ref(database, `listat/${listId}`), uusiListaMeta).then(() => handleListSelection(listId));
 });
 
+// TÄMÄ PUUTTUI - LISÄTTY TAKAISIN
+materiaaliTyyppiSelect.addEventListener('change', () => {
+    const onMuu = materiaaliTyyppiSelect.value === 'Muu';
+    muuMateriaaliInput.classList.toggle('hidden', !onMuu);
+    muuMateriaaliInput.required = onMuu;
+    if (onMuu) {
+        muuMateriaaliInput.focus();
+    }
+});
+
 lomake.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!currentListId) return;
-    const materiaaliTyyppiSelect = document.getElementById('materiaali-tyyppi');
-    const muuMateriaaliInput = document.getElementById('muu-materiaali-syotto');
     const kiloMaaraInput = document.getElementById('kilo-maara');
-
     let materiaali = (materiaaliTyyppiSelect.value === 'Muu' ? muuMateriaaliInput.value.trim() : materiaaliTyyppiSelect.value);
     const kilomäärä = parseFloat(kiloMaaraInput.value);
-
     if (!materiaali || isNaN(kilomäärä) || kilomäärä <= 0) return alert('Tarkista syötteet.');
-
     const uusiKirjaus = { materiaali, kilomäärä, aikaleima: new Date().toISOString() };
     const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
     push(kirjauksetRef, uusiKirjaus);
-    
     lomake.reset();
     muuMateriaaliInput.classList.add('hidden');
     materiaaliTyyppiSelect.value = "";
