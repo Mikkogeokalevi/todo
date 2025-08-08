@@ -14,7 +14,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit
 const listanvalintaOsio = document.getElementById('listanvalinta-osio');
 const listaValikko = document.getElementById('listaValikko');
 const uusiListaNimiInput = document.getElementById('uusiListaNimi');
@@ -33,7 +32,6 @@ const muuMateriaaliInput = document.getElementById('muu-materiaali-syotto');
 const kiloMaaraInput = document.getElementById('kilo-maara');
 const kirjausLista = document.getElementById('kirjaus-lista');
 
-// Sovelluksen tila
 let currentListId = null;
 let listDataUnsubscribe = null;
 
@@ -57,7 +55,6 @@ function handleListSelection(listName) {
     kirjausOsio.classList.remove('hidden');
     aktiivinenListaNimi.textContent = displayName;
     
-    // Varmistetaan, että oikeat elementit näkyvät ja piilotetaan
     otsikkoContainer.classList.remove('hidden');
     muokkaaNimeaContainer.classList.add('hidden');
     
@@ -141,11 +138,9 @@ poistaListaBtn.addEventListener('click', () => {
     if (!currentListId) return;
     const confirmation = confirm(`Haluatko varmasti poistaa koko listan "${aktiivinenListaNimi.textContent}" ja kaikki sen tiedot? Tätä toimintoa ei voi peruuttaa.`);
     if (confirmation) {
-        console.log(`Yritetään poistaa lista ID:llä: ${currentListId}`);
         const listRef = ref(database, `kirjaukset/${currentListId}`);
         remove(listRef)
             .then(() => {
-                console.log('Lista poistettu onnistuneesti.');
                 alert(`Lista "${aktiivinenListaNimi.textContent}" on poistettu.`);
                 window.location.href = window.location.pathname;
             })
