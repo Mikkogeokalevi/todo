@@ -126,31 +126,6 @@ function loadListData(onArkistoitu) {
     });
 }
 
-// **KORJATTU TALLENNUSLOGIIKKA**
-lomake.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!currentListId) return;
-    const materiaaliTyyppiSelect = document.getElementById('materiaali-tyyppi');
-    const muuMateriaaliInput = document.getElementById('muu-materiaali-syotto');
-    const kiloMaaraInput = document.getElementById('kilo-maara');
-
-    let materiaali = (materiaaliTyyppiSelect.value === 'Muu' ? muuMateriaaliInput.value.trim() : materiaaliTyyppiSelect.value);
-    const kilomäärä = parseFloat(kiloMaaraInput.value);
-
-    if (!materiaali || isNaN(kilomäärä) || kilomäärä <= 0) return alert('Tarkista syötteet.');
-
-    // Aina luodaan uusi kirjaus PUSH-komennolla
-    const uusiKirjaus = { materiaali, kilomäärä, aikaleima: new Date().toISOString() };
-    const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
-    push(kirjauksetRef, uusiKirjaus);
-    
-    lomake.reset();
-    muuMateriaaliInput.classList.add('hidden');
-    materiaaliTyyppiSelect.value = "";
-});
-
-// Kaikki muut funktiot (lataaListat, palaaAlkuun, napit, modaali jne.) pysyvät ennallaan
-// ... (liitä aiemman vastauksen loput funktiot tähän)
 function lataaListat() {
     onValue(ref(database, 'listat'), (snapshot) => {
         aktiivisetListatContainer.innerHTML = '';
@@ -158,7 +133,14 @@ function lataaListat() {
         if (snapshot.exists()) {
             const listat = snapshot.val();
             let activeCount = 0;
-            Object.entries(listat).sort((a,b) => a[1].nimi.localeCompare(b[1].nimi)).forEach(([listId, meta]) => {
+            // TÄMÄ KOHTA ON KORJATTU VARMEMMAKSI
+            const sortedLists = Object.entries(listat).sort((a, b) => {
+                const nameA = a[1]?.nimi || ''; // Varmistus, ettei kaadu jos nimi puuttuu
+                const nameB = b[1]?.nimi || ''; // Varmistus, ettei kaadu jos nimi puuttuu
+                return nameA.localeCompare(nameB);
+            });
+
+            sortedLists.forEach(([listId, meta]) => {
                 if (meta.status === 'active') {
                     activeCount++;
                     const nappi = document.createElement('button');
@@ -179,6 +161,7 @@ function lataaListat() {
         }
     });
 }
+
 function palaaAlkuun() {
     kirjausOsio.classList.add('hidden');
     listanvalintaOsio.classList.remove('hidden');
@@ -188,9 +171,11 @@ function palaaAlkuun() {
     uusiListaNimiInput.value = "";
     arkistoValikko.value = "";
 }
+
 palaaTakaisinBtn.addEventListener('click', palaaAlkuun);
 tulostaBtn.addEventListener('click', () => window.print());
 arkistoValikko.addEventListener('change', () => { if(arkistoValikko.value) handleListSelection(arkistoValikko.value) });
+
 luoUusiListaBtn.addEventListener('click', () => {
     const listName = uusiListaNimiInput.value.trim();
     if (!listName) return alert('Anna uudelle listalle nimi.');
@@ -198,6 +183,28 @@ luoUusiListaBtn.addEventListener('click', () => {
     const uusiListaMeta = { nimi: listName, status: 'active' };
     set(ref(database, `listat/${listId}`), uusiListaMeta).then(() => handleListSelection(listId));
 });
+
+lomake.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!currentListId) return;
+    const materiaaliTyyppiSelect = document.getElementById('materiaali-tyyppi');
+    const muuMateriaaliInput = document.getElementById('muu-materiaali-syotto');
+    const kiloMaaraInput = document.getElementById('kilo-maara');
+
+    let materiaali = (materiaaliTyyppiSelect.value === 'Muu' ? muuMateriaaliInput.value.trim() : materiaaliTyyppiSelect.value);
+    const kilomäärä = parseFloat(kiloMaaraInput.value);
+
+    if (!materiaali || isNaN(kilomäärä) || kilomäärä <= 0) return alert('Tarkista syötteet.');
+
+    const uusiKirjaus = { materiaali, kilomäärä, aikaleima: new Date().toISOString() };
+    const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
+    push(kirjauksetRef, uusiKirjaus);
+    
+    lomake.reset();
+    muuMateriaaliInput.classList.add('hidden');
+    materiaaliTyyppiSelect.value = "";
+});
+
 arkistoiListaBtn.addEventListener('click', () => {
     if (!currentListId) return;
     const metaRef = ref(database, `listat/${currentListId}`);
@@ -206,6 +213,7 @@ arkistoiListaBtn.addEventListener('click', () => {
         palaaAlkuun();
     });
 });
+
 poistaArkistointiBtn.addEventListener('click', () => {
     if (!currentListId) return;
     const metaRef = ref(database, `listat/${currentListId}`);
@@ -214,6 +222,7 @@ poistaArkistointiBtn.addEventListener('click', () => {
         handleListSelection(currentListId);
     });
 });
+
 poistaListaBtn.addEventListener('click', async () => {
     if (!currentListId || !confirm(`POISTO ON LOPULLINEN! Haluatko varmasti poistaa listan "${aktiivinenListaNimi.textContent}"?`)) return;
     await remove(ref(database, `listat/${currentListId}`));
@@ -221,6 +230,7 @@ poistaListaBtn.addEventListener('click', async () => {
     alert('Lista ja sen tiedot on poistettu.');
     palaaAlkuun();
 });
+
 kirjausLista.addEventListener('click', async (e) => {
     const li = e.target.closest('li');
     if (!li) return;
@@ -241,6 +251,7 @@ kirjausLista.addEventListener('click', async (e) => {
         }
     }
 });
+
 saveEditBtn.addEventListener('click', async () => {
     if (!currentEditingEntryId) return;
     const paivitetytTiedot = {
@@ -255,10 +266,12 @@ saveEditBtn.addEventListener('click', async () => {
     editModal.classList.add('hidden');
     currentEditingEntryId = null;
 });
+
 cancelEditBtn.addEventListener('click', () => {
     editModal.classList.add('hidden');
     currentEditingEntryId = null;
 });
+
 muokkaaListaaBtn.addEventListener('click', () => {
     const muokkaaNimeaContainer = document.getElementById('muokkaa-nimea-container');
     const muokkaaNimeaInput = document.getElementById('muokkaa-nimea-input');
@@ -266,9 +279,11 @@ muokkaaListaaBtn.addEventListener('click', () => {
     muokkaaNimeaInput.value = document.getElementById('aktiivinenListaNimi').textContent;
     muokkaaNimeaInput.focus();
 });
+
 document.getElementById('peruuta-nimi-btn').addEventListener('click', () => {
     document.getElementById('muokkaa-nimea-container').style.display = 'none';
 });
+
 document.getElementById('tallenna-nimi-btn').addEventListener('click', async () => {
     const muokkaaNimeaInput = document.getElementById('muokkaa-nimea-input');
     const newName = muokkaaNimeaInput.value.trim();
@@ -278,6 +293,7 @@ document.getElementById('tallenna-nimi-btn').addEventListener('click', async () 
     document.getElementById('peruuta-nimi-btn').click();
     alert('Nimi päivitetty!');
 });
+
 function initializePage() {
     const listFromUrl = new URLSearchParams(window.location.search).get('lista');
     lataaListat();
@@ -285,4 +301,5 @@ function initializePage() {
         handleListSelection(listFromUrl);
     }
 }
+
 initializePage();
