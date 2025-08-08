@@ -47,13 +47,13 @@ const formatSuomalainenAika = (isoString) => {
 // Listan nimen normalisointi ID:ksi
 const normalizeListName = (listName) => listName.trim().toLowerCase().replace(/\s+/g, '-');
 
-// Käsittelee aktiivisen listan vaihdon
-function handleListSelection(listName) {
-    if (!listName || listName.trim() === '') return;
-    currentListId = normalizeListName(listName);
+// Käsittelee aktiivisen listan vaihdon. Odottaa saavansa normalisoidun ID:n.
+function handleListSelection(listId) {
+    if (!listId || listId.trim() === '') return;
+    currentListId = listId;
     
-    // Näytä käyttäjälle siistitty nimi
-    const displayName = listName.trim().replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    // Muunnetaan ID takaisin siistiksi nimeksi näytölle
+    const displayName = listId.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     const newUrl = `${window.location.pathname}?lista=${currentListId}`;
     history.pushState({ path: newUrl }, '', newUrl);
 
@@ -61,9 +61,8 @@ function handleListSelection(listName) {
     kirjausOsio.classList.remove('hidden');
     aktiivinenListaNimi.textContent = displayName;
     
-    // Varmista, että elementit ovat oikeassa tilassa
     otsikkoContainer.classList.remove('hidden');
-    muokkaaNimeaContainer.style.display = 'none'; // KÄYTÄ STYLE.DISPLAY
+    muokkaaNimeaContainer.style.display = 'none';
     
     loadListData();
 }
@@ -79,7 +78,6 @@ function loadListData() {
         kirjausLista.innerHTML = '';
         if (snapshot.exists()) {
             const data = snapshot.val();
-            // Järjestä kirjaukset uusimmasta vanhimpaan
             const kirjaukset = Object.entries(data).map(([id, value]) => ({ id, ...value })).reverse();
             kirjaukset.forEach(kirjaus => {
                 const li = document.createElement('li');
@@ -111,11 +109,10 @@ function loadListMenu() {
     });
 }
 
-// **KORJATTU LOGIIKKA**
 // Nimen muokkauskentän näyttäminen
 muokkaaListaaBtn.addEventListener('click', () => {
     otsikkoContainer.classList.add('hidden');
-    muokkaaNimeaContainer.style.display = 'flex'; // NÄYTÄ FLEXBOXINA
+    muokkaaNimeaContainer.style.display = 'flex';
     muokkaaNimeaInput.value = aktiivinenListaNimi.textContent;
     muokkaaNimeaInput.focus();
 });
@@ -123,7 +120,7 @@ muokkaaListaaBtn.addEventListener('click', () => {
 // Nimen muokkauksen peruutus
 peruutaNimiBtn.addEventListener('click', () => {
     otsikkoContainer.classList.remove('hidden');
-    muokkaaNimeaContainer.style.display = 'none'; // PIILOTA
+    muokkaaNimeaContainer.style.display = 'none';
 });
 
 // Nimen tallennus
@@ -146,12 +143,9 @@ tallennaNimiBtn.addEventListener('click', async () => {
         await set(newRef, data);
         await remove(oldRef);
     }
-    // Päivitä sivu uudella ID:llä ilman täyttä latausta
     handleListSelection(newId); 
 });
 
-
-// **KORJATTU JA PARANNETTU LOGIIKKA**
 // Koko listan poistaminen
 poistaListaBtn.addEventListener('click', async () => {
     if (!currentListId) return;
@@ -163,20 +157,16 @@ poistaListaBtn.addEventListener('click', async () => {
             await remove(listRef);
             alert(`Lista "${aktiivinenListaNimi.textContent}" on poistettu.`);
             
-            // Palauta näkymä alkutilaan ilman sivun uudelleenlatausta
             kirjausOsio.classList.add('hidden');
             listanvalintaOsio.classList.remove('hidden');
             
-            // Poista listan <option> valikosta
             const optionToRemove = listaValikko.querySelector(`option[value="${currentListId}"]`);
-            if (optionToRemove) {
-                optionToRemove.remove();
-            }
+            if (optionToRemove) optionToRemove.remove();
+            
             listaValikko.value = "";
             uusiListaNimiInput.value = "";
             currentListId = null;
 
-            // Nollaa URL
             history.pushState(null, '', window.location.pathname);
 
         } catch (error) {
@@ -186,10 +176,21 @@ poistaListaBtn.addEventListener('click', async () => {
     }
 });
 
-
 // Tapahtumankuuntelijat
-listaValikko.addEventListener('change', () => handleListSelection(listaValikko.options[listaValikko.selectedIndex].textContent));
-uusiListaNimiInput.addEventListener('change', () => handleListSelection(uusiListaNimiInput.value));
+listaValikko.addEventListener('change', () => {
+    if (listaValikko.value) {
+        handleListSelection(listaValikko.value);
+    }
+});
+
+uusiListaNimiInput.addEventListener('change', () => {
+    const listName = uusiListaNimiInput.value.trim();
+    if (listName) {
+        const listId = normalizeListName(listName);
+        handleListSelection(listId);
+    }
+});
+
 
 materiaaliTyyppiSelect.addEventListener('change', () => {
     const isMuu = materiaaliTyyppiSelect.value === 'Muu';
@@ -198,6 +199,7 @@ materiaaliTyyppiSelect.addEventListener('change', () => {
     if (isMuu) muuMateriaaliInput.focus();
 });
 
+// **TÄMÄ ON KORJATTU KOHTA**
 lomake.addEventListener('submit', (e) => {
     e.preventDefault();
     if (!currentListId) {
@@ -220,7 +222,9 @@ lomake.addEventListener('submit', (e) => {
         aikaleima: new Date().toISOString()
     };
     const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
-    push(kirjauksetRef)
+    
+    // **VIRHE OLI TÄSSÄ:** `uusiKirjaus`-argumentti puuttui. Nyt se on lisätty takaisin.
+    push(kirjauksetRef, uusiKirjaus)
         .then(() => {
             lomake.reset();
             muuMateriaaliInput.classList.add('hidden');
@@ -229,13 +233,11 @@ lomake.addEventListener('submit', (e) => {
         .catch((error) => console.error("Virhe tallennuksessa: ", error));
 });
 
-
 // Sivun alustusfunktio
 function initializePage() {
     const urlParams = new URLSearchParams(window.location.search);
     const listFromUrl = urlParams.get('lista');
     
-    // Varmista, että muokkauskenttä on piilossa alussa
     muokkaaNimeaContainer.style.display = 'none';
 
     loadListMenu();
