@@ -236,7 +236,7 @@ button:hover {
     background-color: #3D4F2B;
     border-radius: 4px;
     margin-bottom: 8px;
-    gap: 10px; /* Väliä elementtien väliin */
+    gap: 10px;
 }
 
 #materiaali-hallinta-lista .material-actions {
@@ -253,7 +253,6 @@ button:hover {
     border: none;
 }
 
-/* Eriväriset napit muokkaukselle ja poistolle */
 #materiaali-hallinta-lista .edit-material-btn {
     background-color: #2980b9;
 }
@@ -294,4 +293,27 @@ button:hover {
         page-break-inside: avoid;
     }
     #lista-status-badge { color: #555; }
+}
+
+/* ======================================== */
+/* == UUSI OSA: KÄNNYKKÄNÄKYMÄN PARANNUS == */
+/* ======================================== */
+@media (max-width: 480px) {
+    #kirjaus-lista li {
+        /* Sallitaan elementtien rivittyä useammalle riville. */
+        flex-wrap: wrap;
+    }
+
+    .kirjaus-tiedot {
+        /* Asetetaan materiaalin nimi ja paino viemään koko ensimmäisen rivin leveys. */
+        flex-basis: 100%;
+        /* Lisätään pieni väli alle, jotta se ei ole kiinni alemmassa rivissä. */
+        margin-bottom: 5px;
+    }
+
+    .kirjaus-aika,
+    .kirjaus-toiminnot {
+        /* Pienennetään fonttia toisella rivillä pyynnön mukaisesti. */
+        font-size: 0.8em;
+    }
 }
