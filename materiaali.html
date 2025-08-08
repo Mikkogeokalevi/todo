@@ -12,15 +12,24 @@
         <h1>Materiaalikirjanpito</h1>
 
         <div id="listanvalinta-osio">
-            <h3>Valitse tai luo kirjanpitolista</h3>
             <div class="osio-laatikko">
-                <label for="listaValikko">Valitse olemassa oleva lista:</label>
-                <select id="listaValikko">
-                    <option value="">Ladataan...</option>
-                </select>
+                <h3>Aktiiviset listat</h3>
+                <div id="aktiiviset-listat-container">
+                    <p>Ladataan listoja...</p>
+                </div>
+            </div>
 
-                <label for="uusiListaNimi">Tai luo uusi lista:</label>
-                <input type="text" id="uusiListaNimi" placeholder="Esim. Toimipiste A">
+            <div class="osio-laatikko">
+                <h3>Arkistoidut listat</h3>
+                <select id="arkistoValikko">
+                    <option value="">Valitse arkistoitu lista...</option>
+                </select>
+            </div>
+
+             <div class="osio-laatikko">
+                <h3>Luo uusi lista</h3>
+                <input type="text" id="uusiListaNimi" placeholder="Esim. Heinola 09082025">
+                 <button id="luo-uusi-lista-btn">Luo uusi</button>
             </div>
         </div>
 
@@ -28,6 +37,8 @@
             <div id="otsikko-container">
                 <h2 id="aktiivinenListaNimi"></h2>
                 <div id="otsikko-toiminnot">
+                    <button id="palaa-takaisin-btn" title="Palaa listavalikkoon">⬅️ Palaa</button>
+                    <button id="arkistoi-lista-btn" title="Arkistoi tämä lista">📥 Arkistoi</button>
                     <button id="muokkaa-listaa-btn" title="Muokkaa listan nimeä">✏️</button>
                     <button id="poista-lista-btn" title="Poista koko lista">🗑️</button>
                 </div>
