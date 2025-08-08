@@ -54,25 +54,20 @@ async function handleListSelection(listId) {
     currentListId = listId;
     const metaRef = ref(database, `listat/${listId}`);
     const metaSnapshot = await get(metaRef);
-
     if (!metaSnapshot.exists()) {
         alert("Virhe: Listan tietoja ei löytynyt.");
         return palaaAlkuun();
     }
-
     const meta = metaSnapshot.val();
     aktiivinenListaNimi.textContent = meta.nimi;
     const onArkistoitu = meta.status === 'archived';
     listaStatusBadge.textContent = onArkistoitu ? `Arkistoitu: ${formatSuomalainenAika(meta.arkistoituAika)}` : "";
-
     lomake.classList.toggle('hidden', onArkistoitu);
     muokkaaListaaBtn.classList.toggle('hidden', onArkistoitu);
     arkistoiListaBtn.classList.toggle('hidden', onArkistoitu);
     poistaArkistointiBtn.classList.toggle('hidden', !onArkistoitu);
-
     listanvalintaOsio.classList.add('hidden');
     kirjausOsio.classList.remove('hidden');
-    
     history.pushState({ path: `${window.location.pathname}?lista=${currentListId}` }, '', `${window.location.pathname}?lista=${currentListId}`);
     loadListData(onArkistoitu);
 }
@@ -80,16 +75,13 @@ async function handleListSelection(listId) {
 function loadListData(onArkistoitu) {
     if (!currentListId) return;
     if (listDataUnsubscribe) listDataUnsubscribe();
-    
     const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
     listDataUnsubscribe = onValue(kirjauksetRef, (snapshot) => {
         kirjausLista.innerHTML = '';
         yhteenvetoLista.innerHTML = '';
-
         if (snapshot.exists()) {
             const data = snapshot.val();
             const sums = {};
-
             Object.entries(data).forEach(([key, kirjaus]) => {
                 const li = document.createElement('li');
                 li.dataset.id = key;
@@ -107,12 +99,10 @@ function loadListData(onArkistoitu) {
                     </div>
                 `;
                 kirjausLista.appendChild(li);
-
                 const materiaaliNimi = (kirjaus.materiaali || 'Nimetön').trim();
                 const paino = typeof kirjaus.kilomäärä === 'number' ? kirjaus.kilomäärä : 0;
                 sums[materiaaliNimi] = (sums[materiaaliNimi] || 0) + paino;
             });
-
             Object.entries(sums).sort().forEach(([materiaali, summa]) => {
                 const li = document.createElement('li');
                 li.innerHTML = `<strong>${materiaali} yhteensä:</strong> ${summa.toFixed(1)} kg`;
@@ -125,33 +115,44 @@ function loadListData(onArkistoitu) {
 }
 
 function lataaListat() {
-    onValue(ref(database, 'listat'), (snapshot) => {
-        aktiivisetListatContainer.innerHTML = '';
+    const listatRef = ref(database, 'listat');
+    onValue(listatRef, (snapshot) => {
+        aktiivisetListatContainer.innerHTML = ''; 
         arkistoValikko.innerHTML = '<option value="">Valitse arkistoitu lista...</option>';
+
+        console.log("Ladataan listoja Firebasesta...");
+
         if (snapshot.exists()) {
-            const sortedLists = Object.entries(snapshot.val()).sort((a, b) => {
-                const nameA = a[1]?.nimi || '';
-                const nameB = b[1]?.nimi || '';
-                return nameA.localeCompare(nameB);
-            });
+            const listat = snapshot.val();
+            console.log("Löydettiin dataa:", listat); 
+
             let activeCount = 0;
-            sortedLists.forEach(([listId, meta]) => {
-                if (meta.status === 'active') {
+            
+            for (const listId in listat) {
+                const meta = listat[listId];
+
+                if (meta && meta.status === 'active') {
                     activeCount++;
                     const nappi = document.createElement('button');
-                    nappi.textContent = meta.nimi;
+                    nappi.textContent = meta.nimi || "Nimetön lista"; 
                     nappi.className = 'aktiivinen-lista-nappi';
                     nappi.onclick = () => handleListSelection(listId);
                     aktiivisetListatContainer.appendChild(nappi);
-                } else if (meta.status === 'archived') {
+                } else if (meta && meta.status === 'archived') {
                     const option = document.createElement('option');
                     option.value = listId;
-                    option.textContent = meta.nimi;
+                    option.textContent = meta.nimi || "Nimetön lista";
                     arkistoValikko.appendChild(option);
                 }
-            });
-            if (activeCount === 0) aktiivisetListatContainer.innerHTML = '<p>Ei aktiivisia listoja.</p>';
+            }
+
+            if (activeCount === 0) {
+                aktiivisetListatContainer.innerHTML = '<p>Ei aktiivisia listoja.</p>';
+            }
+            console.log("Listojen läpikäynti valmis.");
+
         } else {
+            console.log("Polusta /listat ei löytynyt dataa.");
             aktiivisetListatContainer.innerHTML = '<p>Ei listoja. Luo ensimmäinen.</p>';
         }
     });
