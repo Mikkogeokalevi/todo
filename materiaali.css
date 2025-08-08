@@ -236,6 +236,12 @@ button:hover {
     background-color: #3D4F2B;
     border-radius: 4px;
     margin-bottom: 8px;
+    gap: 10px; /* Väliä elementtien väliin */
+}
+
+#materiaali-hallinta-lista .material-actions {
+    display: flex;
+    gap: 5px;
 }
 
 #materiaali-hallinta-lista button {
@@ -243,11 +249,22 @@ button:hover {
     padding: 5px 10px;
     margin: 0;
     font-size: 0.9em;
-    background-color: #c0392b;
-    border: none;
     color: white;
+    border: none;
 }
-#materiaali-hallinta-lista button:hover {
+
+/* Eriväriset napit muokkaukselle ja poistolle */
+#materiaali-hallinta-lista .edit-material-btn {
+    background-color: #2980b9;
+}
+#materiaali-hallinta-lista .edit-material-btn:hover {
+    background-color: #3498db;
+}
+
+#materiaali-hallinta-lista .delete-material-btn {
+    background-color: #c0392b;
+}
+#materiaali-hallinta-lista .delete-material-btn:hover {
     background-color: #e74c3c;
 }
 
