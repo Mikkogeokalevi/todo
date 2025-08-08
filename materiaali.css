@@ -97,17 +97,21 @@ button:hover {
     justify-content: center;
     align-items: center;
     gap: 15px;
+    flex-wrap: wrap; /* Sallii rivittymisen pienillä näytöillä */
 }
 
 #otsikko-container h2 {
     border-bottom: none;
     margin: 0;
+    text-align: center;
 }
 
 #otsikko-toiminnot {
     display: flex;
     gap: 10px;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 #otsikko-toiminnot button {
@@ -129,10 +133,10 @@ button:hover {
     background-color: #2A381C;
 }
 
-
 #muokkaa-nimea-container {
     gap: 10px;
     margin-top: 10px;
+    display: none; /* Oletuksena piilossa */
 }
 
 #muokkaa-nimea-container input {
@@ -145,7 +149,6 @@ button:hover {
     margin: 0;
 }
 
-/* UUDET TYYLIT AKTIIVISILLE LISTOILLE */
 #aktiiviset-listat-container {
     display: flex;
     flex-direction: column;
@@ -156,4 +159,11 @@ button:hover {
     background-color: #4a5c3a;
     font-size: 1.2em;
     text-align: center;
+}
+
+/* UUSI TYYLI ARKISTOINTI-MERKINNÄLLE */
+#lista-status-badge {
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #ffc107; /* Keltainen huomioväri */
 }
