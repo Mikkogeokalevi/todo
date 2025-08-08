@@ -73,14 +73,20 @@ button:hover {
     background-color: #3D4F2B;
     padding: 15px;
     border-bottom: 1px solid #2A381C;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
 }
 
 #kirjaus-lista li:last-child {
     border-bottom: none;
+}
+
+.kirjaus-paatiedot {
+    padding-bottom: 5px;
+}
+
+.kirjaus-alempi-rivi {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .kirjaus-tiedot {
@@ -90,7 +96,7 @@ button:hover {
 }
 
 .kirjaus-aika {
-    font-size: 0.9em;
+    font-size: 0.8em;
     color: #b3c9a3;
     white-space: nowrap;
 }
