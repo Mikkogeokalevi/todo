@@ -19,7 +19,7 @@
                 </div>
             </div>
 
-            <div class.osio-laatikko">
+            <div class="osio-laatikko">
                 <h3>Arkistoidut listat</h3>
                 <select id="arkistoValikko">
                     <option value="">Valitse arkistoitu lista...</option>
@@ -37,20 +37,21 @@
             <div id="otsikko-container">
                 <h2><span id="aktiivinenListaNimi"></span> <span id="lista-status-badge"></span></h2>
                 <div id="otsikko-toiminnot">
-                    <button id="palaa-takaisin-btn" title="Palaa listavalikkoon">⬅️ Palaa</button>
-                    <button id="poista-arkistointi-btn" title="Poista listan arkistointi" class="hidden">➡️ Aktivoi</button>
-                    <button id="arkistoi-lista-btn" title="Arkistoi tämä lista">📥 Arkistoi</button>
-                    <button id="muokkaa-listaa-btn" title="Muokkaa listan nimeä">✏️</button>
-                    <button id="poista-lista-btn" title="Poista koko lista">🗑️</button>
+                    <button id="palaa-takaisin-btn" title="Palaa listavalikkoon" class="no-print">⬅️ Palaa</button>
+                    <button id="tulosta-btn" title="Tulosta lista" class="no-print">🖨️ Tulosta</button>
+                    <button id="poista-arkistointi-btn" title="Poista listan arkistointi" class="hidden no-print">➡️ Aktivoi</button>
+                    <button id="arkistoi-lista-btn" title="Arkistoi tämä lista" class="no-print">📥 Arkistoi</button>
+                    <button id="muokkaa-listaa-btn" title="Muokkaa listan nimeä" class="no-print">✏️</button>
+                    <button id="poista-lista-btn" title="Poista koko lista" class="no-print">🗑️</button>
                 </div>
             </div>
-            <div id="muokkaa-nimea-container" class="hidden">
+            <div id="muokkaa-nimea-container" class="hidden no-print">
                 <input type="text" id="muokkaa-nimea-input">
                 <button id="tallenna-nimi-btn">Tallenna</button>
                 <button id="peruuta-nimi-btn">Peruuta</button>
             </div>
 
-            <form id="materiaali-lomake" class="osio-laatikko">
+            <form id="materiaali-lomake" class="osio-laatikko no-print">
                 <h3>Lisää uusi kirjaus</h3>
                 <label for="materiaali-tyyppi">Materiaalin tyyppi:</label>
                 <select id="materiaali-tyyppi" required>
@@ -67,12 +68,31 @@
                 <button type="submit">Tallenna kirjaus</button>
             </form>
 
-            <div class="osio-laatikko">
+            <div class="osio-laatikko" id="kirjauslista-container">
                 <h3>Kirjatut materiaalit</h3>
                 <ul id="kirjaus-lista"></ul>
+                
+                <div id="yhteenveto-container">
+                    <h4>Yhteenveto</h4>
+                    <ul id="yhteenveto-lista"></ul>
+                </div>
             </div>
         </div>
     </main>
+
+    <div id="edit-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Muokkaa kirjausta</h3>
+            <label for="edit-materiaali-nimi">Materiaali:</label>
+            <input type="text" id="edit-materiaali-nimi">
+            <label for="edit-kilo-maara">Paino (kg):</label>
+            <input type="number" id="edit-kilo-maara" step="0.1">
+            <div class="modal-actions">
+                <button id="save-edit-btn">Tallenna</button>
+                <button id="cancel-edit-btn">Peruuta</button>
+            </div>
+        </div>
+    </div>
     
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
