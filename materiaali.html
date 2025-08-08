@@ -56,15 +56,13 @@
                 <label for="materiaali-tyyppi">Materiaalin tyyppi:</label>
                 <select id="materiaali-tyyppi" required>
                     <option value="" disabled selected>Valitse tyyppi...</option>
+                    <option value="Muovi SER">Muovi SER</option>
+                    <option value="Metalli SER">Metalli SER</option>
+                    <option value="Johdot">Johdot</option>
+                    <option value="Virtalähteet">Virtalähteet</option>
                     <option value="Muu">Muu, mikä?</option>
                 </select>
                 <input type="text" id="muu-materiaali-syotto" class="hidden" placeholder="Kirjoita materiaalin nimi...">
-                
-                <div id="muista-materiaali-container" class="hidden">
-                    <input type="checkbox" id="muista-materiaali-checkbox">
-                    <label for="muista-materiaali-checkbox" class="checkbox-label">Muista tämä materiaali jatkossa</label>
-                </div>
-
                 <label for="kilo-maara">Paino (kg):</label>
                 <input type="number" id="kilo-maara" step="0.1" placeholder="Esim. 12.5" required>
                 <button type="submit">Tallenna kirjaus</button>
@@ -84,7 +82,16 @@
 
     <div id="edit-modal" class="modal-overlay hidden">
         <div class="modal-content">
+            <h3>Muokkaa kirjausta</h3>
+            <label for="edit-materiaali-nimi">Materiaali:</label>
+            <input type="text" id="edit-materiaali-nimi">
+            <label for="edit-kilo-maara">Paino (kg):</label>
+            <input type="number" id="edit-kilo-maara" step="0.1">
+            <div class="modal-actions">
+                <button id="save-edit-btn">Tallenna</button>
+                <button id="cancel-edit-btn">Peruuta</button>
             </div>
+        </div>
     </div>
     
     <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
