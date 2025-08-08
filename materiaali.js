@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit 2
+// DOM-elementit
 const listanvalintaOsio = document.getElementById('listanvalinta-osio');
 const listaValikko = document.getElementById('listaValikko');
 const uusiListaNimiInput = document.getElementById('uusiListaNimi');
@@ -57,7 +57,7 @@ function handleListSelection(listName) {
     kirjausOsio.classList.remove('hidden');
     aktiivinenListaNimi.textContent = displayName;
     
-    // **KORJAUS TÄSSÄ:** Varmistetaan, että oikeat elementit näkyvät ja piilotetaan
+    // Varmistetaan, että oikeat elementit näkyvät ja piilotetaan
     otsikkoContainer.classList.remove('hidden');
     muokkaaNimeaContainer.classList.add('hidden');
     
