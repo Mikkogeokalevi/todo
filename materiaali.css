@@ -91,3 +91,47 @@ button:hover {
     font-size: 0.9em;
     color: #b3c9a3;
 }
+
+/* --- LISTAN MUOKKAUKSEN TYYLIT --- */
+#otsikko-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+}
+
+#otsikko-container h2 {
+    border-bottom: none; /* Poistetaan oletusviiva, koska se on jo laatikolla */
+    margin: 0;
+}
+
+#otsikko-toiminnot button {
+    width: auto;
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    padding: 5px;
+    margin: 0;
+    cursor: pointer;
+    color: #b3c9a3;
+}
+
+#otsikko-toiminnot button:hover {
+    color: #90EE90;
+}
+
+#muokkaa-nimea-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#muokkaa-nimea-container input {
+    flex-grow: 1;
+    margin: 0;
+}
+
+#muokkaa-nimea-container button {
+    width: auto;
+    margin: 0;
+}
