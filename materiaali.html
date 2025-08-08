@@ -28,10 +28,13 @@
 
              <div class="osio-laatikko">
                 <h3>Luo uusi lista</h3>
-                <label for="uusiListaSijainti">Sijainti:</label> <select id="uusiListaSijainti"> <option value="Kauklahti">Kauklahti</option>
+                <label for="uusiListaSijainti">Sijainti:</label>
+                <select id="uusiListaSijainti">
+                    <option value="Kauklahti">Kauklahti</option>
                     <option value="Heinola">Heinola</option>
                 </select>
-                <label for="uusiListaNimi">Uuden listan nimi:</label> <input type="text" id="uusiListaNimi" placeholder="Esim. Työmaa X 09082025">
+                <label for="uusiListaNimi">Uuden listan nimi:</label>
+                <input type="text" id="uusiListaNimi" placeholder="Esim. Työmaa X 09082025">
                  <button id="luo-uusi-lista-btn">Luo uusi</button>
             </div>
 
@@ -100,8 +103,7 @@
         <div class="modal-content">
             <h3>Muokkaa kirjausta</h3>
             <label for="edit-materiaali-nimi">Materiaali:</label>
-            <input type="text" id="edit-materiaali-nimi">
-            <label for="edit-kilo-maara">Paino (kg):</label>
+            <input type="text" id="edit-materiaali-nimi" disabled> <label for="edit-kilo-maara">Paino (kg):</label>
             <input type="number" id="edit-kilo-maara" step="0.1">
             <div class="modal-actions">
                 <button id="save-edit-btn">Tallenna</button>
