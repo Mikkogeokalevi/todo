@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit ss
+// DOM-elementit
 const listanvalintaOsio = document.getElementById('listanvalinta-osio');
 const aktiivisetListatContainer = document.getElementById('aktiiviset-listat-container');
 const arkistoValikko = document.getElementById('arkistoValikko');
@@ -119,18 +119,15 @@ function lataaListat() {
     onValue(listatRef, (snapshot) => {
         aktiivisetListatContainer.innerHTML = ''; 
         arkistoValikko.innerHTML = '<option value="">Valitse arkistoitu lista...</option>';
-
-        console.log("Ladataan listoja Firebasesta...");
-
         if (snapshot.exists()) {
             const listat = snapshot.val();
-            console.log("Löydettiin dataa:", listat); 
-
             let activeCount = 0;
-            
-            for (const listId in listat) {
-                const meta = listat[listId];
-
+            const sortedLists = Object.entries(listat).sort((a, b) => {
+                const nameA = a[1]?.nimi || '';
+                const nameB = b[1]?.nimi || '';
+                return nameA.localeCompare(nameB);
+            });
+            sortedLists.forEach(([listId, meta]) => {
                 if (meta && meta.status === 'active') {
                     activeCount++;
                     const nappi = document.createElement('button');
@@ -144,17 +141,16 @@ function lataaListat() {
                     option.textContent = meta.nimi || "Nimetön lista";
                     arkistoValikko.appendChild(option);
                 }
-            }
-
+            });
             if (activeCount === 0) {
                 aktiivisetListatContainer.innerHTML = '<p>Ei aktiivisia listoja.</p>';
             }
-            console.log("Listojen läpikäynti valmis.");
-
         } else {
-            console.log("Polusta /listat ei löytynyt dataa.");
             aktiivisetListatContainer.innerHTML = '<p>Ei listoja. Luo ensimmäinen.</p>';
         }
+    }, (error) => {
+        console.error("Virhe listojen latauksessa (tarkista säännöt /listat-polulle):", error);
+        aktiivisetListatContainer.innerHTML = '<p style="color:red;">Listojen lataus epäonnistui. Tarkista tietokantasäännöt.</p>';
     });
 }
 
@@ -175,6 +171,8 @@ function lataaMateriaalitValikko() {
                 materiaaliTyyppiSelect.insertBefore(option, muuOptio);
             });
         }
+    }, (error) => {
+        console.error("Virhe materiaalien latauksessa (tarkista säännöt /materiaalit-polulle):", error);
     });
 }
 
@@ -214,10 +212,9 @@ lomake.addEventListener('submit', (e) => {
     const kiloMaaraInput = document.getElementById('kilo-maara');
     let materiaali = (materiaaliTyyppiSelect.value === 'Muu' ? muuMateriaaliInput.value.trim() : materiaaliTyyppiSelect.value);
     const kilomäärä = parseFloat(kiloMaaraInput.value);
-
     if (!materiaali || isNaN(kilomäärä) || kilomäärä <= 0) return alert('Tarkista syötteet.');
 
-    if (materiaaliTyyppiSelect.value === 'Muu' && muistaMateriaaliCheckbox.checked) {
+    if (materiaaliTyyppiSelect.value === 'Muu' && muistaMateriaaliCheckbox.checked && materiaali) {
         set(ref(database, `materiaalit/${materiaali}`), true);
     }
     const uusiKirjaus = { materiaali, kilomäärä, aikaleima: new Date().toISOString() };
@@ -317,18 +314,23 @@ document.getElementById('tallenna-nimi-btn').addEventListener('click', async () 
     alert('Nimi päivitetty!');
 });
 
-function initializePage() {
-    const listFromUrl = new URLSearchParams(window.location.search).get('lista');
-    lataaListat();
-    lataaMateriaalitValikko();
-    const materiaalitRef = ref(database, 'materiaalit');
-    get(materiaalitRef).then(snapshot => {
+async function initializePage() {
+    try {
+        const materiaalitRef = ref(database, 'materiaalit');
+        const snapshot = await get(materiaalitRef);
         if (!snapshot.exists()) {
-            set(materiaalitRef, { "Muovi SER": true, "Metalli SER": true, "Johdot": true, "Virtalähteet": true });
+            console.log("Oletusmateriaaleja ei löytynyt, luodaan ne...");
+            await set(materiaalitRef, { "Muovi SER": true, "Metalli SER": true, "Johdot": true, "Virtalähteet": true });
         }
-    });
-    if (listFromUrl) {
-        handleListSelection(listFromUrl);
+        lataaListat();
+        lataaMateriaalitValikko();
+        const listFromUrl = new URLSearchParams(window.location.search).get('lista');
+        if (listFromUrl) {
+            handleListSelection(listFromUrl);
+        }
+    } catch (error) {
+        console.error("Sovelluksen alustus epäonnistui:", error);
+        alert("Sovelluksen alustus epäonnistui. Tarkista selaimen konsoli (F12) ja varmista, että Firebasen tietokantasäännöt ovat oikein.");
     }
 }
 
