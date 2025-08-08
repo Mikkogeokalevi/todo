@@ -121,7 +121,7 @@ button:hover {
 }
 
 #muokkaa-nimea-container {
-    display: flex;
+    /* **KORJAUS:** display: flex; poistettu täältä. Sitä hallitaan JS:llä. */
     gap: 10px;
     margin-top: 10px;
 }
