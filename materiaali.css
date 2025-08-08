@@ -152,10 +152,12 @@ button:hover {
     background-color: #2A381C;
 }
 
+/* TÄMÄ SÄÄNTÖ ON MUUTETTU */
 #muokkaa-nimea-container {
+    display: flex; /* Asetetaan flex-asettelu oletukseksi, kun elementti on näkyvissä */
     gap: 10px;
     margin-top: 10px;
-    display: none;
+    /* Poistettu display: none; täältä, koska .hidden-luokka hoitaa piilotuksen */
 }
 
 #muokkaa-nimea-container input { flex-grow: 1; margin: 0; }
@@ -295,25 +297,18 @@ button:hover {
     #lista-status-badge { color: #555; }
 }
 
-/* ======================================== */
-/* == UUSI OSA: KÄNNYKKÄNÄKYMÄN PARANNUS == */
-/* ======================================== */
 @media (max-width: 480px) {
     #kirjaus-lista li {
-        /* Sallitaan elementtien rivittyä useammalle riville. */
         flex-wrap: wrap;
     }
 
     .kirjaus-tiedot {
-        /* Asetetaan materiaalin nimi ja paino viemään koko ensimmäisen rivin leveys. */
         flex-basis: 100%;
-        /* Lisätään pieni väli alle, jotta se ei ole kiinni alemmassa rivissä. */
         margin-bottom: 5px;
     }
 
     .kirjaus-aika,
     .kirjaus-toiminnot {
-        /* Pienennetään fonttia toisella rivillä pyynnön mukaisesti. */
         font-size: 0.8em;
     }
 }
