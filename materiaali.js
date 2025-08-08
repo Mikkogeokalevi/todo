@@ -54,20 +54,25 @@ async function handleListSelection(listId) {
     currentListId = listId;
     const metaRef = ref(database, `listat/${listId}`);
     const metaSnapshot = await get(metaRef);
+
     if (!metaSnapshot.exists()) {
         alert("Virhe: Listan tietoja ei löytynyt.");
         return palaaAlkuun();
     }
+
     const meta = metaSnapshot.val();
     aktiivinenListaNimi.textContent = meta.nimi;
     const onArkistoitu = meta.status === 'archived';
     listaStatusBadge.textContent = onArkistoitu ? `Arkistoitu: ${formatSuomalainenAika(meta.arkistoituAika)}` : "";
+
     lomake.classList.toggle('hidden', onArkistoitu);
     muokkaaListaaBtn.classList.toggle('hidden', onArkistoitu);
     arkistoiListaBtn.classList.toggle('hidden', onArkistoitu);
     poistaArkistointiBtn.classList.toggle('hidden', !onArkistoitu);
+
     listanvalintaOsio.classList.add('hidden');
     kirjausOsio.classList.remove('hidden');
+    
     history.pushState({ path: `${window.location.pathname}?lista=${currentListId}` }, '', `${window.location.pathname}?lista=${currentListId}`);
     loadListData(onArkistoitu);
 }
@@ -75,32 +80,39 @@ async function handleListSelection(listId) {
 function loadListData(onArkistoitu) {
     if (!currentListId) return;
     if (listDataUnsubscribe) listDataUnsubscribe();
+    
     const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
     listDataUnsubscribe = onValue(kirjauksetRef, (snapshot) => {
         kirjausLista.innerHTML = '';
         yhteenvetoLista.innerHTML = '';
+
         if (snapshot.exists()) {
             const data = snapshot.val();
             const sums = {};
+
             Object.entries(data).forEach(([key, kirjaus]) => {
                 const li = document.createElement('li');
                 li.dataset.id = key;
                 li.innerHTML = `
-                    <span class="kirjaus-tiedot">${kirjaus.materiaali || 'Nimetön'} - ${kirjaus.kilomäärä || 0} kg</span>
-                    <span class="kirjaus-aika">${formatSuomalainenAika(kirjaus.aikaleima)}</span>
-                    ${!onArkistoitu ? `
-                    <div class="kirjaus-toiminnot no-print">
-                        <button class="edit-entry-btn" title="Muokkaa">✏️</button>
-                        <button class="delete-entry-btn" title="Poista">🗑️</button>
-                    </div>` : ''}
+                    <div class="kirjaus-paatiedot">
+                        <span class="kirjaus-tiedot">${kirjaus.materiaali || 'Nimetön'} - ${kirjaus.kilomäärä || 0} kg</span>
+                    </div>
+                    <div class="kirjaus-alempi-rivi">
+                        <span class="kirjaus-aika">${formatSuomalainenAika(kirjaus.aikaleima)}</span>
+                        ${!onArkistoitu ? `
+                        <div class="kirjaus-toiminnot no-print">
+                            <button class="edit-entry-btn" title="Muokkaa">✏️</button>
+                            <button class="delete-entry-btn" title="Poista">🗑️</button>
+                        </div>` : ''}
+                    </div>
                 `;
                 kirjausLista.appendChild(li);
 
-                // KORJATTU: Varmistetaan, että arvot ovat olemassa ennen laskentaa
                 const materiaaliNimi = (kirjaus.materiaali || 'Nimetön').trim();
                 const paino = typeof kirjaus.kilomäärä === 'number' ? kirjaus.kilomäärä : 0;
                 sums[materiaaliNimi] = (sums[materiaaliNimi] || 0) + paino;
             });
+
             Object.entries(sums).sort().forEach(([materiaali, summa]) => {
                 const li = document.createElement('li');
                 li.innerHTML = `<strong>${materiaali} yhteensä:</strong> ${summa.toFixed(1)} kg`;
@@ -117,14 +129,12 @@ function lataaListat() {
         aktiivisetListatContainer.innerHTML = '';
         arkistoValikko.innerHTML = '<option value="">Valitse arkistoitu lista...</option>';
         if (snapshot.exists()) {
-            let activeCount = 0;
-            // KORJATTU: Lajittelu on nyt turvallisempi eikä kaadu, jos nimikenttä puuttuu.
             const sortedLists = Object.entries(snapshot.val()).sort((a, b) => {
                 const nameA = a[1]?.nimi || '';
                 const nameB = b[1]?.nimi || '';
                 return nameA.localeCompare(nameB);
             });
-
+            let activeCount = 0;
             sortedLists.forEach(([listId, meta]) => {
                 if (meta.status === 'active') {
                     activeCount++;
@@ -176,8 +186,6 @@ function palaaAlkuun() {
     uusiListaNimiInput.value = "";
     arkistoValikko.value = "";
 }
-
-// --- TAPAHTUMANKUUNTELIJAT ---
 
 palaaTakaisinBtn.addEventListener('click', palaaAlkuun);
 tulostaBtn.addEventListener('click', () => window.print());
@@ -255,7 +263,6 @@ kirjausLista.addEventListener('click', async (e) => {
     if (!li) return;
     const entryId = li.dataset.id;
     const entryRef = ref(database, `kirjaukset/${currentListId}/${entryId}`);
-
     if (e.target.matches('.delete-entry-btn')) {
         if (confirm('Haluatko varmasti poistaa tämän kirjauksen?')) {
             await remove(entryRef);
@@ -292,7 +299,6 @@ cancelEditBtn.addEventListener('click', () => {
     currentEditingEntryId = null;
 });
 
-// Nimenmuokkaus-logiikka...
 document.getElementById('muokkaa-listaa-btn').addEventListener('click', () => {
     document.getElementById('muokkaa-nimea-container').style.display = 'flex';
     document.getElementById('muokkaa-nimea-input').value = document.getElementById('aktiivinenListaNimi').textContent;
@@ -310,7 +316,6 @@ document.getElementById('tallenna-nimi-btn').addEventListener('click', async () 
     alert('Nimi päivitetty!');
 });
 
-// SOVELLUKSEN KÄYNNISTYS
 function initializePage() {
     const listFromUrl = new URLSearchParams(window.location.search).get('lista');
     lataaListat();
