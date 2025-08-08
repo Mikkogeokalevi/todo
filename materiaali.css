@@ -92,7 +92,6 @@ button:hover {
     color: #b3c9a3;
 }
 
-/* --- LISTAN MUOKKAUKSEN TYYLIT --- */
 #otsikko-container {
     display: flex;
     justify-content: center;
@@ -105,23 +104,33 @@ button:hover {
     margin: 0;
 }
 
+#otsikko-toiminnot {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
 #otsikko-toiminnot button {
     width: auto;
     background: none;
     border: none;
-    font-size: 1.5em;
-    padding: 5px;
+    font-size: 1.1em;
+    padding: 8px;
     margin: 0;
     cursor: pointer;
     color: #b3c9a3;
+    border: 1px solid transparent;
+    border-radius: 5px;
 }
 
 #otsikko-toiminnot button:hover {
     color: #90EE90;
+    border-color: #90EE90;
+    background-color: #2A381C;
 }
 
+
 #muokkaa-nimea-container {
-    /* **KORJAUS:** display: flex; poistettu täältä. Sitä hallitaan JS:llä. */
     gap: 10px;
     margin-top: 10px;
 }
@@ -134,4 +143,17 @@ button:hover {
 #muokkaa-nimea-container button {
     width: auto;
     margin: 0;
+}
+
+/* UUDET TYYLIT AKTIIVISILLE LISTOILLE */
+#aktiiviset-listat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.aktiivinen-lista-nappi {
+    background-color: #4a5c3a;
+    font-size: 1.2em;
+    text-align: center;
 }
