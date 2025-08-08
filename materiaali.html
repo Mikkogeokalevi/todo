@@ -30,6 +30,7 @@
                 <h3>Luo uusi lista</h3>
                 <label for="uusiListaSijainti">Sijainti:</label>
                 <select id="uusiListaSijainti">
+                    <option value="">Ei sijaintia</option>
                     <option value="Kauklahti">Kauklahti</option>
                     <option value="Heinola">Heinola</option>
                 </select>
@@ -47,13 +48,13 @@
                     <select id="uusiMateriaaliSijainti" required>
                          <option value="Kauklahti">Kauklahti</option>
                          <option value="Heinola">Heinola</option>
+                         <option value="Yleinen">Yleinen (näkyy kaikissa)</option>
                     </select>
                     <button type="submit">Lisää materiaali</button>
                 </form>
                 <div id="materiaali-hallinta-container">
                     <h4>Nykyiset materiaalit</h4>
-                    <ul id="materiaali-hallinta-lista">
-                        </ul>
+                    <ul id="materiaali-hallinta-lista"></ul>
                 </div>
             </div>
         </div>
@@ -79,8 +80,7 @@
             <form id="materiaali-lomake" class="osio-laatikko no-print">
                 <h3>Lisää uusi kirjaus</h3>
                 <label for="materiaali-tyyppi">Materiaalin tyyppi:</label>
-                <select id="materiaali-tyyppi" required>
-                    </select>
+                <select id="materiaali-tyyppi" required></select>
                 <input type="text" id="muu-materiaali-syotto" class="hidden" placeholder="Kirjoita materiaalin nimi...">
                 <label for="kilo-maara">Paino (kg):</label>
                 <input type="number" id="kilo-maara" step="0.1" placeholder="Esim. 12.5" required>
@@ -90,7 +90,6 @@
             <div class="osio-laatikko" id="kirjauslista-container">
                 <h3>Kirjatut materiaalit</h3>
                 <ul id="kirjaus-lista"></ul>
-                
                 <div id="yhteenveto-container">
                     <h4>Yhteenveto</h4>
                     <ul id="yhteenveto-lista"></ul>
@@ -103,11 +102,30 @@
         <div class="modal-content">
             <h3>Muokkaa kirjausta</h3>
             <label for="edit-materiaali-nimi">Materiaali:</label>
-            <input type="text" id="edit-materiaali-nimi" disabled> <label for="edit-kilo-maara">Paino (kg):</label>
+            <input type="text" id="edit-materiaali-nimi" disabled>
+            <label for="edit-kilo-maara">Paino (kg):</label>
             <input type="number" id="edit-kilo-maara" step="0.1">
             <div class="modal-actions">
                 <button id="save-edit-btn">Tallenna</button>
                 <button id="cancel-edit-btn">Peruuta</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="edit-material-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Muokkaa materiaalia</h3>
+            <label for="edit-material-name">Materiaalin nimi:</label>
+            <input type="text" id="edit-material-name">
+            <label for="edit-material-location">Sijainti:</label>
+            <select id="edit-material-location">
+                <option value="Kauklahti">Kauklahti</option>
+                <option value="Heinola">Heinola</option>
+                <option value="Yleinen">Yleinen (näkyy kaikissa)</option>
+            </select>
+            <div class="modal-actions">
+                <button id="save-material-edit-btn">Tallenna</button>
+                <button id="cancel-material-edit-btn">Peruuta</button>
             </div>
         </div>
     </div>
