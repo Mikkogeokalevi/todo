@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// DOM-elementit
+// DOM-elementit ss
 const listanvalintaOsio = document.getElementById('listanvalinta-osio');
 const aktiivisetListatContainer = document.getElementById('aktiiviset-listat-container');
 const arkistoValikko = document.getElementById('arkistoValikko');
