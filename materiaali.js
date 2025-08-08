@@ -14,7 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
-// UUDET DOM-ELEMENTIT
+// DOM-elementit
 const listanvalintaOsio = document.getElementById('listanvalinta-osio');
 const listaValikko = document.getElementById('listaValikko');
 const uusiListaNimiInput = document.getElementById('uusiListaNimi');
@@ -33,6 +33,7 @@ const muuMateriaaliInput = document.getElementById('muu-materiaali-syotto');
 const kiloMaaraInput = document.getElementById('kilo-maara');
 const kirjausLista = document.getElementById('kirjaus-lista');
 
+// Sovelluksen tila
 let currentListId = null;
 let listDataUnsubscribe = null;
 
@@ -47,13 +48,16 @@ const normalizeListName = (listName) => listName.trim().toLowerCase().replace(/\
 function handleListSelection(listName) {
     if (!listName || listName.trim() === '') return;
     currentListId = normalizeListName(listName);
+    
+    const displayName = listName.trim().replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     const newUrl = `${window.location.pathname}?lista=${currentListId}`;
     history.pushState({ path: newUrl }, '', newUrl);
 
     listanvalintaOsio.classList.add('hidden');
     kirjausOsio.classList.remove('hidden');
-    aktiivinenListaNimi.textContent = listName.trim().replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    aktiivinenListaNimi.textContent = displayName;
     
+    // **KORJAUS TÄSSÄ:** Varmistetaan, että oikeat elementit näkyvät ja piilotetaan
     otsikkoContainer.classList.remove('hidden');
     muokkaaNimeaContainer.classList.add('hidden');
     
@@ -63,6 +67,7 @@ function handleListSelection(listName) {
 function loadListData() {
     if (!currentListId) return;
     if (listDataUnsubscribe) listDataUnsubscribe();
+    
     const kirjauksetRef = ref(database, `kirjaukset/${currentListId}`);
     
     listDataUnsubscribe = onValue(kirjauksetRef, (snapshot) => {
@@ -97,8 +102,6 @@ function loadListMenu() {
         }
     });
 }
-
-// --- UUDET TAPAHTUMANKÄSITTELIJÄT ---
 
 muokkaaListaaBtn.addEventListener('click', () => {
     otsikkoContainer.classList.add('hidden');
@@ -138,16 +141,20 @@ poistaListaBtn.addEventListener('click', () => {
     if (!currentListId) return;
     const confirmation = confirm(`Haluatko varmasti poistaa koko listan "${aktiivinenListaNimi.textContent}" ja kaikki sen tiedot? Tätä toimintoa ei voi peruuttaa.`);
     if (confirmation) {
+        console.log(`Yritetään poistaa lista ID:llä: ${currentListId}`);
         const listRef = ref(database, `kirjaukset/${currentListId}`);
         remove(listRef)
             .then(() => {
-                window.location.href = window.location.pathname; // Palaa aloitussivulle
+                console.log('Lista poistettu onnistuneesti.');
+                alert(`Lista "${aktiivinenListaNimi.textContent}" on poistettu.`);
+                window.location.href = window.location.pathname;
             })
-            .catch(error => console.error("Virhe poistossa: ", error));
+            .catch(error => {
+                console.error("Virhe listan poistossa:", error);
+                alert('Listan poistossa tapahtui virhe. Tarkista konsoli (F12) saadaksesi lisätietoja.');
+            });
     }
 });
-
-// --- VANHAT TAPAHTUMANKÄSITTELIJÄT ---
 
 listaValikko.addEventListener('change', () => handleListSelection(listaValikko.value));
 uusiListaNimiInput.addEventListener('change', () => handleListSelection(uusiListaNimiInput.value));
