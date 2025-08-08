@@ -209,7 +209,6 @@ button:hover {
     margin-top: 20px;
 }
 
-/* UUDET YHTEENVETO-TYYLIT */
 #yhteenveto-container {
     margin-top: 25px;
     padding-top: 15px;
@@ -221,6 +220,35 @@ button:hover {
     justify-content: space-between;
     padding: 8px 0;
     font-size: 1.1em;
+}
+
+#materiaali-hallinta-lista {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+#materiaali-hallinta-lista li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #3D4F2B;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+#materiaali-hallinta-lista button {
+    width: auto;
+    padding: 5px 10px;
+    margin: 0;
+    font-size: 0.9em;
+    background-color: #c0392b;
+    border: none;
+    color: white;
+}
+#materiaali-hallinta-lista button:hover {
+    background-color: #e74c3c;
 }
 
 @media print {
