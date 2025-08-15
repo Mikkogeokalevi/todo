@@ -78,92 +78,18 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 #paivittaisetSummat p { margin: 5px 0; }
 
 ul { list-style: none; padding: 0; }
-.kirjaus-item { 
-    display: flex; 
-    flex-wrap: wrap; 
-    align-items: flex-start;
-    gap: 10px; 
-    padding: 10px; 
-    background: #4a5c3a; 
-    border-radius: 5px; 
-    margin-bottom: 8px; 
-}
-.kirjaus-tiedot { 
-    flex-grow: 1; 
-    min-width: 250px; 
-}
-
-.tehtava-teksti {
-    font-size: 1em;
-    font-weight: bold;
-    margin-bottom: 5px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    display: block;
-}
-.tehtava-input {
-    width: 100%;
-    min-height: 2em;
-    padding: 12px;
-    margin-bottom: 10px;
-    box-sizing: border-box;
-    background-color: #2A381C;
-    color: #F8F8F8;
-    border: 1px solid #556B2F;
-    border-radius: 4px;
-    font-family: 'Georgia', serif;
-    font-size: 1em;
-    resize: vertical;
-}
-
-.aika-tiedot { 
-    display: flex; 
-    flex-wrap: wrap; 
-    align-items: center; 
-    gap: 5px; 
-}
-.aika-tiedot input { 
-    flex: 1; 
-    min-width: 180px; 
-    padding: 8px; 
-    font-size: 14px; 
-}
+.kirjaus-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
+.kirjaus-tiedot { flex-grow: 1; min-width: 250px; }
+.kirjaus-tiedot .tehtava-input { font-size: 1em; font-weight: bold; margin-bottom: 5px; padding-top: 0; padding-bottom: 0;}
+.aika-tiedot { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.aika-tiedot input { flex: 1; min-width: 180px; padding: 8px; font-size: 14px; }
 .aika-nuoli { font-size: 1.2em; }
+.kirjaus-toiminnot { display: flex; gap: 5px; flex-shrink: 0; }
+.kirjaus-toiminnot button { width: auto; background: none; border: none; font-size: 1.5em; padding: 5px; transition: opacity 0.2s; }
 
-.kirjaus-toiminnot-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-top: 5px;
-}
-.kirjaus-toiminnot { 
-    display: flex; 
-    gap: 5px; 
-    flex-shrink: 0; 
-    flex-grow: 1;
-    justify-content: center;
-}
-.kirjaus-toiminnot button { 
-    width: auto; 
-    background: none; 
-    border: none; 
-    font-size: 1.2em; 
-    padding: 5px; 
-    transition: opacity 0.2s; 
-}
-
-.kesto { 
-    font-size: 1em; 
-    color: #FFD700; 
-    font-weight: bold; 
-    flex-grow: 0; 
-}
-.lukitus-label { 
-    cursor: pointer; 
-    display: flex; 
-    align-items: center; 
-}
+.kesto-ja-lukitus-container { display: flex; align-items: center; gap: 15px; width: 100%; margin-top: 5px; }
+.kesto { font-size: 1em; color: #FFD700; font-weight: bold; flex-grow: 1; }
+.lukitus-label { cursor: pointer; display: flex; align-items: center; }
 .lukitse-kirjaus-checkbox { display: none; }
 .lukko-ikoni { font-size: 1.5em; opacity: 0.4; transition: all 0.2s; }
 .lukitse-kirjaus-checkbox:checked + .lukko-ikoni { opacity: 1.0; color: #FFD700; transform: scale(1.1); }
@@ -171,7 +97,7 @@ ul { list-style: none; padding: 0; }
 .kirjaus-item.locked .poista-btn { opacity: 0.2; pointer-events: none; }
 
 /* ======================================= */
-/* --- TULOSTUSTYYLIT --- */
+/* --- TULOSTUSTYYLIT (PALAUTETTU) --- */
 /* ======================================= */
 @media print {
     body {
@@ -211,16 +137,6 @@ ul { list-style: none; padding: 0; }
         border-bottom: 1px solid #ccc;
         page-break-inside: avoid;
     }
-    .tehtava-teksti {
-        font-weight: bold;
-        margin-bottom: 5px;
-        white-space: pre-wrap;
-        word-break: break-word;
-        display: block;
-    }
-    .kirjaus-toiminnot-container, .tehtava-input, .aika-tiedot {
-        display: none !important;
-    }
     input:disabled {
         border: none;
         padding: 0;
@@ -229,9 +145,10 @@ ul { list-style: none; padding: 0; }
         font-family: sans-serif;
         font-size: 1em;
         font-weight: normal;
-        white-space: pre-wrap;
-        width: 100%;
-        height: auto;
+    }
+    .kirjaus-tiedot .tehtava-input {
+        font-weight: bold;
+        margin-bottom: 5px;
     }
     .kesto {
         color: #333;
@@ -258,16 +175,10 @@ ul { list-style: none; padding: 0; }
         flex-basis: 100%;
         min-width: 0;
     }
-    .kirjaus-tiedot .tehtava-input {
-        white-space: pre-wrap;
-        word-break: break-word;
-    }
-    .kirjaus-toiminnot-container {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-        gap: 15px;
-        width: 100%;
+    .kesto-ja-lukitus-container {
+        flex-grow: 1;
+        width: auto;
+        margin-top: 0;
     }
     .kesto {
         font-size: 0.9em;
@@ -279,9 +190,6 @@ ul { list-style: none; padding: 0; }
     .kirjaus-toiminnot {
         flex-shrink: 0;
         gap: 0;
-        width: auto;
-        flex-grow: 1;
-        justify-content: center;
     }
     .kirjaus-toiminnot button {
         font-size: 1.3em;

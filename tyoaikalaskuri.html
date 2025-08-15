@@ -86,25 +86,24 @@
     <template id="kirjaus-template">
         <li class="kirjaus-item">
             <div class="kirjaus-tiedot">
-                <div class="tehtava-teksti"></div>
-                <textarea class="tehtava-input hidden"></textarea>
+                <input type="text" class="tehtava-input" disabled>
                 <div class="aika-tiedot">
                     <input type="datetime-local" class="alku-input" disabled>
                     <span class="aika-nuoli">→</span>
                     <input type="datetime-local" class="loppu-input" disabled>
                 </div>
             </div>
-            <div class="kirjaus-toiminnot-container">
+            <div class="kesto-ja-lukitus-container">
                 <div class="kesto">Kesto: <strong></strong></div>
-                <div class="kirjaus-toiminnot no-print">
-                    <button class="muokkaa-btn" title="Muokkaa">✏️</button>
-                    <button class="tallenna-btn hidden" title="Tallenna">💾</button>
-                    <button class="poista-btn" title="Poista">🗑️</button>
-                </div>
                 <label class="lukitus-label no-print" title="Lukitse muokkauksilta">
                     <input type="checkbox" class="lukitse-kirjaus-checkbox">
                     <span class="lukko-ikoni">🔒</span>
                 </label>
+            </div>
+            <div class="kirjaus-toiminnot no-print">
+                <button class="muokkaa-btn" title="Muokkaa">✏️</button>
+                <button class="tallenna-btn hidden" title="Tallenna">💾</button>
+                <button class="poista-btn" title="Poista">🗑️</button>
             </div>
         </li>
     </template>
