@@ -81,7 +81,17 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 ul { list-style: none; padding: 0; }
 .kirjaus-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
 .kirjaus-tiedot { flex-grow: 1; min-width: 250px; }
-.kirjaus-tiedot .tehtava-input { font-size: 1em; font-weight: bold; margin-bottom: 5px; padding-top: 0; padding-bottom: 0; height: auto; min-height: 2.5em;}
+.kirjaus-tiedot .tehtava-input {
+    font-size: 1em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    padding-top: 0;
+    padding-bottom: 0;
+    height: auto;
+    overflow-y: hidden;
+    resize: none;
+    line-height: 1.2;
+}
 .aika-tiedot { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 .aika-tiedot input { flex: 1; min-width: 180px; padding: 8px; font-size: 14px; }
 .aika-nuoli { font-size: 1.2em; }
