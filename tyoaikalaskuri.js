@@ -59,82 +59,7 @@ tulostaBtn.addEventListener('click', () => { window.print(); });
 kopioiLinkkiBtn.addEventListener('click', () => { const linkInput = suoraLinkkiDiv.querySelector('input'); linkInput.select(); linkInput.setSelectionRange(0, 99999); try { document.execCommand('copy'); kopioiLinkkiBtn.textContent = 'Kopioitu!'; setTimeout(() => { kopioiLinkkiBtn.textContent = 'Kopioi'; }, 2000); } catch (err) { alert('Linkin kopiointi epäonnistui'); } });
 const renderAll = () => { renderActiveEntry(); renderEntriesList(); renderSummary(); };
 const renderActiveEntry = () => { if (activeEntry) { aloitaLopetaBtn.textContent = 'Lopeta Ajanotto'; aloitaLopetaBtn.classList.add('aktiivinen'); aktiivinenKirjausDiv.classList.add('highlight-active'); aktiivinenTehtavaInput.value = activeEntry.tehtava; aktiivinenTehtavaInput.disabled = true; alkuAikaNaytto.textContent = new Date(activeEntry.alkuAika).toLocaleString('fi-FI'); } else { aloitaLopetaBtn.textContent = 'Aloita Ajanotto'; aloitaLopetaBtn.classList.remove('aktiivinen'); aktiivinenKirjausDiv.classList.remove('highlight-active'); aktiivinenTehtavaInput.value = ''; aktiivinenTehtavaInput.disabled = false; alkuAikaNaytto.textContent = '--:--'; } };
-const renderEntriesList = () => {
-    kirjauksetLista.innerHTML = '';
-    const sortedEntries = [...entries].sort((a, b) => new Date(b.alkuAika) - new Date(a.alkuAika));
-    sortedEntries.forEach(entry => {
-        if (activeEntry && entry.id === activeEntry.id) return;
-        const clone = kirjausTemplate.content.cloneNode(true);
-        const li = clone.querySelector('.kirjaus-item');
-        li.dataset.id = entry.id;
-        const tehtavaInput = li.querySelector('.tehtava-input');
-        const alkuInput = li.querySelector('.alku-input');
-        const loppuInput = li.querySelector('.loppu-input');
-        const kestoDiv = li.querySelector('.kesto strong');
-        const muokkaaBtn = li.querySelector('.muokkaa-btn');
-        const tallennaBtn = li.querySelector('.tallenna-btn');
-        const poistaBtn = li.querySelector('.poista-btn');
-        const lukitusCheckbox = li.querySelector('.lukitse-kirjaus-checkbox');
-        
-        entry.isLocked = entry.isLocked || false;
-        lukitusCheckbox.checked = entry.isLocked;
-        if (entry.isLocked) {
-            li.classList.add('locked');
-        } else {
-            li.classList.remove('locked');
-        }
-
-        lukitusCheckbox.addEventListener('change', () => {
-            entry.isLocked = lukitusCheckbox.checked;
-            li.classList.toggle('locked', entry.isLocked);
-            saveState();
-        });
-
-        tehtavaInput.value = entry.tehtava;
-        tehtavaInput.placeholder = "Nimetön tehtävä";
-        // Kutsutaan autoGrowTextarea-funktiota heti kun elementti luodaan
-        autoGrowTextarea(tehtavaInput);
-
-        alkuInput.value = toLocalISOString(new Date(entry.alkuAika));
-        loppuInput.value = entry.loppuAika ? toLocalISOString(new Date(entry.loppuAika)) : '';
-        kestoDiv.textContent = calculateDuration(entry.alkuAika, entry.loppuAika);
-
-        muokkaaBtn.addEventListener('click', () => {
-            if (entry.isLocked) return;
-            tehtavaInput.disabled = false;
-            alkuInput.disabled = false;
-            loppuInput.disabled = false;
-            muokkaaBtn.classList.add('hidden');
-            tallennaBtn.classList.remove('hidden');
-        });
-
-        poistaBtn.addEventListener('click', () => {
-            if (entry.isLocked) return;
-            if (confirm(`Haluatko varmasti poistaa kirjauksen "${entry.tehtava || 'Nimetön'}"?`)) {
-                entries = entries.filter(e => e.id !== entry.id);
-                saveState();
-            }
-        });
-
-        tallennaBtn.addEventListener('click', () => {
-            entry.tehtava = tehtavaInput.value.trim();
-            entry.alkuAika = new Date(alkuInput.value).toISOString();
-            entry.loppuAika = new Date(loppuInput.value).toISOString();
-            
-            // Päivitetään tekstikentän koko tallennuksen yhteydessä
-            autoGrowTextarea(tehtavaInput);
-
-            tehtavaInput.disabled = true;
-            alkuInput.disabled = true;
-            loppuInput.disabled = true;
-            muokkaaBtn.classList.remove('hidden');
-            tallennaBtn.classList.add('hidden');
-            saveState();
-        });
-
-        kirjauksetLista.appendChild(li);
-    });
-};
+const renderEntriesList = () => { kirjauksetLista.innerHTML = ''; const sortedEntries = [...entries].sort((a, b) => new Date(b.alkuAika) - new Date(a.alkuAika)); sortedEntries.forEach(entry => { if (activeEntry && entry.id === activeEntry.id) return; const clone = kirjausTemplate.content.cloneNode(true); const li = clone.querySelector('.kirjaus-item'); li.dataset.id = entry.id; const tehtavaInput = li.querySelector('.tehtava-input'); const alkuInput = li.querySelector('.alku-input'); const loppuInput = li.querySelector('.loppu-input'); const kestoDiv = li.querySelector('.kesto strong'); const muokkaaBtn = li.querySelector('.muokkaa-btn'); const tallennaBtn = li.querySelector('.tallenna-btn'); const poistaBtn = li.querySelector('.poista-btn'); const lukitusCheckbox = li.querySelector('.lukitse-kirjaus-checkbox'); entry.isLocked = entry.isLocked || false; lukitusCheckbox.checked = entry.isLocked; if (entry.isLocked) { li.classList.add('locked'); } else { li.classList.remove('locked'); } lukitusCheckbox.addEventListener('change', () => { entry.isLocked = lukitusCheckbox.checked; li.classList.toggle('locked', entry.isLocked); saveState(); }); tehtavaInput.value = entry.tehtava; tehtavaInput.placeholder = "Nimetön tehtävä"; alkuInput.value = toLocalISOString(new Date(entry.alkuAika)); loppuInput.value = entry.loppuAika ? toLocalISOString(new Date(entry.loppuAika)) : ''; kestoDiv.textContent = calculateDuration(entry.alkuAika, entry.loppuAika); muokkaaBtn.addEventListener('click', () => { if (entry.isLocked) return; tehtavaInput.disabled = false; alkuInput.disabled = false; loppuInput.disabled = false; muokkaaBtn.classList.add('hidden'); tallennaBtn.classList.remove('hidden'); }); poistaBtn.addEventListener('click', () => { if (entry.isLocked) return; if (confirm(`Haluatko varmasti poistaa kirjauksen "${entry.tehtava || 'Nimetön'}"?`)) { entries = entries.filter(e => e.id !== entry.id); saveState(); } }); tallennaBtn.addEventListener('click', () => { entry.tehtava = tehtavaInput.value.trim(); entry.alkuAika = new Date(alkuInput.value).toISOString(); entry.loppuAika = new Date(loppuInput.value).toISOString(); tehtavaInput.disabled = true; alkuInput.disabled = true; loppuInput.disabled = true; muokkaaBtn.classList.remove('hidden'); tallennaBtn.classList.add('hidden'); saveState(); }); kirjauksetLista.appendChild(li); }); };
 
 const renderSummary = () => {
     const dailyTotals = {};
@@ -163,11 +88,5 @@ const renderSummary = () => {
 
 const calculateDuration = (start, end) => { if (!start || !end) return 'Keskeneräinen'; const minutes = (new Date(end) - new Date(start)) / 60000; return formatDuration(minutes); };
 const formatDuration = (totalMinutes) => { if (isNaN(totalMinutes)) return '0h 0min'; const hours = Math.floor(totalMinutes / 60); const minutes = Math.round(totalMinutes % 60); return `${hours}h ${minutes}min`; };
-
-// UUSI FUNKTIO: Automaattinen rivitys tekstikentille
-const autoGrowTextarea = (element) => {
-  element.style.height = "auto";
-  element.style.height = (element.scrollHeight) + "px";
-};
 
 initializePage();
