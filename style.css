@@ -3,496 +3,79 @@ body {
     font-family: 'Georgia', serif;
     margin: 0;
     padding: 10px;
-    -webkit-tap-highlight-color: transparent;
+    color: #F8F8F8;
+    -webkit-tap-highlight-color: transparent; 
 }
-
 .sisalto-laatikko {
     max-width: 800px;
     margin: 15px auto;
-    padding: 10px;
+    padding: 20px;
     background-color: #3D4F2B;
     border: 3px solid #11150C;
     border-radius: 12px;
-    box-shadow: 5px 5px 15px rgba(0,0,0,0.6);
-    position: relative;
 }
-
-#speed-display {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: rgba(0, 0, 0, 0.7);
-    color: #FFD700;
-    padding: 5px 15px;
-    border-radius: 8px;
-    font-family: monospace, sans-serif;
-    font-size: 2.2em;
-    font-weight: bold;
-    z-index: 1002;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
+h1, h2, h3 { color: #90EE90; text-align: center; margin-top: 0; margin-bottom: 15px; }
+label { display: block; margin-bottom: 5px; font-size: 0.9em; }
 .hidden { display: none !important; }
+.custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 25px 0; }
 
-.teksti-alue {
+.projekti-input, input[type="text"], input[type="datetime-local"], select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    background-color: #2A381C;
     color: #F8F8F8;
-    line-height: 1.7;
-    padding: 5px;
-    font-size: 1.0em;
+    border: 1px solid #556B2F;
+    border-radius: 4px;
+    font-family: 'Georgia', serif;
+    font-size: 16px; 
 }
-
-.logo-container { display: flex; align-items: center; margin-bottom: 10px; gap: 15px; }
-.logo { width: 50px; height: 50px; border: 2px solid #90EE90; border-radius: 50%; box-shadow: 1px 1px 3px rgba(0,0,0,0.4); background-color: #3D4F2B; padding: 3px; flex-shrink: 0; }
-.paaotsikko { color: #90EE90; text-align: left; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); font-size: 1.2em; letter-spacing: 0.5px; }
-.alaotsikko { color: #90EE90; text-align: center; margin-top: 20px; margin-bottom: 15px; font-size: 1.2em; text-shadow: 1px 1px 1px rgba(0,0,0,0.6); }
-.custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 20px 0; }
-.container { padding: 0 5px; }
-
-.list-name-display {
-    text-align: left;
-    color: #FFD700;
-    font-family: monospace, sans-serif;
-    font-size: 1.0em;
-    margin: 4px 0 0 0;
-    padding: 0;
-    font-weight: bold;
+input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; padding-left: 0; padding-right: 0; }
+button {
+    padding: 12px 18px;
+    border: 1px solid #90EE90;
+    background-color: transparent;
+    color: #90EE90;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
-
-input[type="text"], textarea, select { flex-grow: 1; padding: 10px; border: 1px solid #2A381C; border-radius: 4px; font-size: 15px; width: 100%; box-sizing: border-box; background-color: #2A381C; color: #F8F8F8; font-family: 'Georgia', serif; }
-input[type="text"]::placeholder, textarea::placeholder { color: #cccccc; opacity: 0.7; }
-button { padding: 10px 15px; border: 1px solid #90EE90; background-color: transparent; color: #90EE90; border-radius: 4px; cursor: pointer; font-size: 15px; font-family: 'Georgia', serif; transition: all 0.2s; flex-shrink: 0; }
 button:hover { background-color: #90EE90; color: #1a2015; }
 
-.toggle-button { background-color: #4a5c3a; border-color: #556B2F; margin-bottom: 15px; width: 100%; }
-.toggle-button:hover { background-color: #556B2F; color: #FFFFFF; }
-.profile-controls { display: flex; margin-bottom: 15px; }
-.profile-controls button { width: 100%; }
+.projekti-valitsin { margin-bottom: 20px; text-align: center; }
+.projekti-valitsin label:not(:first-child) { margin-top: 15px; }
 
-/* --- MUOKATUT TYYLIT --- */
-.settings-and-help-wrapper {
-    display: flex;
-    gap: 10px;
-    margin: 15px 0;
-    flex-wrap: wrap; /* Sallitaan elementtien rivittyminen */
-}
-.pgc-settings-container, .help-container {
-    flex: 1;
-    min-width: 150px; /* Varmistetaan, että napit eivät mene liian kapeaksi */
-    transition: flex-basis 0.3s ease-in-out;
-}
-/* Tämä on se taika: kun details-elementti on auki, sen vanhempi kasvaa koko leveyteen */
-.settings-and-help-wrapper > div:has(details[open]) {
-    flex-basis: 100%;
-}
+.projekti-otsikko-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; }
+.projekti-otsikko-container h2 { margin: 0; flex-grow: 1; text-align: center; }
+.projekti-toiminnot button { width: auto; background: none; border: none; font-size: 1.5em; padding: 5px; color: #cccccc; }
+.projekti-toiminnot button:hover { color: #FFD700; background: none; }
 
-.pgc-settings-container details, .help-container details {
-    border: 1px solid #2A381C;
-    border-radius: 5px;
-    background-color: #2A381C;
-    height: 100%;
-}
-.pgc-settings-container summary, .help-container summary {
-    padding: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #E6E6E6;
-}
-/* --- LOPPU --- */
+#suoraLinkki { margin-top: 25px; }
+.linkki-container { display: flex; gap: 10px; }
+.linkki-container input { flex-grow: 1; }
+.linkki-container button { width: auto; flex-shrink: 0; }
 
-.pgc-input-wrapper {
-    padding: 0 10px 10px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.pgc-input-wrapper label {
-    font-size: 0.9em;
-}
-.pgc-input-wrapper input {
-    background-color: #3D4F2B;
-    border-color: #556B2F;
-}
+.aktiivinen-kirjaus { text-align: center; border: 2px solid transparent; padding: 15px; border-radius: 8px; transition: all 0.3s ease; }
+.highlight-active { border-color: #FFD700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); animation: pulse-yellow 2s infinite; }
+@keyframes pulse-yellow { 0% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } 50% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.7); } 100% { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); } }
 
-.pgc-link-container {
-    margin-top: 5px;
-}
-.pgc-link-container a {
-    color: #FFD700;
-    text-decoration: none;
-    font-size: 0.9em;
-}
-.pgc-link-container a:hover {
-    text-decoration: underline;
-}
+#aloitaLopetaBtn { padding: 15px; font-weight: bold; margin-top: 10px; }
+#aloitaLopetaBtn.aktiivinen { background-color: #e74c3c; border-color: #e74c3c; color: white; }
+.aikaleima { margin: 10px 0; font-size: 1.1em; }
+.form-rivi { display: flex; gap: 10px; }
+.form-ryhma { flex: 1; }
 
+.management-details { border: 1px solid #2A381C; border-radius: 5px; background-color: #2A381C; }
+.management-details summary { padding: 12px; cursor: pointer; font-weight: bold; }
+.management-details .details-content { padding: 15px; }
 
-.bulk-add { background-color: #2A381C; border: 1px solid #556B2F; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-.bulk-add h3 { margin: 0 0 10px 0; text-align: center; color: #E6E6E6; font-size: 1.1em; }
-.bulk-add button { margin-top: 10px; width: 100%; }
+#yhteenveto { background-color: #2A381C; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+#yhteenveto button { margin-top: 15px; }
+.kokonaisaika { font-size: 1.2em; text-align: right; margin-top: 10px; font-weight: bold; }
+#paivittaisetSummat p { margin: 5px 0; }
 
 ul { list-style: none; padding: 0; }
-.municipality-item { background: #4a5c3a; border: 1px solid #2A381C; padding: 10px; margin-bottom: 10px; border-radius: 5px; cursor: grab; transition: all 0.3s ease; }
-.municipality-item.dragging { opacity: 0.8; border: 1px dashed #FFD700; }
-
-.municipality-item.status-empty {
-    background: #3d4f2b; 
-    opacity: 0.7;
-}
-.municipality-item.status-completed {
-    background: #27ae60; 
-    border-color: #2ecc71;
-}
-.municipality-item.status-completed .municipality-name-link {
-    color: #ffffff;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-}
-
-
-.municipality-header { display: flex; justify-content: space-between; align-items: center; font-size: 1.1em; font-weight: bold; color: #FFFFFF; margin-bottom: 5px; }
-.municipality-done-checkbox {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    flex-shrink: 0;
-}
-.municipality-header-main {
-    display: flex;
-    align-items: center;
-    flex-grow: 1;
-}
-
-
-.cache-list { padding-left: 0; margin-top: 10px; }
-.cache-item { display: flex; align-items: center; padding: 5px; border-top: 1px solid #556B2F; }
-.cache-info { flex-grow: 1; word-break: break-word; }
-.cache-info a { color: inherit; text-decoration: underline; text-decoration-color: #cccccc; transition: color 0.2s; }
-.cache-info a:hover { color: #FFD700; }
-.actions { display: flex; align-items: center; }
-.cache-actions button, .municipality-header .actions button { background: none; border: none; font-size: 1.2em; padding: 0 4px; color: #cccccc; width: auto; }
-.cache-actions button:hover, .municipality-header .actions button:hover { color: #FFD700; }
-
-.set-coords-btn { border: 2px solid transparent !important; border-radius: 50%; transition: all 0.3s ease; line-height: 1; }
-.set-coords-btn.coords-set { border-color: #2ecc71 !important; transform: scale(1.1); }
-
-.add-cache { display: flex; flex-direction: row; gap: 8px; margin-top: 10px; align-items: center; }
-.add-cache .new-cache-name { flex-grow: 1; min-width: 50px; }
-.add-cache button { flex-grow: 0; flex-shrink: 0; width: auto; padding: 10px 12px; }
-
-.municipality-name-link { color: #FFFFFF; text-decoration: none; transition: color 0.2s; }
-.municipality-name-link:hover { color: #FFD700; text-decoration: underline; }
-.actions .pgc-link { font-size: 1.2em; text-decoration: none; margin-right: 8px; transition: transform 0.2s; display: inline-block; }
-.actions .pgc-link:hover { transform: scale(1.2); }
-
-#location-status-display { background-color: #2A381C; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; text-align: center; border: 1px solid #4a5c3a; }
-#location-status-display p { margin: 0; line-height: 1.4; }
-.status-kunta { font-size: 1.2em; color: #FFD700; }
-.status-kunta strong { font-weight: 600; }
-.status-koordinaatit { font-size: 0.9em; color: #bbbbbb; font-family: monospace; }
-#map { height: 300px; width: 100%; margin-top: 0; margin-bottom: 0; border-radius: 12px; border: 2px solid #2A381C; z-index: 1; }
-.user-marker { background-color: #3498db; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,0.5); width: 18px; height: 18px; }
-.municipality-item.highlight { background-color: #FFD700; border-color: #fff; transform: scale(1.03); }
-.municipality-item.highlight .municipality-name-link { color: #1a2015; font-weight: bold; }
-#toggleTrackingBtn { background-color: #3498db; color: white; border-color: #3498db; font-weight: bold; }
-#toggleTrackingBtn.tracking-active { background-color: #e74c3c; border-color: #e74c3c; }
-.notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background-color: #2ecc71; color: white; padding: 15px 25px; border-radius: 8px; z-index: 1001; box-shadow: 0 4px 15px rgba(0,0,0,0.3); font-size: 1.1em; font-weight: bold; animation: fadeInOut 8s ease-in-out; text-align: center; max-width: 90%; }
-.notification.approach { background-color: #3498db; }
-.notification.target { background-color: #e67e22; }
-@keyframes fadeInOut { 0% { opacity: 0; top: 0; } 15% { opacity: 1; top: 20px; } 85% { opacity: 1; top: 20px; } 100% { opacity: 0; top: -50px; } }
-.municipality-marker { background: rgba(42, 56, 28, 0.8); color: #FFD700; border: 1px solid #FFD700; border-radius: 5px; padding: 2px 5px; font-size: 12px; font-weight: bold; text-align: center; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.4); pointer-events: none; }
-
-.cache-marker-icon {
-    background: none;
-    border: none;
-    box-shadow: none;
-}
-
-.municipality-boundary {
-    fillColor: "#FFD700";
-    fillOpacity: 0.2;
-    color: "#FFD700";
-    weight: 2;
-}
-
-.map-popup-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.1em;
-}
-
-.pgc-link-popup {
-    font-size: 1.5em;
-    text-decoration: none;
-    transition: transform 0.2s;
-    display: inline-block;
-}
-
-.pgc-link-popup:hover {
-    transform: scale(1.2);
-}
-
-.view-toggles { display: flex; margin-bottom: 20px; border: 1px solid #4a5c3a; border-radius: 8px; overflow: hidden; }
-.view-toggle-btn { flex: 1; padding: 12px; border: none; background-color: transparent; color: #cccccc; cursor: pointer; font-size: 1.1em; transition: all 0.3s; border-radius: 0; }
-.view-toggle-btn.active { background-color: #FFD700; color: #1a2015; font-weight: bold; }
-.direct-add-cache { display: flex; gap: 10px; margin-top: 20px; }
-#directAddBtn { flex-shrink: 1; }
-.found-cache-item { background: #2A381C; padding: 12px; margin-bottom: 10px; border-radius: 5px; border-left: 4px solid #90EE90; }
-.found-cache-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-.found-cache-header a { font-weight: bold; font-size: 1.1em; color: #FFFFFF; text-decoration: none; word-break: break-all; }
-.found-cache-header a:hover { text-decoration: underline; color: #FFD700; }
-.timestamp { font-size: 0.8em; color: #cccccc; margin-bottom: 8px; }
-.loggers { display: flex; gap: 15px; flex-wrap: wrap; }
-.loggers label { display: flex; align-items: center; gap: 5px; color: #dddddd; }
-.found-cache-actions { display: flex; gap: 5px; }
-.found-cache-actions button { color: #cccccc; font-size: 1.1em; }
-
-.municipality-info {
-    font-size: 0.8em;
-    color: #cccccc;
-    font-style: italic;
-    margin-bottom: 8px;
-}
-
-.cache-name { font-weight: bold; margin-bottom: 5px; word-break: break-word; }
-.cache-name a { color: inherit; text-decoration: underline; }
-.cache-name a:hover { color: #FFD700; }
-
-.cache-details { 
-    display: flex; 
-    flex-wrap: wrap; 
-    gap: 5px; 
-    margin-bottom: 8px;
-    align-items: center;
-}
-
-.cache-detail-tag { font-size: 0.8em; background-color: #3D4F2B; color: #dddddd; padding: 2px 8px; border-radius: 10px; white-space: nowrap; border: 1px solid #4a5c3a; }
-
-.cache-detail-tag.type {
-    font-weight: bold;
-    color: #1a2015;
-}
-
-.cache-type-icon-list {
-    height: 16px;
-    width: 16px;
-    margin-right: 5px;
-}
-
-.type-traditional { background-color: #4CAF50; }
-.type-multi { background-color: #FFC107; }
-.type-mystery { background-color: #2196F3; }
-.type-earthcache { background-color: #A52A2A; }
-.type-letterbox { background-color: #E91E63; }
-.type-event { background-color: #F44336; }
-.type-cito { background-color: #009688; }
-.type-wherigo { background-color: #673AB7; }
-.type-virtual { background-color: #795548; }
-.type-webcam { background-color: #607D8B; }
-.type-lab { background-color: #ff5722; }
-.type-default { background-color: #9E9E9E; }
-
-
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-.modal-content { background-color: #3D4F2B; padding: 20px; border-radius: 12px; border: 2px solid #90EE90; width: 90%; max-width: 500px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-.modal-content h2 { color: #90EE90; margin-top: 0; text-align: center; }
-#editCacheForm .form-group { margin-bottom: 12px; }
-#editCacheForm .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
-#editCacheForm .form-row .form-group { flex: 1; margin-bottom: 0; }
-#editCacheForm label { display: block; margin-bottom: 5px; font-size: 0.9em; color: #E6E6E6; }
-.modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
-.modal-actions button { width: auto; padding: 10px 20px; }
-.modal-actions .modal-save-btn { background-color: #2ecc71; border-color: #2ecc71; color: white; }
-.modal-actions .modal-save-btn:hover { background-color: #27ae60; }
-
-.logger-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #3D4F2B;
-    padding: 5px 10px;
-    border-radius: 4px;
-    margin-bottom: 5px;
-}
-.delete-logger-btn {
-    background: none;
-    border: none;
-    color: #ff6b6b;
-    font-size: 1.2em;
-    cursor: pointer;
-}
-.delete-logger-btn:hover {
-    color: #e74c3c;
-}
-.add-logger-controls {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-#activeMunicipalityContainer {
-    border: 2px solid #FFD700;
-    background-color: #4a5c3a;
-    border-radius: 8px;
-    padding: 10px;
-    margin: 15px 0;
-    animation: fadeIn 0.5s;
-}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-.management-details {
-    border: 1px solid #2A381C;
-    border-radius: 5px;
-    background-color: #2A381C;
-    margin-bottom: 20px;
-}
-.management-details summary {
-    padding: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    color: #E6E6E6;
-    font-size: 1.1em;
-}
-.management-details .details-content {
-    padding: 0 10px 10px 10px;
-}
-
-.sort-controls {
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px;
-    background-color: #2A381C;
-    border-radius: 5px;
-}
-.sort-controls span {
-    color: #cccccc;
-    font-size: 0.9em;
-}
-.sort-btn {
-    padding: 5px 10px;
-    font-size: 0.9em;
-    background-color: #4a5c3a;
-    border-color: #556B2F;
-}
-.sort-btn.active {
-    background-color: #FFD700;
-    color: #1a2015;
-    border-color: #FFD700;
-    font-weight: bold;
-}
-
-.help-container {
-    margin: 0; /* Nollataan marginaali, koska wrapper hoitaa sen */
-}
-.help-content {
-    padding: 0 15px 15px 15px;
-    color: #dddddd;
-    line-height: 1.6;
-}
-.help-content h4 {
-    color: #90EE90;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #4a5c3a;
-    padding-bottom: 5px;
-}
-.help-content ul {
-    list-style: disc;
-    padding-left: 20px;
-}
-.help-content code, .help-content pre {
-    background-color: #1a2015;
-    border-radius: 3px;
-    font-family: monospace;
-}
-.help-content code {
-    padding: 2px 5px;
-}
-.help-content pre {
-    padding: 10px;
-    white-space: pre-wrap;
-    word-break: break-all;
-}
-
-
-@media (max-width: 600px) {
-    body { padding: 5px; font-size: 14px; }
-    .sisalto-laatikko { margin: 5px auto; padding: 8px; }
-    .paaotsikko { font-size: 1.1em; }
-    #map { height: 250px; }
-    #speed-display { font-size: 1.8em; top: 5px; right: 5px; }
-
-    .municipality-item { padding: 8px; }
-    .cache-item { padding: 4px 0; }
-    .cache-detail-tag { font-size: 0.7em; padding: 1px 6px; }
-
-    .found-cache-item { padding: 8px; }
-    .found-cache-header a { font-size: 1em; }
-    .loggers { gap: 8px; }
-    .loggers label { font-size: 0.9em; gap: 4px; }
-
-    .settings-and-help-wrapper {
-        flex-direction: column; /* Asetetaan napit allekkain pienillä näytöillä */
-    }
-}
-
-/* --- Reissulistan Indeksin TYYLIT --- */
-#tripIndexContainer {
-    margin-bottom: 0;
-}
-#tripIndexList {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.trip-index-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: #4a5c3a;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    padding: 5px 10px;
-}
-.trip-index-item a {
-    flex-grow: 1;
-    padding: 8px 0;
-    color: #FFFFFF;
-    text-decoration: none;
-    font-weight: bold;
-    transition: color 0.2s ease;
-}
-.trip-index-item a:hover {
-    color: #FFD700;
-}
-.trip-index-item .actions button {
-    background: none;
-    border: none;
-    font-size: 1.1em;
-    padding: 5px;
-    color: #cccccc;
-    width: auto;
-}
-.trip-index-item .actions button:hover {
-    color: #FFD700;
-}
-/* --- LOPPU --- */
-
-/* --- UUSI LISÄYS: Kartan kustomoidun napin tyyli --- */
-.leaflet-control-custom {
-    background-color: white;
-    background-clip: padding-box;
-    border: 2px solid rgba(0,0,0,0.2);
-    border-radius: 4px;
-    color: #333;
-    font: bold 12px/1.4 'Helvetica Neue', Arial, Helvetica, sans-serif;
-    text-align: center;
-    padding: 4px 8px;
-    cursor: pointer;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.65);
-}
-.leaflet-control-custom:hover {
-    background-color: #f4f4f4;
-}
-/* --- LOPPU --- */
+.kirjaus-item { display:
