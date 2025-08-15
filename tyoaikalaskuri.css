@@ -6,6 +6,9 @@ body {
     color: #F8F8F8;
     -webkit-tap-highlight-color: transparent; 
 }
+/* ======================================= */
+/* --- TULOSTUSTYYLIT (PALAUTETTU) --- */
+/* ======================================= */
 .sisalto-laatikko {
     max-width: 800px;
     margin: 15px auto;
