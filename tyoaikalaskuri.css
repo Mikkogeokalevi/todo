@@ -78,27 +78,50 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 #paivittaisetSummat p { margin: 5px 0; }
 
 ul { list-style: none; padding: 0; }
-.kirjaus-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
-.kirjaus-tiedot { flex-grow: 1; min-width: 250px; }
+.kirjaus-item { 
+    display: flex; 
+    flex-wrap: wrap; 
+    align-items: flex-start; /* Muutettu: Aloitetaan sisällön kohdistus ylhäältä */
+    gap: 10px; 
+    padding: 10px; 
+    background: #4a5c3a; 
+    border-radius: 5px; 
+    margin-bottom: 8px; 
+}
+.kirjaus-tiedot { 
+    flex-grow: 1; 
+    min-width: 250px; 
+}
 .kirjaus-tiedot .tehtava-input { 
     font-size: 1em; 
     font-weight: bold; 
     margin-bottom: 5px; 
     padding-top: 0; 
     padding-bottom: 0;
-    /* UUSI: Rivitys sivunäkymässä */
-    white-space: normal;
+    /* KORJATTU: Varmistetaan rivitys sivunäkymässä */
+    white-space: pre-wrap; 
+    word-break: break-word;
     height: auto;
 }
-.aika-tiedot { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
-.aika-tiedot input { flex: 1; min-width: 180px; padding: 8px; font-size: 14px; }
+.aika-tiedot { 
+    display: flex; 
+    flex-wrap: wrap; 
+    align-items: center; 
+    gap: 5px; 
+}
+.aika-tiedot input { 
+    flex: 1; 
+    min-width: 180px; 
+    padding: 8px; 
+    font-size: 14px; 
+}
 .aika-nuoli { font-size: 1.2em; }
 
-/* UUSI: Toimintojen container, jossa painikkeet ja kesto ovat rinnakkain */
+/* KORJATTU: Uusi asettelu toimintokonteille */
 .kirjaus-toiminnot-container {
     display: flex;
+    justify-content: space-between; /* Kesto, kuvakkeet ja lukko eri paikoissa */
     align-items: center;
-    gap: 15px;
     width: 100%;
     margin-top: 5px;
 }
@@ -106,18 +129,29 @@ ul { list-style: none; padding: 0; }
     display: flex; 
     gap: 5px; 
     flex-shrink: 0; 
+    flex-grow: 1; /* Vie ylimääräisen tilan, jotta kuvakkeet ovat keskellä */
+    justify-content: center; /* Keskitetään painikkeet containerin sisällä */
 }
 .kirjaus-toiminnot button { 
     width: auto; 
     background: none; 
     border: none; 
-    font-size: 1.2em; /* Pienennetty fonttikokoa */
+    font-size: 1.2em; 
     padding: 5px; 
     transition: opacity 0.2s; 
 }
 
-.kesto { font-size: 1em; color: #FFD700; font-weight: bold; flex-grow: 1; }
-.lukitus-label { cursor: pointer; display: flex; align-items: center; }
+.kesto { 
+    font-size: 1em; 
+    color: #FFD700; 
+    font-weight: bold; 
+    flex-grow: 0; 
+}
+.lukitus-label { 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+}
 .lukitse-kirjaus-checkbox { display: none; }
 .lukko-ikoni { font-size: 1.5em; opacity: 0.4; transition: all 0.2s; }
 .lukitse-kirjaus-checkbox:checked + .lukko-ikoni { opacity: 1.0; color: #FFD700; transform: scale(1.1); }
@@ -165,7 +199,7 @@ ul { list-style: none; padding: 0; }
         border-bottom: 1px solid #ccc;
         page-break-inside: avoid;
     }
-    /* UUSI: Tulostusnäkymän rivityskorjaus */
+    /* KORJATTU: Tulostusnäkymän rivityskorjaus */
     input:disabled {
         border: none;
         padding: 0;
@@ -207,11 +241,12 @@ ul { list-style: none; padding: 0; }
         flex-basis: 100%;
         min-width: 0;
     }
-    /* Muiden elementtien järjestys mobiilinäkymässä */
+    /* Mobiilinäkymän asettelu korjattu */
     .kirjaus-toiminnot-container {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+        flex-direction: row; /* Vaihdettu takaisin riviksi */
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
         width: 100%;
     }
     .kesto {
@@ -224,8 +259,9 @@ ul { list-style: none; padding: 0; }
     .kirjaus-toiminnot {
         flex-shrink: 0;
         gap: 0;
-        width: 100%;
-        justify-content: flex-end;
+        width: auto;
+        flex-grow: 1; /* Vie ylimääräisen tilan */
+        justify-content: center; /* Keskitetään painikkeet */
     }
     .kirjaus-toiminnot button {
         font-size: 1.3em;
