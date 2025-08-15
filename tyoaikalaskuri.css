@@ -19,7 +19,7 @@ label { display: block; margin-bottom: 5px; font-size: 0.9em; }
 .hidden { display: none !important; }
 .custom-hr { border: none; height: 1px; background-color: #2A381C; margin: 25px 0; }
 
-.projekti-input, input[type="text"], input[type="datetime-local"], select {
+.projekti-input, input[type="text"], input[type="datetime-local"], select, textarea {
     width: 100%;
     padding: 12px;
     margin-bottom: 10px;
@@ -30,6 +30,7 @@ label { display: block; margin-bottom: 5px; font-size: 0.9em; }
     border-radius: 4px;
     font-family: 'Georgia', serif;
     font-size: 16px; 
+    resize: vertical;
 }
 input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; padding-left: 0; padding-right: 0; }
 button {
@@ -80,7 +81,7 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 ul { list-style: none; padding: 0; }
 .kirjaus-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
 .kirjaus-tiedot { flex-grow: 1; min-width: 250px; }
-.kirjaus-tiedot .tehtava-input { font-size: 1em; font-weight: bold; margin-bottom: 5px; padding-top: 0; padding-bottom: 0;}
+.kirjaus-tiedot .tehtava-input { font-size: 1em; font-weight: bold; margin-bottom: 5px; padding-top: 0; padding-bottom: 0; height: auto; min-height: 2.5em;}
 .aika-tiedot { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 .aika-tiedot input { flex: 1; min-width: 180px; padding: 8px; font-size: 14px; }
 .aika-nuoli { font-size: 1.2em; }
@@ -195,4 +196,5 @@ ul { list-style: none; padding: 0; }
         font-size: 1.3em;
         padding: 5px;
     }
+    .kirjaus-tiedot .tehtava-input { height: auto; min-height: 2em; }
 }
