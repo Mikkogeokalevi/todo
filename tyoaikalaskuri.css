@@ -78,16 +78,45 @@ button:hover { background-color: #90EE90; color: #1a2015; }
 #paivittaisetSummat p { margin: 5px 0; }
 
 ul { list-style: none; padding: 0; }
-.kirjaus-item { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px; background: #4a5c3a; border-radius: 5px; margin-bottom: 8px; }
-.kirjaus-tiedot { flex-grow: 1; min-width: 250px; }
-.kirjaus-tiedot .tehtava-input { font-size: 1em; font-weight: bold; margin-bottom: 5px; padding-top: 0; padding-bottom: 0;}
+.kirjaus-item {
+    display: flex;
+    flex-wrap: wrap; /* UUSI: Mahdollistaa rivittymisen */
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #4a5c3a;
+    border-radius: 5px;
+    margin-bottom: 8px;
+}
+.kirjaus-tiedot {
+    flex-grow: 1;
+    min-width: 0; /* MUUTETTU: Sallii kutistumisen */
+    flex-basis: 100%; /* UUSI: Vie koko leveyden, jotta kuvaus rivittyy */
+}
+.kirjaus-tiedot .tehtava-input {
+    font-size: 1em;
+    font-weight: bold;
+    margin-bottom: 5px;
+    padding-top: 0;
+    padding-bottom: 0;
+    max-width: 100%; /* UUSI: Varmistaa, ettei ylitä leveyttä */
+    white-space: normal; /* UUSI: Sallii rivityksen */
+    overflow-wrap: break-word; /* UUSI: Rajoittaa tekstin rivitystä */
+    height: auto; /* UUSI: Mahdollistaa korkeuden kasvamisen */
+}
 .aika-tiedot { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 .aika-tiedot input { flex: 1; min-width: 180px; padding: 8px; font-size: 14px; }
 .aika-nuoli { font-size: 1.2em; }
 .kirjaus-toiminnot { display: flex; gap: 5px; flex-shrink: 0; }
 .kirjaus-toiminnot button { width: auto; background: none; border: none; font-size: 1.5em; padding: 5px; transition: opacity 0.2s; }
 
-.kesto-ja-lukitus-container { display: flex; align-items: center; gap: 15px; width: 100%; margin-top: 5px; }
+.kesto-ja-lukitus-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%; /* MUUTETTU: Vie koko leveyden */
+    margin-top: 5px;
+}
 .kesto { font-size: 1em; color: #FFD700; font-weight: bold; flex-grow: 1; }
 .lukitus-label { cursor: pointer; display: flex; align-items: center; }
 .lukitse-kirjaus-checkbox { display: none; }
@@ -170,9 +199,10 @@ ul { list-style: none; padding: 0; }
 
     .kirjaus-item {
         gap: 5px 10px;
+        flex-wrap: wrap; /* MUUTOS: Varmistaa rivittymisen */
     }
     .kirjaus-tiedot {
-        flex-basis: 100%;
+        flex-basis: 100%; /* MUUTOS: Tekee tehtävän kuvauksesta yksin rivin */
         min-width: 0;
     }
     .kesto-ja-lukitus-container {
