@@ -136,6 +136,8 @@ ul { list-style: none; padding: 0; }
         margin-bottom: 10px;
         border-bottom: 1px solid #ccc;
         page-break-inside: avoid;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
     input:disabled {
         border: none;
@@ -149,6 +151,8 @@ ul { list-style: none; padding: 0; }
     .kirjaus-tiedot .tehtava-input {
         font-weight: bold;
         margin-bottom: 5px;
+        white-space: pre-wrap;
+        width: 100%;
     }
     .kesto {
         color: #333;
