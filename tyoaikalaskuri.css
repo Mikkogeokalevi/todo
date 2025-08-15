@@ -32,7 +32,8 @@ label { display: block; margin-bottom: 5px; font-size: 0.9em; }
     font-size: 16px; 
     resize: vertical;
 }
-input:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; padding-left: 0; padding-right: 0; }
+/* UUSI RIVI: Lisätään textarea tähän sääntöön */
+input:disabled, textarea:disabled { background-color: #3D4F2B; color: #cccccc; border-color: transparent; padding-left: 0; padding-right: 0; }
 button {
     padding: 12px 18px;
     border: 1px solid #90EE90;
@@ -148,7 +149,8 @@ ul { list-style: none; padding: 0; }
         border-bottom: 1px solid #ccc;
         page-break-inside: avoid;
     }
-    input:disabled {
+    /* UUSI RIVI: Muokattu tyyli tulostusnäkymään. */
+    input:disabled, textarea:disabled {
         border: none;
         padding: 0;
         background: none;
