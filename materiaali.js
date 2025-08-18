@@ -57,7 +57,7 @@ const cancelMaterialEditBtn = document.getElementById('cancel-material-edit-btn'
 let currentListId = null;
 let listDataUnsubscribe = null;
 let currentEditingEntryId = null;
-let currentEditingMaterialId = null; // Materiaalin muokkausta varten
+let currentEditingMaterialId = null; 
 
 const formatSuomalainenAika = (isoString) => isoString ? new Date(isoString).toLocaleString('fi-FI', { dateStyle: 'short', timeStyle: 'short' }) : '';
 const normalizeListName = (listName) => listName.trim().toLowerCase().replace(/\s+/g, '-');
@@ -357,45 +357,50 @@ kirjausLista.addEventListener('click', async (e) => {
         }
     }
 });
+
+// TÄMÄ FUNKTIO ON MUUTETTU
 saveEditBtn.addEventListener('click', async () => {
     if (!currentEditingEntryId) return;
-    const paivitetytTiedot = {
-        kilomäärä: parseFloat(editKiloMaara.value),
-    };
-    if (isNaN(paivitetytTiedot.kilomäärä)) {
-        return alert("Tarkista muokatut tiedot.");
+
+    // Luetaan nyt myös materiaalin nimi
+    const uusiNimi = editMateriaaliNimi.value.trim();
+    const uusiPaino = parseFloat(editKiloMaara.value);
+
+    // Tarkistetaan molemmat kentät
+    if (!uusiNimi || isNaN(uusiPaino) || uusiPaino <= 0) {
+        return alert("Tarkista, että materiaalin nimi ja paino on annettu oikein.");
     }
-    await update(ref(database, `kirjaukset/${currentListId}/${currentEditingEntryId}`), {
-        ...paivitetytTiedot,
+    
+    // Luodaan päivitysobjekti molemmilla tiedoilla
+    const paivitetytTiedot = {
+        materiaali: uusiNimi,
+        kilomäärä: uusiPaino,
         muokattuAikaleima: new Date().toISOString()
-    });
+    };
+    
+    await update(ref(database, `kirjaukset/${currentListId}/${currentEditingEntryId}`), paivitetytTiedot);
+    
     editModal.classList.add('hidden');
     currentEditingEntryId = null;
 });
+
 cancelEditBtn.addEventListener('click', () => {
     editModal.classList.add('hidden');
     currentEditingEntryId = null;
 });
-
-// TÄSSÄ ON MUUTOKSET
 muokkaaListaaBtn.addEventListener('click', () => {
-    // Korvataan tyylin suora muokkaus luokan poistamisella.
     muokkaaNimeaContainer.classList.remove('hidden'); 
     document.getElementById('muokkaa-nimea-input').value = aktiivinenListaNimi.textContent;
     document.getElementById('muokkaa-nimea-input').focus();
 });
-
 document.getElementById('peruuta-nimi-btn').addEventListener('click', () => {
-    // Korvataan tyylin suora muokkaus luokan lisäämisellä.
     muokkaaNimeaContainer.classList.add('hidden');
 });
-
 document.getElementById('tallenna-nimi-btn').addEventListener('click', async () => {
-    // Tämän funktion sisällä oleva peruuta-napin klikkaus hoitaa nyt piilottamisen oikein.
     const muokkaaNimeaInput = document.getElementById('muokkaa-nimea-input');
     const newName = muokkaaNimeaInput.value.trim();
     if (!newName || !currentListId) {
-        muokkaaNimeaContainer.classList.add('hidden'); // Varmuuden vuoksi piilotus
+        muokkaaNimeaContainer.classList.add('hidden');
         return;
     }
     await update(ref(database, `listat/${currentListId}`), { nimi: newName });
