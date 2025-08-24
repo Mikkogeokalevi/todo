@@ -141,7 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const profileName = pgcProfileNameInput.value.trim();
         let href = "#";
         if (profileName && pgcMapCountiesLink) {
-            href = `https://project-gc.com/Tools/MapCounties?profile_name=${encodeURIComponent(profileName)}&country=Finland&submit=Filter`;
+            // Myös tässä päivitetään profiilinimen parametri
+            href = `https://project-gc.com/Tools/MapCounties?player_prc_profileName=${encodeURIComponent(profileName)}&country=Finland&submit=Filter`;
         }
         pgcMapCountiesLink.href = href;
     };
@@ -154,7 +155,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const region = officialName ? kuntaMaakuntaData[officialName] : undefined;
 
         if (region && pgcProfileName && officialName) {
-            const pgcUrl = `https://project-gc.com/Tools/MapCompare?profile_name=${pgcProfileName}&country[]=Finland&region[]=${encodeURIComponent(region)}&county[]=${encodeURIComponent(officialName)}&nonefound=on&submit=Filter`;
+            // Tässä luodaan uudenmallinen URL-osoite
+            const pgcUrl = `https://project-gc.com/Tools/MapCompare?player_prc_profileName=${pgcProfileName}&geocache_mc_show[]=found-none&geocache_mc_ownedAsFound=on&geocache_crc_country=Finland&geocache_crc_region=${encodeURIComponent(region)}&geocache_crc_county=${encodeURIComponent(officialName)}&submit=Filter`;
             return `<a href="${pgcUrl}" target="_blank" rel="noopener noreferrer" title="Avaa ${officialName} Project-GC:ssä" class="${cssClass}">🗺️</a>`;
         }
         return '';
